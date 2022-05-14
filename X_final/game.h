@@ -29,6 +29,9 @@ namespace rlf
 
 		EntityId CreateEntity(const DbIndex& cfg, const EntityDynamicConfig& dcfg);
 
+		const std::vector<std::pair<std::string, int>>& MessageLog() const { return messageLog; }
+		void WriteToMessageLog(const std::string& msg);
+
 	private:
 
 		// entities
@@ -43,5 +46,8 @@ namespace rlf
 		// gui
 
 		// game menu?
+
+		// message log: messages and how many times each is encountered
+		std::vector<std::pair<std::string,int>> messageLog;
 	};
 }

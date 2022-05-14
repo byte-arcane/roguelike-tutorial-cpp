@@ -11,6 +11,8 @@ SET(SOURCE_FILES
 	eventhandlers.cpp
 	fov.cpp
 	entityid.cpp
+    gamestate.cpp
+    json.cpp
 )
 
 SET(HEADER_FILES
@@ -26,6 +28,8 @@ SET(HEADER_FILES
 	db.h
 	fov.h
 	entityid.h
+    gamestate.h
+    json.h
 )
 
 SET(ALL_SOURCE_FILES

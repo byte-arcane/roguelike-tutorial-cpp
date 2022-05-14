@@ -1,6 +1,7 @@
 #include "game.h"
 #include "entity.h"
 #include "graphics.h"
+#include "utility.h"
 
 namespace rlf
 {
@@ -50,7 +51,8 @@ namespace rlf
 		currentLevelIndex = iLevel;
 		if (levels.size() <= currentLevelIndex)
 		{
-			auto levelConfig = LoadLevelFromTxtFile("D:\\Games\\REXPaint-v1.50\\images\\singlegen_OpenCavern_v0.txt");
+			// singlegen_OpenCavern_v0.txt
+			auto levelConfig = LoadLevelFromTxtFile(cgf::mediaSearch("maps/map0.txt"));
 			levels.push_back({});
 			levels.back().Init(levelConfig.first, levelConfig.second, currentLevelIndex);
 		}
@@ -62,5 +64,15 @@ namespace rlf
 		CurrentLevel().UpdateFogOfWar();
 		Graphics::Instance().CenterCameraAtPoint(entity.GetLocation().position);
 		Graphics::Instance().OnGuiUpdated();
+	}
+
+	void GameState::WriteToMessageLog(const std::string& msg)
+	{
+		if (!messageLog.empty() && messageLog.back().first == msg)
+			++messageLog.back().second;
+		else
+			messageLog.emplace_back(msg, 1);
+		Graphics::Instance().OnGuiUpdated();
+
 	}
 }

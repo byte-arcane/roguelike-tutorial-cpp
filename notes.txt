@@ -1,21 +1,19 @@
 TODO:
 
-	GUI
-		ADOM-like is last few lines
-		display:
-			Name ATT/DMG/RES/DEF HP KILLS GOLD
-			Log message newest
-			Log message newest-1
-			...
 	Pick up gold
 	Basic AI
 	hitpoints 
+    
+    json
 
 	What about gameprogrammingpatterns composite, for entities?
 		Entity is the GameObject
 		stores a vector of components
 		
-		
+	Gamestate:
+        Render,Update, SwitchTo
+        
+    GUI input stack:
 
 Rationale:
 	Trying to keep things simple, sometimes at the expense of doing things "properly" or efficiently

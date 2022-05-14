@@ -201,8 +201,22 @@ namespace rlf
 			auto p = loc.position;
 			AddTextSprites(fmt::format("{0} - {1},{2} Lvl:{3} ATT:0 DMG:1 DEF:2 RES:3 HP:10(15) XP:0 $30", player->Name(), p.x,p.y,loc.levelId), 2, glm::vec4(1));
 		}
-		AddTextSprites("Some log message", 1, glm::vec4(.7, .7, .7,1));
-		AddTextSprites("Some other log message", 0, glm::vec4(.5, .5, .5, 1));
+		const auto& messages = GameState::Instance().MessageLog();
+		const int maxShownLines = guiNumRows - 2;
+		vec4 color{ .7,.7, .7, 1 };
+		for(int iLine = 0; iLine < maxShownLines; ++iLine)
+		{
+			if(messages.size() > iLine)
+			{
+				const auto& textAndRepeats = messages.rbegin() + iLine;
+				std::string message = textAndRepeats->first;
+				if (textAndRepeats->second > 1)
+					message += fmt::format(" (x{0})", textAndRepeats->second);
+				AddTextSprites(message, maxShownLines-iLine-1, color);
+				color *= 0.8f;
+				color.w = 1.0f;
+			}
+		}
 	}
 
 	void Graphics::UpdateRenderableEntity(const Entity& e)

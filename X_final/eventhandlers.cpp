@@ -1,8 +1,12 @@
 #include "eventhandlers.h"
 
+#include <fmt/format.h>
+
 #include "game.h"
 #include "entity.h"
 #include "graphics.h"
+
+using namespace glm;
 
 namespace rlf
 {
@@ -50,6 +54,20 @@ namespace rlf
 		}
 	}
 
+	static const char * DirectionString(const glm::ivec2& direction)
+	{
+		if (direction == ivec2{ 1, 0 })
+			return "east";
+		else if (direction == ivec2{ -1, 0 })
+			return "west";
+		else if (direction == ivec2{ 0, 1 })
+			return "north";
+		else if (direction == ivec2{ 0, -1 })
+			return "south";
+		else
+			return "unkwnown";
+	}
+
 	void MoveAdj(Entity& entity, const glm::ivec2& direction)
 	{
 		assert(entity.BaseType() != EntityType::Item);
@@ -67,6 +85,7 @@ namespace rlf
 
 			if (GameState::Instance().IsPlayer(entity))
 			{
+				GameState::Instance().WriteToMessageLog(fmt::format("You move {0}", DirectionString(direction)));
 				GameState::Instance().CurrentLevel().UpdateFogOfWar();
 				Graphics::Instance().OnGuiUpdated(); // movement should cause GUI update
 			}
@@ -79,9 +98,11 @@ namespace rlf
 				switch (entityAtPosition->BaseType())
 				{
 					case EntityType::Creature:
+						GameState::Instance().WriteToMessageLog(fmt::format("You attack {0}", entityAtPosition->Name()));
 						DestroyEntity(*entityAtPosition);
 						break;
 					case EntityType::Object:
+						GameState::Instance().WriteToMessageLog(fmt::format("You handle {0}", entityAtPosition->Name()));
 						entityAtPosition->GetObjectData()->Handle(*entityAtPosition, entity);
 						break;
 				}
@@ -132,6 +153,7 @@ namespace rlf
 			level.UpdateFogOfWar();
 		}
 
-		Graphics::Instance().OnGuiUpdated(); // level change should cause GUI update
+		std::string msgtext = delveDirectionForward ? "You delve deeper into the dungeon" : "You take the stairs up";
+		GameState::Instance().WriteToMessageLog(msgtext); // This triggers a gui update
 	}
 }

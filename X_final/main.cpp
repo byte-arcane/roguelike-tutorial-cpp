@@ -37,7 +37,7 @@ class FrameworkAppBasics : public cgf::FrameworkApp
 		EntityConfig cfg{ EntityType::Creature, {TileData{'@',vec4(1,1,1,1)}} };
 		Db::Instance().Add("player", cfg);
 		EntityDynamicConfig dcfg;
-		dcfg.position = ivec2(17, 43);
+		dcfg.position = ivec2(17, 10);
 		dcfg.nameOverride = "Sir Carpaccio";
 		DbIndex cfgdb{ "player" };
 		auto& player = SpawnEntity(cfgdb,dcfg);

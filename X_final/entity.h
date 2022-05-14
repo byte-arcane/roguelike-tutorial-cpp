@@ -56,7 +56,6 @@ namespace rlf
 	// Inventory: does the creature/object store items and/or gold?
 	struct Inventory
 	{
-		int gold = 0;
 		std::vector<EntityId> items;
 	};
 
@@ -70,6 +69,9 @@ namespace rlf
 	struct CreatureData
 	{
 		int lineOfSightRadius = 10;
+		int hp=0;
+		int hpMax=0;
+		int xp = 0;
 	};
 
 	// Object-specific data
