@@ -1,0 +1,35 @@
+opengl:
+	glPolygonMode
+		GL_FRONT_AND_BACK
+		GL_LINE / GL_FILL
+		
+		
+	glUseProgram
+	glClearColor
+	glClear
+	glBindVertexArray
+	glDrawArrays
+	
+	glDeleteVertexArrays
+	glDeleteBuffers
+	glDeleteProgram
+	
+	// Maybe in Geometry session
+	glCreateBuffers
+	glNamedBufferStorage
+	glCreateVertexArrays
+	glVertexArrayVertexBuffer
+	glEnableVertexArrayAttrib
+	glVertexArrayAttribFormat
+	glVertexArrayAttribBinding
+	
+exercises:
+	
+	Draw the lower left of a square
+	Draw the upper left of the same square
+	Draw the square using a strip. 
+	Draw a row of squares.  How many vertices?
+	Draw a row of squares using a triangle strip. How many vertices?
+	
+	draw two triangles
+	

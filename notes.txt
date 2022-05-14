@@ -1,0 +1,115 @@
+TODO:
+
+	GUI
+		ADOM-like is last few lines
+		display:
+			Name ATT/DMG/RES/DEF HP KILLS GOLD
+			Log message newest
+			Log message newest-1
+			...
+	Pick up gold
+	Basic AI
+	hitpoints 
+
+	What about gameprogrammingpatterns composite, for entities?
+		Entity is the GameObject
+		stores a vector of components
+		
+		
+
+Rationale:
+	Trying to keep things simple, sometimes at the expense of doing things "properly" or efficiently
+	no templates, no shared pointers
+
+Codebase:
+	Graphics:
+		Select tile size (based e.g. on bitmap font)
+			Determine game grid size
+			Expose simple functions such as:
+			void SetTile(ivec2 position, int layerId, Tile tile) // layer info bad?
+			void SetBackgroundImage( string filename )
+			
+			int2 CursorPosition(), in Input class really
+			
+		Simple classes/enums like:
+			TileMap: a handle on the texture, plus info on what it contains ( default layer)
+			Tile: tile index, plus optional tint and optional layer override
+			Layer: Background, Objects, Creatures, Effects, FogOfWar, Gui
+			
+		It's worth to have a resizable buffer class (realloc at 2x capacity when growing)
+			
+			
+	Game state:
+		Different screens are different update/render loops
+		Single global game state that stores info about the game
+		
+		Basic widgets, e.g. buttons with different rendering for pressed/unpressed
+		
+	ECS:
+		
+		Common entity data:
+			name
+			Render info
+				array of Tiles (that's constant data, at entity creation)
+				current tile (default to 0, changes as needed)
+		
+		Entity types:
+			Creature:
+				position
+				location
+				container
+				equipment
+				hp
+			Item
+				weight
+				value
+				owner
+				stackSize = 1
+				
+				useInfo // can it be Used
+				meleeInfo // can it be wielded as a melee weapon?
+				throwInfo // can it be thrown?
+				rangedInfo // can it be used as a ranged weapon?
+				ammoInfo // can it be used as ammo?
+				armorInfo // can it be used as armor?
+			Object
+				position
+				location
+				blocksVision
+				blocksMovement
+				
+				bool canInteractFromAdjacentTile = true
+				
+				virtual void OnInteractWith()
+				
+				Subclasses:
+					Container
+					Fountain
+					Door
+					Stairs
+						stores connecting stairs id/name (name is easier as it doesn't require pre-instantiation, e.g. "stairs to level 1b")
+						
+			SpawnInfo class: configuration to assist with instantiation of an entity:
+				static info in database (render tiles, etc)
+				dynamic info as parameters (position, location, etc)
+				
+	GUI and interactions:
+		Melee, target, area of effect display
+						
+
+					
+
+Part 0 - Setting Up
+Part 1 - Drawing the ‘@’ symbol and moving it around
+Part 2 - The generic Entity, the render functions, and the map
+Part 3 - Generating a dungeon
+Part 4 - Field of view
+Part 5 - Placing enemies and kicking them (harmlessly)
+Part 6 - Doing (and taking) some damage
+Part 7 - Creating the Interface
+Part 8 - Items and Inventory
+Part 9 - Ranged Scrolls and Targeting
+Part 10 - Saving and loading
+Part 11 - Delving into the Dungeon
+Part 12 - Increasing Difficulty
+Part 13 - Gearing up

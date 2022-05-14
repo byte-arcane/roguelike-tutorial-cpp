@@ -1,0 +1,13 @@
+{
+  "name": "rlcpptut",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "fmt",
+	"glm",
+	"glew",
+	"imgui",
+	"glfw3",
+	"stb",
+	"nlohmann-json"
+  ]
+}
