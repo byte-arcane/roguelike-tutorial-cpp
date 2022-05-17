@@ -1,8 +1,42 @@
 TODO:
+
+	state separation all nice, but how do we handle the buffers, extra or not? who listens to what?
+		Graphics object provides buffers for writing/updates
+		
+		// Renders player info and log in given area,  with the gui shader
+		RenderGui(rect)
+		
+		// Renders the regular game view with the dense shader
+		RenderGame(rect)
+		
+		// Renders this buffer at the given rect with the gui shader (e.g. inventory)
+		RenderGameOverlay(rect, buffer)	
+		
+		// Renders this buffer at the given rect with the highlighting shader (e.g. cursor, target locations)
+		RenderGameOverlayHighlighted(rect, buffer)	
+		
+		// Renders a fullscreen background image, with the dense shader
+		RenderBg(rect)
+		
+		// Renders a menu
+		RenderMenu(buffer)
+
+	? How, after targetting, we know how to resume with any action that required targetting?
+		input handling and GUI go together. Static classes maybe, or via a state stack
+
 	ranged attack support + look support
-		"actions"
+		"T" targets for ranged weapons
+			takes over arrow keys
+			allow to MOVE the cursor anywhere, but only confirm on visible tiles (maybe highlight w/ color)
+		when projectile is fired, render all distinct points in the path, N times per frame (default to 2) WHILE other things are happening -- who cares
+	
+	"actions": no
+	
+	refactor w/ signals-slots library
 	
 	save/load via json
+	
+	in db.cpp, add a function to manually create some entities (inc.player) -- useful for pre-json stuff
 	
 	main menu
 

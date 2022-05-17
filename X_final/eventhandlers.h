@@ -14,7 +14,7 @@ namespace rlf
 	Entity& SpawnEntity(const DbIndex& cfg, const EntityDynamicConfig& dcfg);
 
 	// entity moves 
-	void Move(Entity& entity, const glm::ivec2& position);
+	void Teleport(Entity& entity, const glm::ivec2& position);
 	void MoveAdj(Entity& entity, const glm::ivec2& direction);
 	//void EnterLevel(const Level& level, const glm::ivec2& position);
 	//void Handle(Entity& handler, Entity& handled);

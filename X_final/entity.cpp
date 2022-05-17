@@ -62,7 +62,7 @@ namespace rlf
 			itemData->owner = dcfg.itemOwner;
 		}
 
-		if (!dcfg.inventory.empty())
+		if (DbCfg() == DbIndex::ItemPile() || !dcfg.inventory.empty())
 		{
 			if(!inventory)
 				inventory = std::make_unique<Inventory>();

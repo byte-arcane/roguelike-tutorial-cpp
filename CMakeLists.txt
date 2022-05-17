@@ -77,8 +77,10 @@ find_path(STB_INCLUDE_DIRS "stb.h")
 #target_include_directories(main PRIVATE ${STB_INCLUDE_DIRS})
 find_package(magic_enum CONFIG REQUIRED)
 #target_link_libraries(main PRIVATE magic_enum::magic_enum)
+find_path(NANO_SIGNAL_SLOT_INCLUDE_DIRS "nano_function.hpp")
+#target_include_directories(main PRIVATE ${NANO_SIGNAL_SLOT_INCLUDE_DIRS})
 
-SET( APP_INCLUDE_DIRECTORIES_FW ${glm_DIR} ${STB_INCLUDE_DIRS} ${GLEW_DIR} ${fmt_DIR} ${imgui_DIR} ${glfw3_DIR} ${nlohmann_json_DIR} ${magic_enum_DIR})
+SET( APP_INCLUDE_DIRECTORIES_FW ${glm_DIR} ${STB_INCLUDE_DIRS} ${GLEW_DIR} ${fmt_DIR} ${imgui_DIR} ${glfw3_DIR} ${nlohmann_json_DIR} ${magic_enum_DIR} ${NANO_SIGNAL_SLOT_INCLUDE_DIRS})
 SET( APP_INCLUDE_DIRECTORIES ${APP_INCLUDE_DIRECTORIES_FW} framework)
 SET( APP_LINK_LIBRARIES GLEW::GLEW fmt::fmt imgui::imgui glfw glm::glm nlohmann_json::nlohmann_json framework magic_enum::magic_enum)
 

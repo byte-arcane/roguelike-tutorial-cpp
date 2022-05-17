@@ -54,7 +54,7 @@ namespace rlf
 	NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(DbIndex, name);
 	NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(EntityId, version, id);
     //NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(TileData, spriteIndex, color);
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(ItemConfig, defaultStackSize, weight, category, combatStatBonuses, effect);
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(ItemConfig, defaultStackSize, weight, category, combatStatBonuses, effect, attackRange);
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(CreatureConfig, lineOfSightRadius, hp, combatStats);
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(ObjectConfig, effect, blocksMovement, blocksVision, defaultState);
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(EntityConfig, type, tileData, itemCfg, creatureCfg, objectCfg, allowRandomSpawn);

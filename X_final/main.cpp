@@ -17,6 +17,7 @@
 #include "astar.h"
 #include "grid.h"
 #include "inventory.h"
+#include "state/state.h"
 
 using namespace glm;
 using namespace std;
@@ -25,6 +26,7 @@ using namespace rlf;
 enum class GameMode
 {
 	InGame = 0,
+	Targeting,
 	Inventory_EquipOrUse,
 	Inventory_PickUp,
 	Inventory_Drop,
@@ -33,8 +35,11 @@ enum class GameMode
 
 class Game : public cgf::FrameworkApp
 {
+	std::vector<std::unique_ptr<state::IState>> gameStates;
+
 	GameMode gameMode = GameMode::InGame;
 	int inventoryModePageIndex = 0;
+	glm::ivec2 targetPosition = { -1,-1 }; // for targetting mode
 
 	// Put here any initialisation code. Happens once, before the main loop and after initialisation of GLFW/GLEW/ImGui
 	void onInit() override
@@ -47,16 +52,6 @@ class Game : public cgf::FrameworkApp
 		// Set level
 		ChangeLevel(0);
 
-		// Spawn player
-		EntityConfig cfg{ 
-			EntityType::Creature, 
-			{TileData{'@',vec4(1,1,1,1)}},
-			{},
-			CreatureConfig{10},
-			{}
-		};
-		cfg.allowRandomSpawn = false;
-		Db::Instance().Add("player", cfg);
 		EntityDynamicConfig dcfg;
 		dcfg.position = ivec2(4, 4);
 		dcfg.nameOverride = "Sir Carpaccio";
@@ -164,6 +159,17 @@ class Game : public cgf::FrameworkApp
 #endif
 			}
 			g.GetTurnSystem().Process();
+		}
+		else if (gameMode == GameMode::Targeting)
+		{
+#if 0
+			bool confirmed = targetingHandleInput(targetPosition);
+			if (confirmed)
+			{
+				gameMode = GameMode::InGame;
+				// TODO: 
+			}
+#endif
 		}
 		else if (gameMode == GameMode::Inventory_EquipOrUse)
 		{

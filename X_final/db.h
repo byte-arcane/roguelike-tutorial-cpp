@@ -13,6 +13,7 @@ namespace rlf
 		static Db& Instance() { static Db instance; return instance; }
 
 		void LoadFromDisk();
+		void LoadFromCode();
 
 		const EntityConfig * Get(const std::string& name) const { return &db.at(name); }
 		void Add(const std::string& name, EntityConfig& cfg) { db.emplace(name, std::move(cfg)); }

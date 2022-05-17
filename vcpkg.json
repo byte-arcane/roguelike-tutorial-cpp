@@ -9,6 +9,7 @@
 	"glfw3",
 	"stb",
 	"nlohmann-json",
-	"magic-enum"
+	"magic-enum",
+	"nano-signal-slot"
   ]
 }

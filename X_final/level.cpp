@@ -150,94 +150,6 @@ namespace rlf
 		static const LevelBgElement bgWall = { "wall", true, true, false, '#', glm::vec4(.7, .7, .7, 1) };
 		static const LevelBgElement bgWater = { "water", false, true, true, '=', glm::vec4(0, 0, 1, 1) };
 
-		// Add here the DB objects
-		EntityConfig cfgDoor = {
-			EntityType::Object,
-			{TileData{'+', glm::vec4(1,.545,0,1)},
-			 TileData{'/', glm::vec4(1,.545,0,1)}},
-			{},
-			{},
-			{}
-		};
-		cfgDoor.allowRandomSpawn = false;
-		Db::Instance().Add("door", cfgDoor);
-		auto dbCfgDoor = DbIndex("door");
-
-		EntityConfig cfgStairsUp = {
-			EntityType::Object,
-			{TileData{'<', glm::vec4(.7,.7,.7,1)}},
-			{},
-			{},
-			{}
-		};
-		cfgStairsUp.allowRandomSpawn = false;
-		Db::Instance().Add("stairs_up", cfgStairsUp);
-		auto dbCfgStairsUp = DbIndex("stairs_up");
-
-		EntityConfig cfgStairsDown = {
-			EntityType::Object,
-			{TileData{'>', glm::vec4(.7,.7,.7,1)}},
-			{},
-			{},
-			{}
-		};
-		cfgStairsDown.allowRandomSpawn = false;
-		Db::Instance().Add("stairs_down", cfgStairsDown);
-		auto dbCfgStairsDown = DbIndex("stairs_down");
-
-		EntityConfig cfgTreasure = {
-			EntityType::Object,
-			{TileData{'%', glm::vec4(.7,.7,.7,1)}},
-			{},
-			{},
-			{}
-		};
-		cfgTreasure.allowRandomSpawn = false;
-		Db::Instance().Add("item_pile", cfgTreasure);
-		auto dbCfgTreasure = DbIndex("item_pile");
-
-		EntityConfig cfgGold = {
-			EntityType::Item,
-			{TileData{'$', glm::vec4(1,1,.5,1)}},
-			ItemConfig{1}
-		};
-		Db::Instance().Add("gold", cfgGold);
-		auto dbCfgGold = DbIndex("gold");
-
-		EntityConfig cfgHat = {
-			EntityType::Item,
-			{TileData{'[', glm::vec4(1,1,.5,1)}},
-			ItemConfig{0,1,ItemCategory::Armor},
-		};
-		Db::Instance().Add("hat", cfgHat);
-		auto dbCfgHat = DbIndex("hat");
-
-		EntityConfig cfgCoif = {
-			EntityType::Item,
-			{TileData{']', glm::vec4(1,.5,.5,1)}},
-			ItemConfig{0,2,ItemCategory::Armor},
-		};
-		Db::Instance().Add("coif", cfgCoif);
-		auto dbCfgCoif = DbIndex("coif");
-
-		EntityConfig cfgSword = {
-			EntityType::Item,
-			{TileData{'(', glm::vec4(1,.5,.5,1)}},
-			ItemConfig{0,3,ItemCategory::Weapon},
-		};
-		Db::Instance().Add("sword", cfgSword);
-		auto dbCfgSword = DbIndex("sword");
-
-		EntityConfig cfgGoblin = {
-			EntityType::Creature,
-			{TileData{'g', glm::vec4(.2,.2,1,1)}},
-			{},
-			CreatureConfig{2},
-			{},
-		};
-		Db::Instance().Add("goblin", cfgGoblin);
-		auto dbCfgGoblin = DbIndex("goblin");
-
 		auto text = cgf::readTextFile(filename);
 		
 		// remove all occurences of \r, for windows-style newlines, so we always split newlines with '\n'
@@ -279,20 +191,20 @@ namespace rlf
 				switch (c)
 				{
 				case '+':
-					entityCfgs.emplace_back(dbCfgDoor, dcfg);
+					entityCfgs.emplace_back("door", dcfg);
 					break;
 				case '>':
-					entityCfgs.emplace_back(dbCfgStairsDown, dcfg);
+					entityCfgs.emplace_back("stairs_down", dcfg);
 					break;
 				case '<':
-					entityCfgs.emplace_back(dbCfgStairsUp, dcfg);
+					entityCfgs.emplace_back("stairs_up", dcfg);
 					break;
 				case 'X':
-					entityCfgs.emplace_back(dbCfgGoblin, dcfg);
+					entityCfgs.emplace_back("goblin", dcfg);
 					break;
 				case '$':
-					dcfg.inventory.push_back(dbCfgGold);
-					entityCfgs.emplace_back(dbCfgTreasure, dcfg);
+					dcfg.inventory.emplace_back("gold");
+					entityCfgs.emplace_back("item_pile", dcfg);
 					break;
 				default:
 					break;
@@ -300,10 +212,10 @@ namespace rlf
 			}
 		}
 
-		std::vector<DbIndex> spawnableItems = {
-			dbCfgCoif,
-			dbCfgSword,
-			dbCfgHat,
+		std::vector<std::string> spawnableItems = {
+			"helmet",
+			"sword",
+			"hat",
 		};
 		for (int i = 0; i < 200; ++i)
 		{
@@ -313,8 +225,8 @@ namespace rlf
 			if (!bg(x, y).blocksMovement && std::find_if(entityCfgs.begin(), entityCfgs.end(), [&](const auto& dbi_dcfg) { return dbi_dcfg.second.position == p; }) == entityCfgs.end())
 			{
 				EntityDynamicConfig dcfg{ p };
-				dcfg.inventory.push_back(spawnableItems[rand()% spawnableItems.size()]);
-				entityCfgs.emplace_back(dbCfgTreasure, dcfg);
+				dcfg.inventory.emplace_back(spawnableItems[rand()% spawnableItems.size()]);
+				entityCfgs.emplace_back("item_pile", dcfg);
 			}
 				
 		}

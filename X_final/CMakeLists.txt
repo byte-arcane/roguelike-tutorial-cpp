@@ -19,6 +19,11 @@ SET(SOURCE_FILES
 	inventory.cpp
 	effect.cpp
 	dungen.cpp
+	db.cpp
+	state/inventory.cpp
+	state/maingame.cpp
+	state/menu.cpp
+	state/ranged.cpp
 )
 
 SET(HEADER_FILES
@@ -42,6 +47,11 @@ SET(HEADER_FILES
 	inventory.h
 	effect.h
 	dungen.h
+	state/inventory.h
+	state/maingame.h
+	state/menu.h
+	state/ranged.h
+	state/state.h
 )
 
 SET(ALL_SOURCE_FILES

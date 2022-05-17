@@ -16,9 +16,9 @@ namespace rlf
 			return nullptr;
 		auto& entity = poolEntities[entityId.id];
 		// is it an old version?
-		if (entity.Id().version != entityId.version)
+		if (!entity || entity->Id().version != entityId.version)
 			return nullptr;
-		return &entity;
+		return entity.get();
 	}
 
 	EntityId GameState::CreateEntity(const DbIndex& cfg, const EntityDynamicConfig& dcfg)
@@ -27,7 +27,7 @@ namespace rlf
 		if (!invalidPoolIndices.empty())
 		{
 			auto it = invalidPoolIndices.begin();
-			entityId.version = poolEntities[*it].Id().version + 1;
+			entityId.version = poolEntities[*it]->Id().version + 1;
 			entityId.id = *it;
 			invalidPoolIndices.erase(it);
 		}
@@ -37,7 +37,8 @@ namespace rlf
 			entityId.version = 1;
 			poolEntities.resize(poolEntities.size() + 1);
 		}
-		poolEntities[entityId.id].Initialize(entityId,cfg, dcfg);
+		poolEntities[entityId.id].reset(new Entity());
+		poolEntities[entityId.id]->Initialize(entityId,cfg, dcfg);
 		return entityId;
 	}
 

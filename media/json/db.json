@@ -1,4 +1,16 @@
 {
+	"player": {
+        "type": "Creature",
+        "tileData": [{
+                "sprite": "@",
+                "color": [1, 1, 1, 1]
+            }
+        ],
+        "creatureCfg": {
+            "hp": 10
+        },
+		"allowRandomSpawn" : false
+    },
     "door": {
         "type": "Object",
         "tileData": [{

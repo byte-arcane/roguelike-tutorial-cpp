@@ -137,17 +137,14 @@ namespace rlf
 
 	struct EntityConfig : INonCopyable
 	{
-		EntityConfig() = default;
-		EntityConfig(const EntityType zType, const std::vector<TileData>& zTileData, const ItemConfig& zItemCfg = {}, const CreatureConfig& zCreatureCfg = {}, const ObjectConfig& zObjectCfg = {})
-			:type(zType), tileData(zTileData), itemCfg(zItemCfg), creatureCfg(zCreatureCfg), objectCfg(zObjectCfg) {}
-
 		EntityType type = EntityType::Creature;
 		std::vector<TileData> tileData;
-		ItemConfig itemCfg;
-		CreatureConfig creatureCfg;
-		ObjectConfig objectCfg;
 		// set to false for special objects like stairs and doors, that are not randomly generated
 		bool allowRandomSpawn = true;
+
+		CreatureConfig creatureCfg;
+		ObjectConfig objectCfg;
+		ItemConfig itemCfg;
 	};
 
 	struct EntityDynamicConfig

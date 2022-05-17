@@ -39,7 +39,7 @@ namespace rlf
 		GameState::Instance().RemoveEntity(e);
 	}
 
-	void Move(Entity& entity, const glm::ivec2& position)
+	void Teleport(Entity& entity, const glm::ivec2& position)
 	{
 		assert(entity.Type() != EntityType::Item);
 		const auto& level = GameState::Instance().CurrentLevel();
@@ -74,6 +74,15 @@ namespace rlf
 			return "unkwnown";
 	}
 
+	const Entity * EquippedItemAtSlot(const Entity& entity, ItemCategory itemCategory)
+	{
+		const auto& items = entity.GetInventory()->items;
+		auto itFound = std::find_if(items.begin(), items.end(), [&itemCategory](const EntityId& itemId) {
+			return itemId.Entity()->GetItemData()->equipped && itemId.Entity()->DbCfg().Cfg()->itemCfg.category == itemCategory;
+		});
+		return itFound != items.end() ? itFound->Entity() : nullptr;
+	}
+
 	void MoveAdj(Entity& entity, const glm::ivec2& direction)
 	{
 		assert(entity.Type() != EntityType::Item);
@@ -104,13 +113,19 @@ namespace rlf
 				switch (entityAtPosition->Type())
 				{
 					case EntityType::Creature:
-						
-						AttackEntity(entity, *entityAtPosition);
+					{
+						// Attack if we're attacking with bare hands or a melee weapon
+						auto weapon = EquippedItemAtSlot(entity, ItemCategory::Weapon);
+						if (weapon == nullptr || weapon->DbCfg().Cfg()->itemCfg.attackRange == 1)
+							AttackEntity(entity, *entityAtPosition);
 						break;
+					}
 					case EntityType::Object:
+					{
 						GameState::Instance().WriteToMessageLog(fmt::format("You handle {0}", entityAtPosition->Name()));
 						entityAtPosition->GetObjectData()->Handle(*entityAtPosition, entity);
 						break;
+					}
 				}
 			}
 		}

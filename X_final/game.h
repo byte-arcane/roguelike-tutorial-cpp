@@ -37,8 +37,8 @@ namespace rlf
 
 	private:
 
-		// entities
-		std::vector<Entity> poolEntities;
+		// entities. Stored as uptr, so that when the vector is resized and the memory is reallocated, our data is not invalidated
+		std::vector<std::unique_ptr<Entity>> poolEntities;
 		std::unordered_set<int> invalidPoolIndices;
 		EntityId playerId;
 

@@ -186,7 +186,7 @@ namespace rlf
 		bool hasPrevPage = pageIdx != 0;
 		bool hasNextPage = pageIdx < (numPages-1);
 
-		std::string inventoryModeText = inventoryMode == InventoryMode::EquipOrUse ? "Equip/Use" : "Pick up/Drop";
+		std::string inventoryModeText = inventoryMode == InventoryMode::EquipOrUse ? "Equip/Use" : (isPlayer ? "Drop" : "Pick up");
 		addSeparatorLine(buffer, guiNumRows+gameGridSize.y-1, color::BROWN, gameGridSize.x, "Inventory: " + inventoryModeText);
 		addTextToLine(buffer, fmt::format("Total weight: {0} stones", entity.GetInventory()->Weight()),0, guiNumRows+gameGridSize.y-3, color::BROWN);
 		int rowItems0 = guiNumRows+gameGridSize.y - 5;
