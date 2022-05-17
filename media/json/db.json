@@ -1,0 +1,252 @@
+{
+    "door": {
+        "type": "Object",
+        "tileData": [{
+                "sprite": "+",
+                "color": [1, 0.545, 0, 1]
+            }, {
+                "sprite": "/",
+                "color": [1, 0.545, 0, 1]
+            }
+        ],
+		"allowRandomSpawn" : false
+    },
+    "stairs_up": {
+        "type": "Object",
+        "tileData": [{
+                "sprite": "<",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+		"allowRandomSpawn" : false
+    },
+    "stairs_down": {
+        "type": "Object",
+        "tileData": [{
+                "sprite": ">",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+		"allowRandomSpawn" : false
+    },
+    "item_pile": {
+        "type": "Object",
+        "tileData": [{
+                "sprite": ";",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+		"allowRandomSpawn" : false
+    },
+    "gold": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "$",
+                "color": [1, 1, 0.5, 1]
+            }
+        ]
+    },
+    "hat": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "[",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "category": "Armor",
+            "weight": 1,
+            "combatStatBonuses": [0, 1, 0, 0]
+        }
+    },
+    "helmet": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "[",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "category": "Armor",
+            "weight": 5,
+            "combatStatBonuses": [0, 2, 0, 0]
+        }
+    },
+    "scale mail": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "[",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "category": "Armor",
+            "weight": 25,
+            "combatStatBonuses": [0, 5, 0, 1]
+        }
+    },
+    "dagger": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "(",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "category": "Weapon",
+            "weight": 2,
+            "combatStatBonuses": [10, 0, 0, 0]
+        }
+    },
+    "sword": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "(",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "category": "Weapon",
+            "weight": 5,
+            "combatStatBonuses": [5, 0, 1, 0]
+        }
+    },
+	"bow": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "}",
+                "color": [0.97, 0.97, 0.97, 1]
+            }
+        ],
+        "itemCfg": {
+            "category": "Weapon",
+            "weight": 2,
+            "combatStatBonuses": [10, 0, 1, 0],
+			"attackRange" : 6
+        }
+    },
+    "greatclub": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "(",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "category": "Weapon",
+            "weight": 25,
+            "combatStatBonuses": [0, 0, 2, 0]
+        }
+    },
+    "amulet of protection": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "]",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "category": "Accessory",
+            "weight": 1,
+            "combatStatBonuses": [0, 5, 0, 0]
+        }
+    },
+    "ring of resistance": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "]",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "category": "Accessory",
+            "weight": 1,
+            "combatStatBonuses": [0, 0, 0, 1]
+        }
+    },
+    "minor potion of healing": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "!",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "category": "Consumable",
+            "weight": 1,
+            "effect": "MinorHeal"
+        }
+    },
+    "potion of healing": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "!",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "category": "Consumable",
+            "weight": 1,
+            "effect": "Heal"
+        }
+    },
+    "major potion of healing": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "!",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "category": "Consumable",
+            "weight": 1,
+            "effect": "MajorHeal"
+        }
+    },
+    "pool of healing": {
+        "type": "Object",
+        "tileData": [{
+                "sprite": "o",
+                "color": [0.5, 0.5, 1, 1]
+            }
+        ],
+        "objectCfg": {
+            "effect": "MajorHeal",
+            "blocksMovement": true,
+            "blocksVision": false
+        }
+    },
+    "goblin": {
+        "type": "Creature",
+        "tileData": [{
+                "sprite": "g",
+                "color": [0.5, 0.5, 1, 1]
+            }
+        ],
+        "creatureCfg": {
+            "hp": 2
+        }
+    },
+    "orc": {
+        "type": "Creature",
+        "tileData": [{
+                "sprite": "o",
+                "color": [0.5, 1, 0.5, 1]
+            }
+        ],
+        "creatureCfg": {
+            "hp": 4
+        }
+    },
+    "rat": {
+        "type": "Creature",
+        "tileData": [{
+                "sprite": "r",
+                "color": [1, 0.5, 0, 1]
+            }
+        ],
+        "creatureCfg": {
+            "hp": 1
+        }
+    }
+}

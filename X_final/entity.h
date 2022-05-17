@@ -10,6 +10,7 @@
 #include "tilemap.h"
 #include "db.h"
 #include "entityid.h"
+#include "effect.h"
 
 namespace rlf
 {
@@ -19,28 +20,30 @@ namespace rlf
 	// allow 8 bits per type, so a max of 255 subtypes
 	enum class EntityType : uint32_t
 	{
-		// Creatures
-		Creature = 0,
-		// Objects
-		Object = 256,
-		Object_Door,
-		Object_StairsUp,
-		Object_StairsDown,
-		Object_ItemPile,
-		// Items
-		Item = 512
+		Creature,
+		Object,
+		Item
 	};
 
-	// clear out the 8 lowest bits that define the subtype
-	inline EntityType BaseEntityType(EntityType t) { return EntityType(uint32_t(t) & 0xffffff00); }
-
-	enum class EquipmentSlot : int
+	enum class ItemCategory : int
 	{
 		Weapon = 0,
 		Shield,
 		Armor,
 		Accessory,
-		NUM
+		Consumable,
+		Other
+	};
+
+	constexpr int NUM_EQUIPMENT_SLOTS = int(ItemCategory::Other) -1;
+	constexpr int NUM_ITEM_CATEGORIES = int(ItemCategory::Other)+1;
+
+	enum class CombatStat
+	{
+		Attack=0,
+		Defense,
+		Damage,
+		Resist
 	};
 
 	///---------------------------------------------------------------------------
@@ -57,21 +60,15 @@ namespace rlf
 	struct Inventory
 	{
 		std::vector<EntityId> items;
-	};
 
-	// Equipment: can the creature equip items?
-	struct Equipment
-	{
-		std::array<EntityId, int(EquipmentSlot::NUM)> items;
+		int Weight() const;
 	};
 
 	// Creature-specific data
 	struct CreatureData
 	{
-		int lineOfSightRadius = 10;
 		int hp=0;
-		int hpMax=0;
-		int xp = 0;
+		int xp=0;
 	};
 
 	// Object-specific data
@@ -81,24 +78,76 @@ namespace rlf
 		bool blocksMovement = false;
 		bool blocksVision = false;
 
-		void Handle(const Entity& object, const Entity& handler);
+		void Handle(Entity& object, Entity& handler);
 	};
 
 	// Item-specific data
 	struct ItemData
 	{
-		int stackSize = 0;
+		int stackSize = 1;
 		// owner entity; object or creature
 		EntityId owner;
 
-		bool IsStackable() const { return stackSize > 0; }
-		//void ChangeOwner();
+		// is this item currently equipped?
+		bool equipped = false;
 	};
 
-	struct EntityConfig
+	struct ItemConfig
 	{
+		bool defaultStackSize = 0;
+		int weight = 1; // in stones
+		ItemCategory category = ItemCategory::Other;
+
+		// add this to creature's stats
+		glm::ivec4 combatStatBonuses = {0,0,0,0};
+
+		// Set this to > 1 for ranged weapons, like a bow
+		int attackRange = 1;
+		
+		// consumable-specific
+		Effect effect; 
+
+		bool IsStackable() const { return defaultStackSize != 0; }
+	};
+
+	struct CreatureConfig
+	{
+		int hp=10;
+		int lineOfSightRadius = 10;
+		// att/def/dmg/res
+		glm::ivec4 combatStats = { 10,5,1,0 };
+	};
+
+	struct ObjectConfig
+	{
+		Effect effect = Effect(-1);
+		bool blocksMovement = false;
+		bool blocksVision = false;
+		bool defaultState = 0;
+	};
+
+	// An interface to inherit for classes/structs that should not be copied, but only moved
+	struct INonCopyable
+	{
+		INonCopyable() = default;
+		INonCopyable(INonCopyable&&) noexcept = default; // movable
+		INonCopyable(const INonCopyable&) = delete; // non construction-copyable    
+		INonCopyable& operator=(const INonCopyable&) = delete; // non copyable
+	};
+
+	struct EntityConfig : INonCopyable
+	{
+		EntityConfig() = default;
+		EntityConfig(const EntityType zType, const std::vector<TileData>& zTileData, const ItemConfig& zItemCfg = {}, const CreatureConfig& zCreatureCfg = {}, const ObjectConfig& zObjectCfg = {})
+			:type(zType), tileData(zTileData), itemCfg(zItemCfg), creatureCfg(zCreatureCfg), objectCfg(zObjectCfg) {}
+
 		EntityType type = EntityType::Creature;
 		std::vector<TileData> tileData;
+		ItemConfig itemCfg;
+		CreatureConfig creatureCfg;
+		ObjectConfig objectCfg;
+		// set to false for special objects like stairs and doors, that are not randomly generated
+		bool allowRandomSpawn = true;
 	};
 
 	struct EntityDynamicConfig
@@ -110,17 +159,11 @@ namespace rlf
 	};
 
 	// Entities
-	class Entity
+	class Entity : INonCopyable
 	{
 	public:
 
-		Entity() = default;
-		Entity(Entity&&) = default; // movable
-		Entity(const Entity&) = delete; // non construction-copyable    
-		Entity& operator=(const Entity&) = delete; // non copyable
-
 		EntityType Type() const { return type; }
-		EntityType BaseType() const { return BaseEntityType(type); }
 
 		const DbIndex& DbCfg() const { return dbIndex; }
 		const EntityId& Id() const { return id; }
@@ -132,11 +175,10 @@ namespace rlf
 
 		void SetLocation(const Location& newLocation) { location = newLocation; }
 		const Location& GetLocation() const { return location; }
-		const Inventory* GetInventory() const { return inventory.get(); }
-		const Equipment* GetEquipment() const { return equipment.get(); }
-		const CreatureData* GetCreatureData() const { return creatureData.get(); }
+		Inventory* GetInventory() const { return inventory.get(); }
+		CreatureData* GetCreatureData() const { return creatureData.get(); }
 		ObjectData* GetObjectData() const { return objectData.get(); }
-		const ItemData* GetItemData() const { return itemData.get(); }
+		ItemData* GetItemData() const { return itemData.get(); }
 
 		// how do we render this entity given its current state?
 		const TileData& CurrentTileData() const;
@@ -161,9 +203,6 @@ namespace rlf
 		Location location;
 		// Inventory is useful for creatures and sometimes objects
 		std::unique_ptr<Inventory> inventory;
-		// Equipment is useful for creatures
-		std::unique_ptr<Equipment> equipment;
-		
 		std::unique_ptr<CreatureData> creatureData;
 		std::unique_ptr<ObjectData> objectData;
 		std::unique_ptr<ItemData> itemData;

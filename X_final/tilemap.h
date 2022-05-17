@@ -38,6 +38,9 @@ namespace rlf
 		int spriteIndex = -1;
 		glm::vec4 color;
 
+		TileData() = default;
+		TileData(int si, const glm::vec4& c) :spriteIndex(si), color(c) {}
+
 		// Pack sprite data (which sprite and what color tint) for use with a dense 2D grid (position of sprite is given implicitly by grid cell)
 		glm::uvec2 PackDense() const;
 		// Pack sprite data (position, which sprite and what color tint) for use with a sparse 2D grid

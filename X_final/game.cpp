@@ -2,6 +2,7 @@
 #include "entity.h"
 #include "graphics.h"
 #include "utility.h"
+#include "dungen.h"
 
 namespace rlf
 {
@@ -34,7 +35,7 @@ namespace rlf
 		{
 			entityId.id = poolEntities.size();
 			entityId.version = 1;
-			poolEntities.push_back({});
+			poolEntities.resize(poolEntities.size() + 1);
 		}
 		poolEntities[entityId.id].Initialize(entityId,cfg, dcfg);
 		return entityId;
@@ -52,9 +53,16 @@ namespace rlf
 		if (levels.size() <= currentLevelIndex)
 		{
 			// singlegen_OpenCavern_v0.txt
-			auto levelConfig = LoadLevelFromTxtFile(cgf::mediaSearch("maps/map0.txt"));
+#if 0
+			auto levelConfig = LoadLevelFromTxtFile(cgf::mediaSearch("maps/map2.txt"));
+			const auto& layout = levelConfig.first;
+			const auto& entityConfigs = levelConfig.second;
+#else
+			auto layout = generateDungeon({ 64,32 });
+			auto entityConfigs = populateDungeon(layout, 10, 5, 10, true, true);
+#endif
 			levels.push_back({});
-			levels.back().Init(levelConfig.first, levelConfig.second, currentLevelIndex);
+			levels.back().Init(layout, entityConfigs, currentLevelIndex);
 		}
 	}
 

@@ -39,11 +39,17 @@ namespace rlf
 
 		void UpdateFogOfWar();
 		bool EntityCanMoveTo(const Entity& e, const glm::ivec2& position) const;
+		bool EntityHasLineOfSightTo(const Entity& e, const glm::ivec2& position) const;
 		Entity* GetEntity(const glm::ivec2& position, bool blocksMovement) const;
 
 		void OnEntityAdded(const Entity& entity);
 		void OnEntityRemoved(const Entity& e);
 		void OnObjectStateChanged(const Entity& e);
+
+		std::vector<glm::ivec2> CalcPath(const Entity& e, const glm::ivec2& tgt) const;
+	private:
+
+		bool PositionIsVisible(const glm::ivec2& p) const;
 	private:
 
 		Array2D<LevelBgElement> bg;

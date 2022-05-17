@@ -8,6 +8,7 @@
 	"imgui",
 	"glfw3",
 	"stb",
-	"nlohmann-json"
+	"nlohmann-json",
+	"magic-enum"
   ]
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <unordered_map>
 
 #include <glm/glm.hpp>
@@ -8,11 +9,10 @@
 #include "tilemap.h"
 #include "spritemap.h"
 #include "sparsebuffer.h"
+#include "inventory.h"
 
 template <class T>
 class MyHash;
-
-
 
 namespace rlf
 {
@@ -34,6 +34,13 @@ namespace rlf
 		void RenderLevel();
 		void RenderGui();
 
+		void BuildInventoryData(int pageIndex, InventoryMode inventoryMode, const Entity& e);
+		void ClearInventoryData() { inventoryBufferData.resize(0); isGuiDirty = true; }
+
+		void CenterCameraAtPoint(const glm::ivec2& point);
+		void SetHighlightedTiles(const std::vector<glm::ivec2>& points);
+		glm::ivec2 MouseCursorTile() const;
+
 		// Response functions
 		void OnEntityMoved(const Entity& e);
 		void OnEntityAdded(Entity& e);
@@ -41,8 +48,8 @@ namespace rlf
 		void OnLevelChanged(const Level& level);
 		void OnFogOfWarChanged();
 		void OnObjectStateChanged(const Entity& e);
-		void OnGuiUpdated() { BuildLevelGui(); }
-		void CenterCameraAtPoint(const glm::ivec2& point);
+		void OnGuiUpdated() { isGuiDirty = true; }
+		
 	private:
 		void UpdateRenderableEntity(const Entity& e);
 		void SetupShaderCommon(uint32_t program);
@@ -52,6 +59,7 @@ namespace rlf
 	private:
 		
 	private:
+		bool isGuiDirty = true;
 		glm::ivec2 cameraOffset = {0,0};
 
 		// viewport-specific, measured in CELLs
@@ -90,5 +98,8 @@ namespace rlf
 		std::unordered_map<EntityId, int> entityToBufferIndex;
 		SparseBuffer bufferEffects; // spells/projectiles
 		SparseBuffer bufferGui; // The user interface
+
+		std::vector<glm::ivec2> highlightedTiles; // for path
+		std::vector<glm::uvec4> inventoryBufferData;
 	};
 }

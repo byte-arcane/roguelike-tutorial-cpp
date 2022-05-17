@@ -2,6 +2,7 @@
 
 #include "level.h"
 #include "entity.h"
+#include "turn.h"
 
 namespace rlf
 {
@@ -32,6 +33,8 @@ namespace rlf
 		const std::vector<std::pair<std::string, int>>& MessageLog() const { return messageLog; }
 		void WriteToMessageLog(const std::string& msg);
 
+		TurnSystem& GetTurnSystem() { return turnSystem; }
+
 	private:
 
 		// entities
@@ -42,6 +45,8 @@ namespace rlf
 		// levels
 		std::vector<Level> levels;
 		int currentLevelIndex = -1;
+
+		TurnSystem turnSystem;
 
 		// gui
 

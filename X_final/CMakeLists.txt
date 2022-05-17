@@ -13,6 +13,12 @@ SET(SOURCE_FILES
 	entityid.cpp
     gamestate.cpp
     json.cpp
+	astar.cpp
+	grid.cpp
+	turn.cpp
+	inventory.cpp
+	effect.cpp
+	dungen.cpp
 )
 
 SET(HEADER_FILES
@@ -30,6 +36,12 @@ SET(HEADER_FILES
 	entityid.h
     gamestate.h
     json.h
+	astar.h
+	grid.h
+	turn.h
+	inventory.h
+	effect.h
+	dungen.h
 )
 
 SET(ALL_SOURCE_FILES

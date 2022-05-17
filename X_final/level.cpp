@@ -6,6 +6,10 @@
 #include "entity.h"
 #include "fov.h"
 #include "eventhandlers.h"
+#include "astar.h"
+#include "grid.h"
+
+using namespace glm;
 
 namespace rlf
 {
@@ -38,6 +42,19 @@ namespace rlf
 		entities.erase(std::remove_if(entities.begin(), entities.end(), [id](const EntityId& eref) { return eref == id; }), entities.end());
 	}
 
+	bool Level::PositionIsVisible(const glm::ivec2& p) const
+	{
+		if (bg(p.x, p.y).blocksVision)
+			return false;
+		for (const auto& entityId : entities)
+		{
+			auto entity = entityId.Entity();
+			if (entity->GetLocation().position == p && entity->BlocksVision())
+				return false;
+		}
+		return true;
+	}
+
 	void Level::UpdateFogOfWar()
 	{
 		// "reset" the fov map
@@ -52,20 +69,10 @@ namespace rlf
 			}
 
 		auto player = GameState::Instance().Player().Entity();
-		auto cb_is_opaque = [&](const glm::ivec2& p) 
-		{ 
-			if (bg(p.x, p.y).blocksVision)
-				return true;
-			for (const auto& entityId : entities)
-			{
-				auto entity = entityId.Entity();
-				if (entity != player && entity->GetLocation().position == p && entity->BlocksVision())
-					return true;
-			}
-			return false;
-		};
+		auto posPlayer = player->GetLocation().position;
+		auto cb_is_opaque = [&](const glm::ivec2& p) {return !PositionIsVisible(p); };
 		auto cb_on_visible = [&](const glm::ivec2& p) { fogOfWar(p.x, p.y) = FogOfWarStatus::Visible; };
-		calculate_fov(player->GetLocation().position, player->GetCreatureData()->lineOfSightRadius, map_size, cb_is_opaque, cb_on_visible);
+		calculate_fov(player->GetLocation().position, player->DbCfg().Cfg()->creatureCfg.lineOfSightRadius, map_size, cb_is_opaque, cb_on_visible);
 
 		Graphics::Instance().OnFogOfWarChanged();
 	}
@@ -82,6 +89,31 @@ namespace rlf
 			if (entity != &e && entity->GetLocation().position == position && entity->BlocksMovement())
 				return false;
 		}
+		return true;
+	}
+
+	bool Level::EntityHasLineOfSightTo(const Entity& e, const glm::ivec2& position) const
+	{
+		// only creatures can see
+		if (e.GetCreatureData() == nullptr)
+			return false;
+		// check if the target is out of our line of sight radius
+		auto start = e.GetLocation().position;
+		auto distance = length(vec2(position - start));
+		if (distance > e.DbCfg().Cfg()->creatureCfg.lineOfSightRadius)
+			return false;
+		// if it's adjacent (within 8-neighbourhood), return true
+		if (distance < 2.0f) 
+			return true; 
+
+		std::vector<glm::ivec2> points;
+		Line(points, start, position);
+		assert(points.size() > 2); // not adjacent, so minimum of 3 points
+
+		// process all but first/last points, for vision blocking
+		for (int i = 1; i< int(points.size()) - 1; ++i) 
+			if (!PositionIsVisible(points[i]))
+				return false;
 		return true;
 	}
 
@@ -106,6 +138,11 @@ namespace rlf
 		UpdateFogOfWar();
 	}
 
+	std::vector<glm::ivec2> Level::CalcPath(const Entity& e, const glm::ivec2& tgt) const
+	{
+		return calcPath(e.GetLocation().position, tgt, bg.Size(), [&](const glm::ivec2& p) { return EntityCanMoveTo(e, p) ? 1.0f : std::numeric_limits<float>::infinity(); });
+	}
+
 
 	std::pair<Array2D<LevelBgElement>, std::vector<std::pair<DbIndex, EntityDynamicConfig>>> LoadLevelFromTxtFile(const std::string& filename)
 	{	
@@ -115,44 +152,88 @@ namespace rlf
 
 		// Add here the DB objects
 		EntityConfig cfgDoor = {
-			EntityType::Object_Door,
+			EntityType::Object,
 			{TileData{'+', glm::vec4(1,.545,0,1)},
-			 TileData{'/', glm::vec4(1,.545,0,1)}}
+			 TileData{'/', glm::vec4(1,.545,0,1)}},
+			{},
+			{},
+			{}
 		};
+		cfgDoor.allowRandomSpawn = false;
 		Db::Instance().Add("door", cfgDoor);
 		auto dbCfgDoor = DbIndex("door");
 
 		EntityConfig cfgStairsUp = {
-			EntityType::Object_StairsUp,
-			{TileData{'<', glm::vec4(.7,.7,.7,1)}}
+			EntityType::Object,
+			{TileData{'<', glm::vec4(.7,.7,.7,1)}},
+			{},
+			{},
+			{}
 		};
+		cfgStairsUp.allowRandomSpawn = false;
 		Db::Instance().Add("stairs_up", cfgStairsUp);
 		auto dbCfgStairsUp = DbIndex("stairs_up");
 
 		EntityConfig cfgStairsDown = {
-			EntityType::Object_StairsDown,
-			{TileData{'>', glm::vec4(.7,.7,.7,1)}}
+			EntityType::Object,
+			{TileData{'>', glm::vec4(.7,.7,.7,1)}},
+			{},
+			{},
+			{}
 		};
+		cfgStairsDown.allowRandomSpawn = false;
 		Db::Instance().Add("stairs_down", cfgStairsDown);
 		auto dbCfgStairsDown = DbIndex("stairs_down");
 
 		EntityConfig cfgTreasure = {
-			EntityType::Object_ItemPile,
-			{TileData{'%', glm::vec4(.7,.7,.7,1)}}
+			EntityType::Object,
+			{TileData{'%', glm::vec4(.7,.7,.7,1)}},
+			{},
+			{},
+			{}
 		};
-		Db::Instance().Add("treasure", cfgTreasure);
-		auto dbCfgTreasure = DbIndex("treasure");
+		cfgTreasure.allowRandomSpawn = false;
+		Db::Instance().Add("item_pile", cfgTreasure);
+		auto dbCfgTreasure = DbIndex("item_pile");
 
 		EntityConfig cfgGold = {
 			EntityType::Item,
-			{TileData{'$', glm::vec4(1,1,.5,1)}}
+			{TileData{'$', glm::vec4(1,1,.5,1)}},
+			ItemConfig{1}
 		};
 		Db::Instance().Add("gold", cfgGold);
 		auto dbCfgGold = DbIndex("gold");
 
+		EntityConfig cfgHat = {
+			EntityType::Item,
+			{TileData{'[', glm::vec4(1,1,.5,1)}},
+			ItemConfig{0,1,ItemCategory::Armor},
+		};
+		Db::Instance().Add("hat", cfgHat);
+		auto dbCfgHat = DbIndex("hat");
+
+		EntityConfig cfgCoif = {
+			EntityType::Item,
+			{TileData{']', glm::vec4(1,.5,.5,1)}},
+			ItemConfig{0,2,ItemCategory::Armor},
+		};
+		Db::Instance().Add("coif", cfgCoif);
+		auto dbCfgCoif = DbIndex("coif");
+
+		EntityConfig cfgSword = {
+			EntityType::Item,
+			{TileData{'(', glm::vec4(1,.5,.5,1)}},
+			ItemConfig{0,3,ItemCategory::Weapon},
+		};
+		Db::Instance().Add("sword", cfgSword);
+		auto dbCfgSword = DbIndex("sword");
+
 		EntityConfig cfgGoblin = {
 			EntityType::Creature,
-			{TileData{'g', glm::vec4(.2,.2,1,1)}}
+			{TileData{'g', glm::vec4(.2,.2,1,1)}},
+			{},
+			CreatureConfig{2},
+			{},
 		};
 		Db::Instance().Add("goblin", cfgGoblin);
 		auto dbCfgGoblin = DbIndex("goblin");
@@ -168,7 +249,7 @@ namespace rlf
 		int width = text.find('\n');
 		int height = text.size() / (width + 1); // each line contains all chars PLUS the newline
 
-		Array2D<LevelBgElement> bg( glm::ivec2(width, height), {});
+		Array2D<LevelBgElement> bg( glm::ivec2(width, height));
 
 		std::vector<std::pair<DbIndex,EntityDynamicConfig>> entityCfgs;
 
@@ -217,6 +298,25 @@ namespace rlf
 					break;
 				}
 			}
+		}
+
+		std::vector<DbIndex> spawnableItems = {
+			dbCfgCoif,
+			dbCfgSword,
+			dbCfgHat,
+		};
+		for (int i = 0; i < 200; ++i)
+		{
+			auto x = rand()%width;
+			auto y = rand() % height;
+			ivec2 p = { x,y };
+			if (!bg(x, y).blocksMovement && std::find_if(entityCfgs.begin(), entityCfgs.end(), [&](const auto& dbi_dcfg) { return dbi_dcfg.second.position == p; }) == entityCfgs.end())
+			{
+				EntityDynamicConfig dcfg{ p };
+				dcfg.inventory.push_back(spawnableItems[rand()% spawnableItems.size()]);
+				entityCfgs.emplace_back(dbCfgTreasure, dcfg);
+			}
+				
 		}
 
 		return { bg, entityCfgs };

@@ -14,31 +14,56 @@
 #include "level.h"
 #include "game.h"
 #include "eventhandlers.h"
+#include "astar.h"
+#include "grid.h"
+#include "inventory.h"
 
 using namespace glm;
 using namespace std;
 using namespace rlf;
 
-class FrameworkAppBasics : public cgf::FrameworkApp
+enum class GameMode
 {
-	Level level;
+	InGame = 0,
+	Inventory_EquipOrUse,
+	Inventory_PickUp,
+	Inventory_Drop,
+	Menu
+};
 
-	int playerBufSlot = -1;
+class Game : public cgf::FrameworkApp
+{
+	GameMode gameMode = GameMode::InGame;
+	int inventoryModePageIndex = 0;
 
 	// Put here any initialisation code. Happens once, before the main loop and after initialisation of GLFW/GLEW/ImGui
 	void onInit() override
 	{
+		// we can map this to a key for dynamic database reload!
+		Db::Instance().LoadFromDisk();
+
 		Graphics::Instance().Init();
 
 		// Set level
 		ChangeLevel(0);
 
 		// Spawn player
-		EntityConfig cfg{ EntityType::Creature, {TileData{'@',vec4(1,1,1,1)}} };
+		EntityConfig cfg{ 
+			EntityType::Creature, 
+			{TileData{'@',vec4(1,1,1,1)}},
+			{},
+			CreatureConfig{10},
+			{}
+		};
+		cfg.allowRandomSpawn = false;
 		Db::Instance().Add("player", cfg);
 		EntityDynamicConfig dcfg;
-		dcfg.position = ivec2(17, 10);
+		dcfg.position = ivec2(4, 4);
 		dcfg.nameOverride = "Sir Carpaccio";
+		// add one of each item
+		for (const auto& kv : Db::Instance().All())
+			if (kv.second.allowRandomSpawn && kv.second.type == EntityType::Item)
+				dcfg.inventory.emplace_back(kv.first);
 		DbIndex cfgdb{ "player" };
 		auto& player = SpawnEntity(cfgdb,dcfg);
 		GameState::Instance().SetPlayer(player);
@@ -53,39 +78,135 @@ class FrameworkAppBasics : public cgf::FrameworkApp
 	// Put here any rendering code. Called every frame
 	void onRender() override
 	{
-		Graphics::Instance().BeginRender();
-		Graphics::Instance().RenderLevel();
-		Graphics::Instance().RenderGui();
-		Graphics::Instance().EndRender();
+		auto& g = Graphics::Instance();
+		g.BeginRender();
+		switch (gameMode)
+		{
+		case GameMode::InGame:
+			g.RenderLevel();
+		case GameMode::Inventory_EquipOrUse:
+		case GameMode::Inventory_PickUp:
+		case GameMode::Inventory_Drop:
+			g.RenderGui();
+			break;
+		default:
+			break;
+		}
+		
+		g.EndRender();
 	}
 
 	// Put here any update related code. Called before render
 	void onUpdate() override
 	{
+		auto& g = GameState::Instance();
 		auto player = GameState::Instance().Player().Entity();
-		if (player != nullptr)
+		if (gameMode == GameMode::InGame)
 		{
-			auto playerPos = player->GetLocation().position;
-			glm::ivec2 direction{ 0,0 };
-			auto oldPlayerPos = playerPos;
-			if (cgf::Input::GetKeyDown(GLFW_KEY_LEFT))
-				direction.x -= 1;
-			if (cgf::Input::GetKeyDown(GLFW_KEY_RIGHT))
-				direction.x += 1;
-			if (cgf::Input::GetKeyDown(GLFW_KEY_UP))
-				direction.y += 1;
-			if (cgf::Input::GetKeyDown(GLFW_KEY_DOWN))
-				direction.y -= 1;
-			if (direction != glm::ivec2(0,0))
+			if (player != nullptr)
 			{
-				MoveAdj(*player, direction);
-			}
+				auto playerPos = player->GetLocation().position;
+				glm::ivec2 direction{ 0,0 };
+				auto oldPlayerPos = playerPos;
+				if (cgf::Input::GetKeyDown(GLFW_KEY_LEFT))
+					direction.x -= 1;
+				if (cgf::Input::GetKeyDown(GLFW_KEY_RIGHT))
+					direction.x += 1;
+				if (cgf::Input::GetKeyDown(GLFW_KEY_UP))
+					direction.y += 1;
+				if (cgf::Input::GetKeyDown(GLFW_KEY_DOWN))
+					direction.y -= 1;
+				if (direction != glm::ivec2(0, 0))
+				{
+					MoveAdj(*player, direction);
+					g.GetTurnSystem().SetWaitingForPlayerAction(false);
+				}
 
-			if (cgf::Input::GetKeyDown(GLFW_KEY_ENTER))
+				if (cgf::Input::GetKeyDown(GLFW_KEY_ENTER))
+				{
+					PickUpEverythingOrHandle(*player);
+					g.GetTurnSystem().SetWaitingForPlayerAction(false);
+				}
+
+				if (cgf::Input::GetKeyDown(GLFW_KEY_P))
+				{
+					auto itemPile = g.CurrentLevel().GetEntity(playerPos, false);
+					if (itemPile != nullptr && itemPile->DbCfg() == DbIndex::ItemPile())
+					{
+						gameMode = GameMode::Inventory_PickUp;
+						inventoryModePageIndex = 0;
+						Graphics::Instance().BuildInventoryData(inventoryModePageIndex, InventoryMode::PickUpOrDrop, *itemPile);
+					}
+				}
+				if (cgf::Input::GetKeyDown(GLFW_KEY_D))
+				{
+					gameMode = GameMode::Inventory_Drop;
+					inventoryModePageIndex = 0;
+					Graphics::Instance().BuildInventoryData(inventoryModePageIndex, InventoryMode::PickUpOrDrop, *player);
+				}
+				if (cgf::Input::GetKeyDown(GLFW_KEY_E))
+				{
+					gameMode = GameMode::Inventory_EquipOrUse;
+					inventoryModePageIndex = 0;
+					Graphics::Instance().BuildInventoryData(inventoryModePageIndex, InventoryMode::EquipOrUse, *player);
+				}
+
+#if 0 // Debugging
+				if (cgf::Input::GetKey(GLFW_KEY_LEFT_CONTROL))
+				{
+					auto tgt = Graphics::Instance().MouseCursorTile();
+					auto path = rlf::GameState::Instance().CurrentLevel().CalcPath(*player, tgt);
+					//std::vector<ivec2> path; rlf::Square(path, player->GetLocation().position, 2,false);
+					Graphics::Instance().SetHighlightedTiles(path);
+				}
+				else
+					Graphics::Instance().SetHighlightedTiles({});
+#endif
+			}
+			g.GetTurnSystem().Process();
+		}
+		else if (gameMode == GameMode::Inventory_EquipOrUse)
+		{
+			if (inventoryHandleInput(inventoryModePageIndex, InventoryMode::EquipOrUse, *player))
 			{
-				HandleOnGround(*player);
+				if (inventoryModePageIndex >= 0)
+					Graphics::Instance().BuildInventoryData(inventoryModePageIndex, InventoryMode::EquipOrUse, *player);
+				else
+				{
+					gameMode = GameMode::InGame;
+					Graphics::Instance().ClearInventoryData();
+				}
+			}
+			
+		}
+		else if (gameMode == GameMode::Inventory_PickUp)
+		{
+			auto itemPile = g.CurrentLevel().GetEntity(player->GetLocation().position, false);
+			if (itemPile == nullptr || inventoryHandleInput(inventoryModePageIndex, InventoryMode::PickUpOrDrop, *itemPile))
+			{
+				if (inventoryModePageIndex >= 0 && itemPile != nullptr)
+					Graphics::Instance().BuildInventoryData(inventoryModePageIndex, InventoryMode::PickUpOrDrop, *itemPile);
+				else
+				{
+					gameMode = GameMode::InGame;
+					Graphics::Instance().ClearInventoryData();
+				}
 			}
 		}
+		else if (gameMode == GameMode::Inventory_Drop)
+		{
+			if(inventoryHandleInput(inventoryModePageIndex, InventoryMode::PickUpOrDrop, *player))
+			{
+				if (inventoryModePageIndex >= 0)
+					Graphics::Instance().BuildInventoryData(inventoryModePageIndex, InventoryMode::PickUpOrDrop, *player);
+				else
+				{
+					gameMode = GameMode::InGame;
+					Graphics::Instance().ClearInventoryData();
+				}
+			}
+		}
+		
 	}
 
 	// Put here any GUI related code. Called after render
@@ -96,6 +217,6 @@ class FrameworkAppBasics : public cgf::FrameworkApp
 
 int main(int argc, char** argv)
 {
-	FrameworkAppBasics app;
-	return app.run();
+	Game game;
+	return game.run();
 }

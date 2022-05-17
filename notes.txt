@@ -1,19 +1,10 @@
 TODO:
-
-	Pick up gold
-	Basic AI
-	hitpoints 
-    
-    json
-
-	What about gameprogrammingpatterns composite, for entities?
-		Entity is the GameObject
-		stores a vector of components
-		
-	Gamestate:
-        Render,Update, SwitchTo
-        
-    GUI input stack:
+	ranged attack support + look support
+		"actions"
+	
+	save/load via json
+	
+	main menu
 
 Rationale:
 	Trying to keep things simple, sometimes at the expense of doing things "properly" or efficiently

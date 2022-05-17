@@ -10,6 +10,8 @@
 #include "framework.h"
 #include "entity.h"
 #include "game.h"
+#include "input.h"
+#include "eventhandlers.h"
 
 using namespace glm;
 
@@ -48,8 +50,8 @@ namespace rlf
 		glTextureParameteri(tilemap.Texture(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		const ivec2 screenSize = ivec2(cgf::FrameworkApp::ViewportWidth(), cgf::FrameworkApp::ViewportHeight());
 		screenGridSize = screenSize / tilemap.TileSize();
-		ivec2 viewSize = screenGridSize * tilemap.TileSize();
-		ivec2 screenOffset = (screenSize - viewSize) / 2;
+		viewSize = screenGridSize * tilemap.TileSize();
+		screenOffset = (screenSize - viewSize) / 2;
 
 
 		// Allocate the last 4 rows for gui
@@ -57,7 +59,7 @@ namespace rlf
 
 		// The game view starts from the top
 		gameViewOffset = screenOffset + ivec2(0, guiHeight);
-		gameViewSize = viewSize - ivec2(0, guiHeight); // allow 3 lines for gui, at the end
+		gameViewSize = viewSize - ivec2(0, guiHeight + 1* tilemap.TileSize().y); // allow 4 lines for gui, at the bottom, plus one at the top
 
 		guiOffset = screenOffset;
 		guiSize = ivec2(viewSize.x, guiHeight);
@@ -108,7 +110,7 @@ namespace rlf
 	void Graphics::SetupShaderCommon(uint32_t program)
 	{
 		// set uniforms for the dense pass
-		glUniform2i(glGetUniformLocation(program, "screen_grid_size"), screenGridSize.x, screenGridSize.y- guiNumRows);
+		glUniform2i(glGetUniformLocation(program, "screen_grid_size"), screenGridSize.x, screenGridSize.y- guiNumRows-1);
 		glUniform2i(glGetUniformLocation(program, "camera_offset"), cameraOffset.x, cameraOffset.y);
 		glBindTextureUnit(0, tilemap.Texture());
 		glUniform1i(glGetUniformLocation(program, "tilemap"), 0);
@@ -134,12 +136,41 @@ namespace rlf
 		return shaderTilemapSparse;
 	}
 
+	void Graphics::BuildInventoryData(int pageIndex, InventoryMode inventoryMode, const Entity& e)
+	{
+		inventoryBufferData.resize(0);
+		inventoryBuildGuiBuffer(inventoryBufferData, pageIndex, inventoryMode, e, guiNumRows, screenGridSize - ivec2(0, guiNumRows));
+		isGuiDirty = true;
+	}
+
+	ivec2 Graphics::MouseCursorTile() const {
+		auto cursor = ivec2(cgf::Input::MouseCursor());
+		// mouse cursor from GLFW starts at top-left. Change the .y so that it starts from bottom-left
+		cursor.y = cgf::FrameworkApp::ViewportHeight() - 1 - cursor.y;
+		// calculate the coordinates relative to the game view
+		auto p = (cursor - gameViewOffset);
+		// if we're outside of the game view, return invalid coordinates
+		if (p.x < 0 || p.y < 0 || p.x >= gameViewSize.x || p.y >= gameViewSize.y)
+			return { -1,-1 }; // return invalid coordinates
+		// from pixel coordinates, change to tile coordinates
+		p /= tilemap.TileSize();
+		// add the camera offset to calculate the level coordinates
+		p += cameraOffset;
+		// if we're out of map bounds, return invalid coordinates
+		auto mapSize = GameState::Instance().CurrentLevel().Bg().Size();
+		if (p.x < 0 || p.y < 0 || p.x >= mapSize.x || p.y >= mapSize.y)
+			return { -1,-1 }; // return invalid coordinates
+		printf("cursor: %d %d\n", p.x, p.y);
+		return p;
+	}
+
 	void Graphics::CenterCameraAtPoint(const glm::ivec2& point)
 	{
-		auto halfScreenGridSize = screenGridSize / 2;
+		auto viewGridSize = gameViewSize / tilemap.TileSize();
+		auto halfScreenGridSize = viewGridSize / 2;
 		cameraOffset = point - halfScreenGridSize;
 		const auto& levelSize = GameState::Instance().CurrentLevel().Bg().Size();
-		cameraOffset = clamp(cameraOffset, ivec2(0), levelSize- screenGridSize);
+		cameraOffset = clamp(cameraOffset, ivec2(0), levelSize- viewGridSize);
 	}
 
 	void Graphics::RenderLevel()
@@ -162,12 +193,14 @@ namespace rlf
 
 	void Graphics::RenderGui()
 	{
+		if (isGuiDirty)
+			BuildLevelGui();
 		// set the viewport so that we don't render the padding
-		glViewport(guiOffset.x, guiOffset.y, guiSize.x, guiSize.y);
+		glViewport(screenOffset.x, screenOffset.y, viewSize.x, viewSize.y);
 
 		auto program = shaderTilemapSparseGui;
 		glUseProgram(program);
-		glUniform2i(glGetUniformLocation(program, "screen_grid_size"), screenGridSize.x, guiNumRows);
+		glUniform2i(glGetUniformLocation(program, "screen_grid_size"), screenGridSize.x, screenGridSize.y);
 		glBindTextureUnit(0, tilemap.Texture());
 		glUniform1i(glGetUniformLocation(program, "tilemap"), 0);
 		glUniform2i(glGetUniformLocation(program, "tilemap_tile_num"), tilemap.TileNum().x, tilemap.TileNum().y);
@@ -176,7 +209,7 @@ namespace rlf
 		bufferGui.Draw();
 	}
 
-	void Graphics::AddTextSprites(const std::string& text, int lineIndex, const glm::vec4& color)
+	void Graphics::AddTextSprites(const std::string& text, int row, const glm::vec4& color)
 	{
 		int x = 0;
 		for (const auto& c : text)
@@ -184,22 +217,36 @@ namespace rlf
 			if (c != ' ')
 			{
 				auto td = TileData{ c,color };
-				auto bufferData = td.PackSparse({ x,lineIndex });
+				auto bufferData = td.PackSparse({ x,row });
 				bufferGui.Add(&bufferData);
 			}
 			++x;
 		}
 	}
 
+	void Graphics::SetHighlightedTiles(const std::vector<ivec2>& points)
+	{
+		highlightedTiles = points;
+		isGuiDirty = true;
+	}
+
 	void Graphics::BuildLevelGui()
 	{
+		isGuiDirty = false;
 		bufferGui.Clear();
 		auto player = GameState::Instance().Player().Entity();
 		if (player != nullptr)
 		{
 			auto loc = player->GetLocation();
 			auto p = loc.position;
-			AddTextSprites(fmt::format("{0} - {1},{2} Lvl:{3} ATT:0 DMG:1 DEF:2 RES:3 HP:10(15) XP:0 $30", player->Name(), p.x,p.y,loc.levelId), 2, glm::vec4(1));
+			int gold = 0;
+			auto it_gold = std::find_if(player->GetInventory()->items.begin(), player->GetInventory()->items.end(), [](const EntityId& itemId) {return itemId.Entity()->Name() == "gold"; });
+			if (it_gold != player->GetInventory()->items.end())
+				gold = it_gold->Entity()->GetItemData()->stackSize;
+			const auto& cd = player->GetCreatureData();
+			auto hpMax = player->DbCfg().Cfg()->creatureCfg.hp;
+			auto cs = AccumulateCombatStats(*player);
+			AddTextSprites(fmt::format("{0} - {1},{2} Lvl:{3} ATT:{4} DEF:{5} DMG:{6} RES:{7} HP:{8}({9}) XP:{10} ${11}", player->Name(), p.x,p.y,loc.levelId+1,cs.x,cs.y,cs.z,cs.w,cd->hp, hpMax,cd->xp, gold), 2, glm::vec4(1));
 		}
 		const auto& messages = GameState::Instance().MessageLog();
 		const int maxShownLines = guiNumRows - 2;
@@ -217,6 +264,18 @@ namespace rlf
 				color.w = 1.0f;
 			}
 		}
+
+		// add highlighted tiles!
+		for (auto p : highlightedTiles)
+		{
+			p -= cameraOffset;
+			auto td = TileData{ '*',vec4(1,0,0,1)};
+			auto bufferData = td.PackSparse({ p.x, guiNumRows+p.y });
+			bufferGui.Add(&bufferData);
+		}
+
+		for(const auto& bufferElem : inventoryBufferData)
+			bufferGui.Add(&bufferElem);
 	}
 
 	void Graphics::UpdateRenderableEntity(const Entity& e)
@@ -224,7 +283,7 @@ namespace rlf
 		auto position = e.GetLocation().position;
 		auto bufferData = e.CurrentTileData().PackSparse(position);
 
-		auto& buffer = e.BaseType() == EntityType::Creature ? bufferCreatures : bufferObjects;
+		auto& buffer = e.Type() == EntityType::Creature ? bufferCreatures : bufferObjects;
 
 		const auto& eid = e.Id();
 		auto it = entityToBufferIndex.find(eid);
@@ -252,7 +311,7 @@ namespace rlf
 		auto it = entityToBufferIndex.find(e.Id());
 		if (it != entityToBufferIndex.end())
 		{
-			auto& buffer = e.BaseType() == EntityType::Creature ? bufferCreatures : bufferObjects;
+			auto& buffer = e.Type() == EntityType::Creature ? bufferCreatures : bufferObjects;
 			constexpr uvec4 noData{ 0,0,0,0 };
 			buffer.Update(it->second, &noData);
 			entityToBufferIndex.erase(it);
