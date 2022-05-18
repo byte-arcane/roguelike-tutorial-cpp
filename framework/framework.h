@@ -3,7 +3,7 @@
 #include <unordered_map>
 
 // Computer graphics framework
-namespace cgf
+namespace rlf
 {
 	// This class is just an organisational unit for some basic functions
 	class FrameworkApp

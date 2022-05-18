@@ -1,9 +1,7 @@
 #include "dungen.h"
 
 #include <algorithm>
-#include <unordered_set>
-
-#include <glm/gtx/hash.hpp>
+#include <random>
 
 #include "grid.h"
 
@@ -63,16 +61,20 @@ namespace rlf
 		});
 		
 		// Get all available positions, randomized
-		unordered_set<ivec2> availablePositions;
+		std::vector<ivec2> availablePositions;
+		availablePositions.reserve(layout.Size().x * layout.Size().y);
 		for (int y = 0; y < layout.Size().y; ++y)
 			for (int x = 0; x < layout.Size().x; ++x)
 				if (!layout(x, y).blocksMovement)
-					availablePositions.emplace(x, y);
+					availablePositions.emplace_back(x, y);
+		std::random_device rd;
+		std::mt19937 g(rd());
+		std::shuffle(availablePositions.begin(), availablePositions.end(),g);
 
 		auto fnPopPosition = [&availablePositions]()
 		{
-			auto position = *availablePositions.begin();
-			availablePositions.erase(availablePositions.begin());
+			auto position = availablePositions.back();
+			availablePositions.pop_back();
 			return position;
 		};
 
@@ -82,15 +84,46 @@ namespace rlf
 		if (addStairsUp)
 			output.emplace_back("stairs_up", EntityDynamicConfig{ fnPopPosition() });
 
+		// monsters first
 		for(int i=0;i<numMonsters;++i)
 			output.emplace_back(monsters[rand()%monsters.size()], EntityDynamicConfig{fnPopPosition()});
-		for (int i = 0; i < numFeatures; ++i)
-			output.emplace_back(features[rand() % features.size()], EntityDynamicConfig{ fnPopPosition() });
+		// treasures afterwards
 		for (int i = 0; i < numTreasures; ++i)
 		{
 			auto dcfg = EntityDynamicConfig{ fnPopPosition() };
 			dcfg.inventory.push_back(treasures[rand() % treasures.size()]);
 			output.emplace_back("item_pile", dcfg);
+		}
+		// now features, but careful as they have the potential to be blocking narrow passageways!
+		for (int i = 0; i < numFeatures; ++i)
+		{
+			// get a feature
+			const auto& feature = features[rand() % features.size()];
+			// only attempt to place if we have enough positions available
+			while (!availablePositions.empty())
+			{
+				// pop a position
+				auto position = fnPopPosition();
+				// if the feature blocks movement, need further checks to ensure passability
+				if (feature.Cfg()->objectCfg.blocksMovement)
+				{
+					// calculate the number of walkable neighbours (4-connected). We need at least 3!
+					int numFloorNbs = 0;
+					for (const auto& nb4 : Nb4())
+					{
+						auto pnb = position + nb4;
+						if (layout.InBounds(pnb) && !layout(pnb.x, pnb.y).blocksMovement)
+							numFloorNbs++;
+					}
+					// if we don't have 3 walkable neighbours, then skip this one
+					if (numFloorNbs < 3)
+						continue;
+				}
+				// if we arrived here, either the feature is not a blocker, or it has enough walkable neighbours
+				output.emplace_back(feature, EntityDynamicConfig{ position });
+				break;
+			}
+			
 		}
 		return output;
 	}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "state.h"
 
 #include <glm/glm.hpp>
@@ -21,7 +23,7 @@ namespace rlf
 
 			Inventory(Mode mode) :mode(mode) {}
 
-			bool update() override;
+			bool update(StateStack& stateStack) override;
 			void render() override;
 		
 			int PageIndex() const { return pageIndex; }
@@ -31,7 +33,8 @@ namespace rlf
 			int pageIndex = 0;
 			// set true if we need to rebuild the gui
 			bool isGuiDirty = true;
-			std::vector<glm::uvec4> buffer;
+			std::vector<glm::uvec4> bufferMain;
+			std::vector<glm::uvec4> bufferHeader;
 		};
 	}
 }

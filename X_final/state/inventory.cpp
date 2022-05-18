@@ -6,6 +6,7 @@
 
 #include <GLFW/glfw3.h>
 #include <fmt/format.h>
+#include <magic_enum.hpp>
 
 #include "input.h"
 
@@ -21,63 +22,12 @@ namespace rlf
 {
 	namespace state
 	{
-		constexpr int ITEMS_PER_PAGE = 16; // TODO: Dependent on vert rows
+		// As per below, we need 6 rows for padding things nicely
+		int ItemsPerPage() { return Graphics::Instance().RowStartAndNum("main").y - 6; }; 
 
-		constexpr char* ITEM_CATEGORY_STRINGS[] = {
-			"Weapon",
-			"Shield",
-			"Armor",
-			"Accessory",
-			"Consumable",
-			"Other"
-		};
-
-		namespace color
+		namespace color // TODO: move out of here, in util/color.h or constants.h
 		{
 			constexpr glm::vec4 BROWN(1, .545, 0, 1);
-		}
-
-		// return the next writeable column for this line
-		int addTextToLine(vector<uvec4>& buf, const string& text, int col, int row, const vec4& color)
-		{
-			for (const auto c : text)
-			{
-				if (c != ' ')
-				{
-					auto td = TileData{ c,color };
-					auto bufferData = td.PackSparse({ col,row });
-					buf.push_back(bufferData);
-				}
-				++col;
-			}
-			return col;
-		}
-
-		void addSeparatorLine(vector<uvec4>& buf, int row, const vec4& color, int numCols, const string& centeredText = "")
-		{
-			const auto dashTileData = TileData{ '-',color };
-
-			if (centeredText.empty())
-				for (int i = 0; i < numCols; ++i)
-					buf.push_back(dashTileData.PackSparse({ i,row }));
-			else
-			{
-				auto numColsEachSide = (numCols - (centeredText.size() + 2)) / 2;
-				for (int i = 0; i < numColsEachSide; ++i)
-				{
-					buf.push_back(dashTileData.PackSparse({ i,row }));
-					buf.push_back(dashTileData.PackSparse({ numCols - 1 - i,row }));
-				}
-				for (int i = 0; i<int(centeredText.size()); ++i)
-				{
-					auto c = centeredText[i];
-					if (c != ' ')
-					{
-						TileData td{ c, color };
-						buf.push_back(td.PackSparse({ numColsEachSide + 1 + i,row }));
-					}
-				}
-			}
 		}
 
 		void sortItems(vector<EntityId>& items)
@@ -144,54 +94,72 @@ namespace rlf
 			}
 		}
 
-		bool Inventory::update()
+		bool Inventory::update(StateStack& stateStack)
 		{
+			if (rlf::Input::GetKeyDown(GLFW_KEY_ESCAPE))
+			{
+				pageIndex = -1;
+				return true;
+			}
+
+			const auto itemsPerPage = ItemsPerPage();
 			auto& entity = GetRelevantEntity(mode);
 			auto& items = entity.GetInventory()->items;
-			auto firstIdxAtPage = pageIndex * ITEMS_PER_PAGE;
-			auto itemsInPage = glm::min(ITEMS_PER_PAGE, int(items.size() - firstIdxAtPage));
+			auto firstIdxAtPage = pageIndex * itemsPerPage;
+			auto itemsInPage = glm::min(itemsPerPage, int(items.size() - firstIdxAtPage));
 			bool hasPrevPage = pageIndex != 0;
-			bool hasNextPage = (firstIdxAtPage + ITEMS_PER_PAGE) < items.size();
+			bool hasNextPage = (firstIdxAtPage + itemsPerPage) < items.size();
 			for (int i = 0; i < itemsInPage; ++i)
 			{
-				if (cgf::Input::GetKeyDown(GLFW_KEY_A + i))
+				if (rlf::Input::GetKeyDown(GLFW_KEY_A + i))
 				{
 					inventoryAction(firstIdxAtPage + i, mode, entity);
 					isGuiDirty = true;
+					if (entity.GetInventory()->items.empty())
+						return true;
 				}
 			}
-			if (hasNextPage && cgf::Input::GetKeyDown(GLFW_KEY_KP_ADD))
+			if (hasNextPage && rlf::Input::GetKeyDown(GLFW_KEY_KP_ADD))
 			{
 				pageIndex++;
 				isGuiDirty = true;
 			}
-			if (hasPrevPage && cgf::Input::GetKeyDown(GLFW_KEY_KP_SUBTRACT))
+			if (hasPrevPage && rlf::Input::GetKeyDown(GLFW_KEY_KP_SUBTRACT))
 			{
 				pageIndex--;
 				isGuiDirty = true;
-			}
-			if (cgf::Input::GetKeyDown(GLFW_KEY_ESCAPE))
-			{
-				pageIndex = -1;
-				return true;
 			}
 			return false;
 		}
 
 		void Inventory::render()
 		{
+			auto& g = Graphics::Instance();
+			const auto itemsPerPage = ItemsPerPage();
+
+			static const std::string SPARSE_BUFFER_NAME_INV = "inventory";
+			static const std::string SPARSE_BUFFER_NAME_HEADER = "header";
+			auto& gfx = Graphics::Instance();
+			auto& sparseBufferInv = gfx.RequestBuffer(SPARSE_BUFFER_NAME_INV);
+			if (!sparseBufferInv.IsInitialized())
+				sparseBufferInv.Init(sizeof(uvec4), 2000);
+			auto& sparseBufferHeader = gfx.RequestBuffer(SPARSE_BUFFER_NAME_HEADER);
+			if (!sparseBufferHeader.IsInitialized())
+				sparseBufferHeader.Init(sizeof(uvec4), 200);
+
 			auto& entity = GetRelevantEntity(mode);
 			if (isGuiDirty)
 			{
 				isGuiDirty = false;
 				
-				buffer.resize(0);
+				bufferMain.resize(0);
+				bufferHeader.resize(0);
 				auto isPlayer = GameState::Instance().IsPlayer(entity);
 				auto& items = entity.GetInventory()->items;
 				sortItems(items);
-				auto numPages = (items.size() + ITEMS_PER_PAGE - 1) / ITEMS_PER_PAGE;
-				auto firstIdxAtPage = pageIndex * ITEMS_PER_PAGE;
-				auto itemsInPage = glm::min(ITEMS_PER_PAGE, int(items.size() - firstIdxAtPage));
+				auto numPages = (items.size() + itemsPerPage - 1) / itemsPerPage;
+				auto firstIdxAtPage = pageIndex * itemsPerPage;
+				auto itemsInPage = glm::min(itemsPerPage, int(items.size() - firstIdxAtPage));
 				bool hasPrevPage = pageIndex != 0;
 				bool hasNextPage = pageIndex < (numPages - 1);
 
@@ -210,9 +178,11 @@ namespace rlf
 				default:
 					break;
 				}
-				addSeparatorLine(buffer, guiNumRows + gameGridSize.y - 1, color::BROWN, gameGridSize.x, "Inventory: " + inventoryModeText);
-				addTextToLine(buffer, fmt::format("Total weight: {0} stones", entity.GetInventory()->Weight()), 0, guiNumRows + gameGridSize.y - 3, color::BROWN);
-				int rowItems0 = guiNumRows + gameGridSize.y - 5;
+				auto rowStartAndNum = Graphics::Instance().RowStartAndNum("main");
+				auto screenSize = g.ScreenSize();
+				addSeparatorLine(bufferHeader, 0, color::BROWN, screenSize.x, "Inventory: " + inventoryModeText);
+				addTextToLine(bufferMain, fmt::format("Total weight: {0} stones", entity.GetInventory()->Weight()), 0, rowStartAndNum.y-2, color::BROWN);
+				int rowItems0 = rowStartAndNum.y - 4;
 				ItemCategory category = ItemCategory(-1);
 				const int maxNameSize = 40;
 				for (int iItem = 0; iItem < itemsInPage; ++iItem)
@@ -232,8 +202,8 @@ namespace rlf
 					for (int i = 0; i < pad; ++i)
 						text.push_back(' ');
 					if (changedCategory)
-						text += fmt::format(" [{0}]", ITEM_CATEGORY_STRINGS[int(category)]);
-					addTextToLine(buffer, text, 0, rowItems0 - iItem, color::BROWN);
+						text += fmt::format(" [{0}]", magic_enum::enum_name(category));
+					addTextToLine(bufferMain, text, 0, rowItems0 - iItem, color::BROWN);
 				}
 				auto lastLine = fmt::format("[a-{0}] {1}", char('a' + itemsInPage - 1), inventoryModeText);
 				if (hasPrevPage && hasNextPage)
@@ -243,25 +213,16 @@ namespace rlf
 				if (hasNextPage)
 					lastLine += " - [+] Next page";
 				lastLine += fmt::format(" - Page {0}/{1} - [Esc] Exit inventory", pageIndex + 1, glm::max(int(numPages), 1));
-				addTextToLine(buffer, lastLine, 0, guiNumRows, color::BROWN);
-				addSeparatorLine(buffer, guiNumRows - 1, color::BROWN, gameGridSize.x);
-				// TODO: save to a umap<string,sparsebuffer> w/ name=="inventory"
+				addTextToLine(bufferMain, lastLine, 0, 1, color::BROWN);
+				addSeparatorLine(bufferMain, 0, color::BROWN, screenSize.x);
+				// update the GPU buffers
+				sparseBufferInv.Set(bufferMain.size(), bufferMain.data());
+				sparseBufferHeader.Set(bufferHeader.size(), bufferHeader.data());
 			}
-
-			// TODO: render
-			assert(false);
-			Graphics::Instance().BeginRender();
+			
 			Graphics::Instance().RenderGui();
-			Graphics::Instance().EndRender();
-
-			/*
-			*	Examples:
-			*	BeginRender();
-			*		RenderGui(rect);
-			*		RenderGameView
-			*		RenderGameOverlay(rect, inventorySparseBuffer)
-			*	EndRender();
-			*/
+			Graphics::Instance().RenderGameOverlay(sparseBufferInv,"gui");
+			Graphics::Instance().RenderHeader();
 		}
 	}
 }

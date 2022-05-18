@@ -150,7 +150,7 @@ namespace rlf
 		static const LevelBgElement bgWall = { "wall", true, true, false, '#', glm::vec4(.7, .7, .7, 1) };
 		static const LevelBgElement bgWater = { "water", false, true, true, '=', glm::vec4(0, 0, 1, 1) };
 
-		auto text = cgf::readTextFile(filename);
+		auto text = rlf::readTextFile(filename);
 		
 		// remove all occurences of \r, for windows-style newlines, so we always split newlines with '\n'
 		text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());

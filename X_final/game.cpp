@@ -55,7 +55,7 @@ namespace rlf
 		{
 			// singlegen_OpenCavern_v0.txt
 #if 0
-			auto levelConfig = LoadLevelFromTxtFile(cgf::mediaSearch("maps/map2.txt"));
+			auto levelConfig = LoadLevelFromTxtFile(rlf::mediaSearch("maps/map2.txt"));
 			const auto& layout = levelConfig.first;
 			const auto& entityConfigs = levelConfig.second;
 #else
@@ -82,6 +82,19 @@ namespace rlf
 		else
 			messageLog.emplace_back(msg, 1);
 		Graphics::Instance().OnGuiUpdated();
+	}
 
+	void GameState::ExecuteActionData()
+	{
+		// Execute the action
+		ExecuteAction(actionData.type);
+		// Store the action in history
+		actionHistory.push_back(actionData);
+		// tell the turn system that the player has played
+		turnSystem.SetWaitingForPlayerAction(false);
+		// process everybody else in the turn system
+		turnSystem.Process();
+		// reset the action data
+		actionData = {};
 	}
 }

@@ -53,8 +53,8 @@ namespace rlf
 
 	void Db::LoadFromDisk()
 	{
-		auto filename = cgf::mediaSearch("json/db.json");
-		auto text = cgf::readTextFile(filename);
+		auto filename = rlf::mediaSearch("json/db.json");
+		auto text = rlf::readTextFile(filename);
 		auto j = json::parse(text);
 		db = j;
 	}

@@ -11,7 +11,6 @@ SET(SOURCE_FILES
 	eventhandlers.cpp
 	fov.cpp
 	entityid.cpp
-    gamestate.cpp
     json.cpp
 	astar.cpp
 	grid.cpp
@@ -20,13 +19,16 @@ SET(SOURCE_FILES
 	effect.cpp
 	dungen.cpp
 	db.cpp
+	action.cpp
 	state/inventory.cpp
 	state/maingame.cpp
 	state/menu.cpp
-	state/ranged.cpp
+	state/selecttarget.cpp
+	state/state.cpp
 )
 
 SET(HEADER_FILES
+	action.h
 	tilemap.h
 	sparsebuffer.h
 	level.h
@@ -39,7 +41,6 @@ SET(HEADER_FILES
 	db.h
 	fov.h
 	entityid.h
-    gamestate.h
     json.h
 	astar.h
 	grid.h
@@ -50,7 +51,7 @@ SET(HEADER_FILES
 	state/inventory.h
 	state/maingame.h
 	state/menu.h
-	state/ranged.h
+	state/selecttarget.h
 	state/state.h
 )
 

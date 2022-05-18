@@ -5,7 +5,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-namespace cgf
+namespace rlf
 {
 	std::string readTextFile(const std::string& path);
 	void writeTextFile(const std::string& path, const std::string& text);

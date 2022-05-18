@@ -3,6 +3,7 @@
 #include "level.h"
 #include "entity.h"
 #include "turn.h"
+#include "action.h"
 
 namespace rlf
 {
@@ -35,6 +36,11 @@ namespace rlf
 
 		TurnSystem& GetTurnSystem() { return turnSystem; }
 
+		// Set the action data (or some of it, if it needs to be done over multiple stages)
+		ActionData& GetActionData() { return actionData; }
+		// execute the action
+		void ExecuteActionData();
+
 	private:
 
 		// entities. Stored as uptr, so that when the vector is resized and the memory is reallocated, our data is not invalidated
@@ -46,7 +52,9 @@ namespace rlf
 		std::vector<Level> levels;
 		int currentLevelIndex = -1;
 
+		ActionData actionData;
 		TurnSystem turnSystem;
+		std::vector<ActionData> actionHistory;
 
 		// gui
 

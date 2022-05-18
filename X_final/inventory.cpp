@@ -150,23 +150,23 @@ namespace rlf
 		bool hasNextPage = (firstIdxAtPage + ITEMS_PER_PAGE) < items.size();
 		for (int i = 0; i < itemsInPage; ++i)
 		{
-			if (cgf::Input::GetKeyDown(GLFW_KEY_A + i))
+			if (rlf::Input::GetKeyDown(GLFW_KEY_A + i))
 			{
 				inventoryAction(firstIdxAtPage + i, inventoryMode, entity);
 				return true;
 			}
 		}
-		if (hasNextPage && cgf::Input::GetKeyDown(GLFW_KEY_KP_ADD))
+		if (hasNextPage && rlf::Input::GetKeyDown(GLFW_KEY_KP_ADD))
 		{
 			pageIdx++;
 			return true;
 		}
-		if (hasPrevPage && cgf::Input::GetKeyDown(GLFW_KEY_KP_SUBTRACT))
+		if (hasPrevPage && rlf::Input::GetKeyDown(GLFW_KEY_KP_SUBTRACT))
 		{
 			pageIdx--;
 			return true;
 		}
-		if (cgf::Input::GetKeyDown(GLFW_KEY_ESCAPE))
+		if (rlf::Input::GetKeyDown(GLFW_KEY_ESCAPE))
 		{
 			pageIdx = -1;
 			return true;

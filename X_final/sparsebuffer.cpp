@@ -12,7 +12,7 @@ namespace rlf
 	{
 		assert(buffer == 0);
 		numElementsMax = 1024;
-		buffer = cgf::createBuffer(numElementsMax *stride, nullptr, GL_DYNAMIC_DRAW);
+		buffer = rlf::createBuffer(numElementsMax *stride, nullptr, GL_DYNAMIC_DRAW);
 		this->stride = stride;
 		this->numElementsMax = numElementsMax;
 	}
@@ -43,7 +43,17 @@ namespace rlf
 	// update the data at a given slot
 	void SparseBuffer::Update(int slot, const void* data)
 	{
-		cgf::updateSSBO(buffer, slot*stride, stride, data);
+		rlf::updateSSBO(buffer, slot*stride, stride, data);
+	}
+
+	void SparseBuffer::Set(int numElements, const void* data)
+	{
+		numElements = glm::min(numElements, numElementsMax);
+		auto mem = MapMemory(GL_MAP_WRITE_BIT);
+		memcpy(mem, data, numElements * stride);
+		UnmapMemory();
+		freeSlots.clear();
+		firstFreeSlotAtEnd = numElements;
 	}
 
 	// Free up a slot

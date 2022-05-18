@@ -26,7 +26,7 @@
 namespace fs = std::filesystem;
 using namespace glm;
 
-namespace cgf
+namespace rlf
 {
     std::string readTextFile(const std::string& path)
     {
@@ -92,13 +92,13 @@ namespace cgf
 
         float rotSpeed = 0.05f;
         // rotation
-        if (cgf::Input::GetKey(GLFW_KEY_W))
+        if (rlf::Input::GetKey(GLFW_KEY_W))
             phi -= rotSpeed;
-        if (cgf::Input::GetKey(GLFW_KEY_S))
+        if (rlf::Input::GetKey(GLFW_KEY_S))
             phi += rotSpeed;
-        if (cgf::Input::GetKey(GLFW_KEY_A))
+        if (rlf::Input::GetKey(GLFW_KEY_A))
             theta -= rotSpeed;
-        if (cgf::Input::GetKey(GLFW_KEY_D))
+        if (rlf::Input::GetKey(GLFW_KEY_D))
             theta += rotSpeed;
 
         phi = clamp(phi, 1e-05f, float(pi<float>() - 1e-05));
@@ -169,10 +169,10 @@ namespace cgf
     {
         if (Input::GetKeyDown(key))
         {
-            auto vsText = cgf::readTextFile(cgf::mediaSearch(vs));
-            auto fsText = cgf::readTextFile(cgf::mediaSearch(fs));
+            auto vsText = rlf::readTextFile(rlf::mediaSearch(vs));
+            auto fsText = rlf::readTextFile(rlf::mediaSearch(fs));
             if (!vsText.empty() && !fsText.empty())
-            program = cgf::buildShader(vsText.c_str(), fsText.c_str());
+            program = rlf::buildShader(vsText.c_str(), fsText.c_str());
         }
     }
 

@@ -9,8 +9,10 @@ namespace rlf
 		class Menu : public IState
 		{
 		public:
-			bool update() override;
+			bool update(StateStack& stateStack) override;
 			void render() override;
+
+			int option = -1;
 		};
 	}
 }

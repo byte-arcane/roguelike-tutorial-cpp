@@ -18,6 +18,8 @@ namespace rlf
 {
 	class Entity; 
 	class Level;
+
+	// High-level graphics code
 	class Graphics
 	{
 	public:
@@ -26,20 +28,23 @@ namespace rlf
 
 		void Init();
 		void Dispose();
-		
 		void BeginRender();
 		void EndRender();
-		uint32_t BeginDenseShader();
-		uint32_t BeginSparseShader();
-		void RenderLevel();
+		
 		void RenderGui();
+		void RenderHeader();
+		void RenderGame();
+		void RenderGameOverlay(const SparseBuffer& buffer, const std::string& shaderName);
+		void RenderBg(const Spritemap& spritemap);
+		void RenderMenu(const SparseBuffer& buffer);
 
-		void BuildInventoryData(int pageIndex, InventoryMode inventoryMode, const Entity& e);
-		void ClearInventoryData() { inventoryBufferData.resize(0); isGuiDirty = true; }
+		SparseBuffer& RequestBuffer(const std::string& name) { return bufferMap[name];  }
+		Spritemap RequestSpritemap(const std::string& name) { return spritemapMap[name];  }
 
 		void CenterCameraAtPoint(const glm::ivec2& point);
-		void SetHighlightedTiles(const std::vector<glm::ivec2>& points);
 		glm::ivec2 MouseCursorTile() const;
+		glm::ivec2 RowStartAndNum(const std::string& guiSegment) const;
+		const glm::ivec2& ScreenSize() const { return screenSize; }
 
 		// Response functions
 		void OnEntityMoved(const Entity& e);
@@ -51,32 +56,28 @@ namespace rlf
 		void OnGuiUpdated() { isGuiDirty = true; }
 		
 	private:
+		
+		uint32_t BeginDenseShader(int numRows);
+		uint32_t BeginSparseShader(int numRows);
 		void UpdateRenderableEntity(const Entity& e);
-		void SetupShaderCommon(uint32_t program);
-		void BuildLevelGui();
-		void AddTextSprites(const std::string& text, int lineIndex, const glm::vec4& color);
+		void SetupShaderCommon(uint32_t program, int numRows);
 
 	private:
 		
 	private:
+
+		// gui element info and how big each is. Order is bottom to top. -1 (main) will auto-fill based on remaining rows
+		std::vector<std::pair<std::string, int>> guiSegments = { {"char",5}, {"main",-1}, {"status",1} };
+
 		bool isGuiDirty = true;
 		glm::ivec2 cameraOffset = {0,0};
 
 		// viewport-specific, measured in CELLs
-		glm::ivec2 screenGridSize;
-		int guiNumRows = 4;
+		glm::ivec2 screenSize;
 
 		// The viewport coordinates for the entire window
-		glm::ivec2 screenOffset;
-		glm::ivec2 viewSize;
-
-		// which subrect from screenGridSize we're using
-		glm::ivec2 gameViewOffset;
-		glm::ivec2 gameViewSize;
-
-		glm::ivec2 guiOffset;
-		glm::ivec2 guiSize;
-
+		glm::ivec2 screenOffsetPx;
+		glm::ivec2 viewSizePx;
 
 		// Quad
 		unsigned int VBO = 0, VAO = 0;
@@ -85,7 +86,8 @@ namespace rlf
 		// shaders
 		uint32_t shaderTilemapDense = 0;
 		uint32_t shaderTilemapSparse = 0;
-		uint32_t shaderTilemapSparseGui = 0;
+
+		std::unordered_map<std::string, uint32_t> shaderDb;
 
 		// tilemap
 		rlf::Tilemap tilemap;
@@ -96,10 +98,12 @@ namespace rlf
 		SparseBuffer bufferObjects;
 		SparseBuffer bufferCreatures;
 		std::unordered_map<EntityId, int> entityToBufferIndex;
-		SparseBuffer bufferEffects; // spells/projectiles
-		SparseBuffer bufferGui; // The user interface
+		
+		// cpu gui data
+		std::vector<glm::uvec4> guiBuffer;
 
-		std::vector<glm::ivec2> highlightedTiles; // for path
-		std::vector<glm::uvec4> inventoryBufferData;
+		// maps to gpu data buffers/textures
+		std::unordered_map<std::string, SparseBuffer> bufferMap;
+		std::unordered_map<std::string, Spritemap> spritemapMap;
 	};
 }

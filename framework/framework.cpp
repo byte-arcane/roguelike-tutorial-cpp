@@ -21,8 +21,8 @@
 // GLFW window related
 GLFWwindow* glfWindow = NULL;
 
-int cgf::FrameworkApp::viewportWidth = 0;
-int cgf::FrameworkApp::viewportHeight = 0;
+int rlf::FrameworkApp::viewportWidth = 0;
+int rlf::FrameworkApp::viewportHeight = 0;
 
 // Callback for GLFW related errors
 static void glfw_error_callback(int error, const char* description)
@@ -32,17 +32,17 @@ static void glfw_error_callback(int error, const char* description)
 
 static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    cgf::Input::KeyCallback(key, action);
+    rlf::Input::KeyCallback(key, action);
 }
 
 static void glfw_mcur_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    cgf::Input::MouseCursorCallback((float)xpos, (float)ypos);
+    rlf::Input::MouseCursorCallback((float)xpos, (float)ypos);
 }
 
 static void glfw_mbtn_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    cgf::Input::MouseButtonCallback(button, action);
+    rlf::Input::MouseButtonCallback(button, action);
 }
 
 // Taken from https://learnopengl.com/In-Practice/Debugging
@@ -109,7 +109,7 @@ void teardown()
 }
 
 // Initialisation function
-bool initializeGLFW(const cgf::FrameworkApp::WindowSettings& settings)
+bool initializeGLFW(const rlf::FrameworkApp::WindowSettings& settings)
 {
     // Set callback to handle any GLFW errors
     glfwSetErrorCallback(glfw_error_callback);
@@ -202,7 +202,7 @@ bool initializeDearImGui()
     return true;
 }
 
-namespace cgf
+namespace rlf
 {
 	int FrameworkApp::run()
 	{

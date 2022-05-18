@@ -1,6 +1,6 @@
 #include <glm/glm.hpp>
 
-namespace cgf
+namespace rlf
 {
 	class Input
 	{

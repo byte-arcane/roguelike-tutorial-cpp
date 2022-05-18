@@ -7,7 +7,7 @@
 
 using namespace glm;
 
-namespace cgf
+namespace rlf
 {
 	struct KeyBtnState
 	{

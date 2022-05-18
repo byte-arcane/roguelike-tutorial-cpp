@@ -18,6 +18,7 @@
 #include "grid.h"
 #include "inventory.h"
 #include "state/state.h"
+#include "state/maingame.h"
 
 using namespace glm;
 using namespace std;
@@ -33,7 +34,7 @@ enum class GameMode
 	Menu
 };
 
-class Game : public cgf::FrameworkApp
+class Game : public rlf::FrameworkApp
 {
 	std::vector<std::unique_ptr<state::IState>> gameStates;
 
@@ -51,6 +52,8 @@ class Game : public cgf::FrameworkApp
 
 		// Set level
 		ChangeLevel(0);
+
+		gameStates.emplace_back(new state::MainGame());
 
 		EntityDynamicConfig dcfg;
 		dcfg.position = ivec2(4, 4);
@@ -73,146 +76,24 @@ class Game : public cgf::FrameworkApp
 	// Put here any rendering code. Called every frame
 	void onRender() override
 	{
-		auto& g = Graphics::Instance();
-		g.BeginRender();
-		switch (gameMode)
+		if (!gameStates.empty())
 		{
-		case GameMode::InGame:
-			g.RenderLevel();
-		case GameMode::Inventory_EquipOrUse:
-		case GameMode::Inventory_PickUp:
-		case GameMode::Inventory_Drop:
-			g.RenderGui();
-			break;
-		default:
-			break;
+			Graphics::Instance().BeginRender();
+			gameStates.back()->render();
+			Graphics::Instance().EndRender();
 		}
-		
-		g.EndRender();
 	}
 
 	// Put here any update related code. Called before render
 	void onUpdate() override
 	{
-		auto& g = GameState::Instance();
-		auto player = GameState::Instance().Player().Entity();
-		if (gameMode == GameMode::InGame)
+		bool doneWithState = gameStates.back()->update(gameStates);
+		if (doneWithState)
 		{
-			if (player != nullptr)
-			{
-				auto playerPos = player->GetLocation().position;
-				glm::ivec2 direction{ 0,0 };
-				auto oldPlayerPos = playerPos;
-				if (cgf::Input::GetKeyDown(GLFW_KEY_LEFT))
-					direction.x -= 1;
-				if (cgf::Input::GetKeyDown(GLFW_KEY_RIGHT))
-					direction.x += 1;
-				if (cgf::Input::GetKeyDown(GLFW_KEY_UP))
-					direction.y += 1;
-				if (cgf::Input::GetKeyDown(GLFW_KEY_DOWN))
-					direction.y -= 1;
-				if (direction != glm::ivec2(0, 0))
-				{
-					MoveAdj(*player, direction);
-					g.GetTurnSystem().SetWaitingForPlayerAction(false);
-				}
-
-				if (cgf::Input::GetKeyDown(GLFW_KEY_ENTER))
-				{
-					PickUpEverythingOrHandle(*player);
-					g.GetTurnSystem().SetWaitingForPlayerAction(false);
-				}
-
-				if (cgf::Input::GetKeyDown(GLFW_KEY_P))
-				{
-					auto itemPile = g.CurrentLevel().GetEntity(playerPos, false);
-					if (itemPile != nullptr && itemPile->DbCfg() == DbIndex::ItemPile())
-					{
-						gameMode = GameMode::Inventory_PickUp;
-						inventoryModePageIndex = 0;
-						Graphics::Instance().BuildInventoryData(inventoryModePageIndex, InventoryMode::PickUpOrDrop, *itemPile);
-					}
-				}
-				if (cgf::Input::GetKeyDown(GLFW_KEY_D))
-				{
-					gameMode = GameMode::Inventory_Drop;
-					inventoryModePageIndex = 0;
-					Graphics::Instance().BuildInventoryData(inventoryModePageIndex, InventoryMode::PickUpOrDrop, *player);
-				}
-				if (cgf::Input::GetKeyDown(GLFW_KEY_E))
-				{
-					gameMode = GameMode::Inventory_EquipOrUse;
-					inventoryModePageIndex = 0;
-					Graphics::Instance().BuildInventoryData(inventoryModePageIndex, InventoryMode::EquipOrUse, *player);
-				}
-
-#if 0 // Debugging
-				if (cgf::Input::GetKey(GLFW_KEY_LEFT_CONTROL))
-				{
-					auto tgt = Graphics::Instance().MouseCursorTile();
-					auto path = rlf::GameState::Instance().CurrentLevel().CalcPath(*player, tgt);
-					//std::vector<ivec2> path; rlf::Square(path, player->GetLocation().position, 2,false);
-					Graphics::Instance().SetHighlightedTiles(path);
-				}
-				else
-					Graphics::Instance().SetHighlightedTiles({});
-#endif
-			}
-			g.GetTurnSystem().Process();
+			state::IState::terminate(gameStates);
+			if (gameStates.empty())
+				exit(0); // Be nicer!
 		}
-		else if (gameMode == GameMode::Targeting)
-		{
-#if 0
-			bool confirmed = targetingHandleInput(targetPosition);
-			if (confirmed)
-			{
-				gameMode = GameMode::InGame;
-				// TODO: 
-			}
-#endif
-		}
-		else if (gameMode == GameMode::Inventory_EquipOrUse)
-		{
-			if (inventoryHandleInput(inventoryModePageIndex, InventoryMode::EquipOrUse, *player))
-			{
-				if (inventoryModePageIndex >= 0)
-					Graphics::Instance().BuildInventoryData(inventoryModePageIndex, InventoryMode::EquipOrUse, *player);
-				else
-				{
-					gameMode = GameMode::InGame;
-					Graphics::Instance().ClearInventoryData();
-				}
-			}
-			
-		}
-		else if (gameMode == GameMode::Inventory_PickUp)
-		{
-			auto itemPile = g.CurrentLevel().GetEntity(player->GetLocation().position, false);
-			if (itemPile == nullptr || inventoryHandleInput(inventoryModePageIndex, InventoryMode::PickUpOrDrop, *itemPile))
-			{
-				if (inventoryModePageIndex >= 0 && itemPile != nullptr)
-					Graphics::Instance().BuildInventoryData(inventoryModePageIndex, InventoryMode::PickUpOrDrop, *itemPile);
-				else
-				{
-					gameMode = GameMode::InGame;
-					Graphics::Instance().ClearInventoryData();
-				}
-			}
-		}
-		else if (gameMode == GameMode::Inventory_Drop)
-		{
-			if(inventoryHandleInput(inventoryModePageIndex, InventoryMode::PickUpOrDrop, *player))
-			{
-				if (inventoryModePageIndex >= 0)
-					Graphics::Instance().BuildInventoryData(inventoryModePageIndex, InventoryMode::PickUpOrDrop, *player);
-				else
-				{
-					gameMode = GameMode::InGame;
-					Graphics::Instance().ClearInventoryData();
-				}
-			}
-		}
-		
 	}
 
 	// Put here any GUI related code. Called after render
