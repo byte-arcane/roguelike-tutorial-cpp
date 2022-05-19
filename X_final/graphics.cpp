@@ -12,6 +12,7 @@
 #include "game.h"
 #include "input.h"
 #include "eventhandlers.h"
+#include "signals.h"
 
 using namespace glm;
 
@@ -120,6 +121,15 @@ namespace rlf
 			else
 				itUnfixed = it;
 		itUnfixed->second = screenSize.y - numRowsFixed;
+
+		// Start listening to signals here
+		sig::onEntityMoved.connect<Graphics, &Graphics::OnEntityMoved>(this);
+		sig::onEntityAdded.connect<Graphics, &Graphics::OnEntityAdded>(this);
+		sig::onEntityRemoved.connect<Graphics, &Graphics::OnEntityRemoved>(this);
+		sig::onLevelChanged.connect<Graphics, &Graphics::OnLevelChanged>(this);
+		sig::onFogOfWarChanged.connect<Graphics, &Graphics::OnFogOfWarChanged>(this);
+		sig::onObjectStateChanged.connect<Graphics, &Graphics::OnObjectStateChanged>(this);
+		sig::onGuiUpdated.connect<Graphics, &Graphics::OnGuiUpdated>(this);
 	}
 
 	void Graphics::Dispose()
@@ -303,7 +313,7 @@ namespace rlf
 		// Populate with new data
 		const auto& bg = level.Bg();
 		std::vector<uvec2> renderData(bg.Size().x * bg.Size().y);
-		std::transform(bg.RawVec().begin(), bg.RawVec().end(), renderData.begin(), [](const LevelBgElement& elem) {
+		std::transform(bg.Data().begin(), bg.Data().end(), renderData.begin(), [](const LevelBgElement& elem) {
 			TileData td{ elem.glyph, elem.color };
 			return td.PackDense();
 		});
@@ -434,5 +444,10 @@ namespace rlf
 		glUseProgram(program);
 		SetupTilemapAndGrid(program, tilemap, screenSize);
 		buffer.Draw();
+	}
+
+	void Graphics::OnGameLoaded()
+	{
+		assert(false);
 	}
 }

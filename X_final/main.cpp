@@ -19,6 +19,7 @@
 #include "inventory.h"
 #include "state/state.h"
 #include "state/maingame.h"
+#include "state/menu.h"
 
 using namespace glm;
 using namespace std;
@@ -47,24 +48,9 @@ class Game : public rlf::FrameworkApp
 	{
 		// we can map this to a key for dynamic database reload!
 		Db::Instance().LoadFromDisk();
-
 		Graphics::Instance().Init();
-
-		// Set level
-		ChangeLevel(0);
-
-		gameStates.emplace_back(new state::MainGame());
-
-		EntityDynamicConfig dcfg;
-		dcfg.position = ivec2(4, 4);
-		dcfg.nameOverride = "Sir Carpaccio";
-		// add one of each item
-		for (const auto& kv : Db::Instance().All())
-			if (kv.second.allowRandomSpawn && kv.second.type == EntityType::Item)
-				dcfg.inventory.emplace_back(kv.first);
-		DbIndex cfgdb{ "player" };
-		auto& player = SpawnEntity(cfgdb,dcfg);
-		GameState::Instance().SetPlayer(player);
+		std::unique_ptr<state::State> menu = std::make_unique<state::Menu>();
+		state::State::pushToStack(gameStates, menu);
 	}
 
 	// Put here any termination code. Happens once, before termination of GLFW/GLEW/ImGui

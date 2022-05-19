@@ -9,6 +9,22 @@ namespace rlf
 {
 	class Entity;
 
+	struct SaveData
+	{
+		// entities. Stored as uptr, so that when the vector is resized and the memory is reallocated, our data is not invalidated
+		std::vector<std::unique_ptr<Entity>> poolEntities;
+		// std::vector<std::pair<DbIndex, EntityDynamicConfig>> poolEntities;
+		std::unordered_set<int> invalidPoolIndices;
+		EntityId playerId;
+
+		// levels
+		std::vector<Level> levels;
+		int currentLevelIndex = -1;
+
+		// message log: messages and how many times each is encountered
+		std::vector<std::pair<std::string, int>> messageLog;
+	};
+
 	// The game state. [De]serializing this results in our savegame data
 	class GameState
 	{
@@ -35,6 +51,9 @@ namespace rlf
 		void WriteToMessageLog(const std::string& msg);
 
 		void EndTurn();
+
+		void Load();
+		void Save();
 
 	private:
 

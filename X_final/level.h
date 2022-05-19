@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <glm/glm.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include "sparsebuffer.h"
 #include "spritemap.h"
@@ -42,15 +43,25 @@ namespace rlf
 		bool EntityHasLineOfSightTo(const Entity& e, const glm::ivec2& position) const;
 		Entity* GetEntity(const glm::ivec2& position, bool blocksMovement) const;
 
-		void OnEntityAdded(const Entity& entity);
-		void OnEntityRemoved(const Entity& e);
-		void OnObjectStateChanged(const Entity& e);
+		
+		
 
 		std::vector<glm::ivec2> CalcPath(const Entity& e, const glm::ivec2& tgt) const;
+
+		void startListening();
+		void stopListening();
+
 	private:
+		void OnEntityAdded(Entity& entity);
+		void OnEntityRemoved(Entity& e);
+		void OnObjectStateChanged(const Entity& e);
 
 		bool PositionIsVisible(const glm::ivec2& p) const;
 	private:
+
+		// friends for easy serialization
+		friend void from_json(const nlohmann::json& j, Level& level);
+		friend void to_json(nlohmann::json& j, const Level& level);
 
 		Array2D<LevelBgElement> bg;
 		Array2D<FogOfWarStatus> fogOfWar;

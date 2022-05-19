@@ -5,6 +5,7 @@
 #include "game.h"
 #include "entity.h"
 #include "graphics.h"
+#include "signals.h"
 
 using namespace glm;
 
@@ -14,10 +15,7 @@ namespace rlf
 	{
 		auto& e = *GameState::Instance().CreateEntity(cfg, dcfg).Entity();
 		if (e.Type() != EntityType::Item)
-		{
-			GameState::Instance().CurrentLevel().OnEntityAdded(e);
-			Graphics::Instance().OnEntityAdded(e);
-		}
+			sig::onEntityAdded.fire(e);
 		return e;
 	}
 
@@ -25,10 +23,7 @@ namespace rlf
 	void DestroyEntity(Entity& e)
 	{
 		if (e.Type() != EntityType::Item)
-		{
-			GameState::Instance().CurrentLevel().OnEntityRemoved(e);
-			Graphics::Instance().OnEntityRemoved(e);
-		}
+			sig::onEntityRemoved.fire(e);
 		else // it's an item -- remove it from its owner!
 		{
 			auto& items = e.GetItemData()->owner.Entity()->GetInventory()->items;
@@ -51,12 +46,12 @@ namespace rlf
 		auto loc = entity.GetLocation();
 		loc.position = position;
 		entity.SetLocation(loc);
-		Graphics::Instance().OnEntityMoved(entity);
+		sig::onEntityMoved.fire(entity);
 
 		if (GameState::Instance().IsPlayer(entity))
 		{
 			GameState::Instance().CurrentLevel().UpdateFogOfWar();
-			Graphics::Instance().OnGuiUpdated(); // movement should cause GUI update
+			sig::onGuiUpdated.fire();// movement should cause GUI update
 		}
 	}
 
@@ -96,13 +91,13 @@ namespace rlf
 			auto loc = entity.GetLocation();
 			loc.position = position;
 			entity.SetLocation(loc);
-			Graphics::Instance().OnEntityMoved(entity);
+			sig::onEntityMoved.fire(entity);
 
 			if (GameState::Instance().IsPlayer(entity))
 			{
 				GameState::Instance().WriteToMessageLog(fmt::format("You move {0}", DirectionString(direction)));
 				GameState::Instance().CurrentLevel().UpdateFogOfWar();
-				Graphics::Instance().OnGuiUpdated(); // movement should cause GUI update
+				sig::onGuiUpdated.fire();// movement should cause GUI update
 			}
 		}
 		else // ok, we can't move. Get entity at the tile
@@ -140,10 +135,14 @@ namespace rlf
 		std::string text;
 		if (died)
 		{
-			text = GameState::Instance().IsPlayer(entity) 
+			auto isPlayer = GameState::Instance().IsPlayer(entity);
+			text = isPlayer 
 				? "You have died" 
 				: fmt::format("{0} has died!", entity.Name());
-			DestroyEntity(entity);
+			if (!isPlayer)
+				DestroyEntity(entity);
+			else
+				sig::onPlayerDied.fire();
 		}
 		else
 		{
@@ -234,11 +233,11 @@ namespace rlf
 			if (giverItems.empty())
 				DestroyEntity(giver);
 			else if (giverItems.size() == 1)
-				Graphics::Instance().OnObjectStateChanged(giver);
+				sig::onObjectStateChanged.fire(giver);
 		}
 		const auto& taker = *takerId.Entity();
 		if (taker.DbCfg() == DbIndex::ItemPile())
-			Graphics::Instance().OnObjectStateChanged(taker);
+			sig::onObjectStateChanged.fire(taker);
 		
 	}
 
@@ -297,13 +296,13 @@ namespace rlf
 
 		// remove player from old level
 		if (playerId.Entity() != nullptr && g.GetCurrentLevelIndex() >= 0)
-			g.CurrentLevel().OnEntityRemoved(*playerId.Entity());
+			sig::onEntityRemoved.fire(*playerId.Entity());
 
 		// Change the level
 		g.SetCurrentLevelIndex(levelIndex);
 
 		auto& level = g.CurrentLevel();
-		Graphics::Instance().OnLevelChanged(level);		
+		sig::onLevelChanged.fire(level);
 
 		// put player in new level
 		auto placeAtStairsEntityType = delveDirectionForward ? DbIndex::StairsUp() : DbIndex::StairsDown();
@@ -315,9 +314,7 @@ namespace rlf
 					auto position = entity.Entity()->GetLocation().position;
 					playerId.Entity()->SetLocation({ levelIndex, position });
 				}
-
-			level.OnEntityAdded(*playerId.Entity());
-			Graphics::Instance().OnEntityAdded(*playerId.Entity());
+			sig::onEntityAdded.fire(*playerId.Entity());
 			level.UpdateFogOfWar();
 		}
 

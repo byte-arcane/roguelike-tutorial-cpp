@@ -6,6 +6,7 @@
 #include <memory>
 
 #include <glm/glm.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include "tilemap.h"
 #include "db.h"
@@ -134,6 +135,7 @@ namespace rlf
 		INonCopyable(INonCopyable&&) noexcept = default; // movable
 		INonCopyable(const INonCopyable&) = delete; // non construction-copyable    
 		INonCopyable& operator=(const INonCopyable&) = delete; // non copyable
+		INonCopyable& operator=(INonCopyable&&) = default;
 	};
 
 	struct EntityConfig : INonCopyable
@@ -184,6 +186,10 @@ namespace rlf
 	private:
 		friend class GameState;
 		void Initialize(EntityId id, DbIndex dbIndex, const EntityDynamicConfig& dcfg);
+
+		// friends for easy serialization
+		friend void from_json(const nlohmann::json& j, Entity& entity);
+		friend void to_json(nlohmann::json& j, const Entity& entity);
 		
 	private:
 

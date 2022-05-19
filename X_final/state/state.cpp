@@ -26,15 +26,22 @@ namespace rlf
 
 		}
 
+		void State::pushToStack(StateStack& stateStack, std::unique_ptr<State>& state)
+		{
+			stateStack.push_back(std::move(state));
+			stateStack.back()->startListening();
+		}
+
 		void State::update(StateStack& stateStack)
 		{
 			auto status = updateImpl(stateStack);
 			if (status != Status::Running)
 			{
-				if (onDone)
-					onDone(status == Status::Success, this);
+				stateStack.back()->stopListening();
 				auto thisState = std::move(stateStack.back());
 				stateStack.pop_back();
+				if (onDone)
+					onDone(status == Status::Success, this);
 				if (!stateStack.empty())
 					stateStack.back()->onResumeFrom(thisState.get());
 			}
@@ -55,21 +62,25 @@ namespace rlf
 			return col;
 		}
 
-		void addSeparatorLine(std::vector<glm::uvec4>& buf, int row, const glm::vec4& color, int numCols, const std::string& centeredText)
+		void addSeparatorLine(std::vector<glm::uvec4>& buf, int row, const glm::vec4& color, int numCols, const std::string& centeredText, char fillChar)
 		{
-			const auto dashTileData = TileData{ '-',color };
+			const auto dashTileData = TileData{ fillChar,color };
 
 			if (centeredText.empty())
-				for (int i = 0; i < numCols; ++i)
-					buf.push_back(dashTileData.PackSparse({ i,row }));
+			{
+				if(fillChar != ' ')
+					for (int i = 0; i < numCols; ++i)
+						buf.push_back(dashTileData.PackSparse({ i,row }));
+			}
 			else
 			{
 				auto numColsEachSide = (numCols - (centeredText.size() + 2)) / 2;
-				for (int i = 0; i < numColsEachSide; ++i)
-				{
-					buf.push_back(dashTileData.PackSparse({ i,row }));
-					buf.push_back(dashTileData.PackSparse({ numCols - 1 - i,row }));
-				}
+				if (fillChar != ' ')
+					for (int i = 0; i < numColsEachSide; ++i)
+					{
+						buf.push_back(dashTileData.PackSparse({ i,row }));
+						buf.push_back(dashTileData.PackSparse({ numCols - 1 - i,row }));
+					}
 				for (int i = 0; i<int(centeredText.size()); ++i)
 				{
 					auto c = centeredText[i];

@@ -58,4 +58,24 @@ namespace rlf
 		auto j = json::parse(text);
 		db = j;
 	}
+
+	void GameState::Load()
+	{
+		auto text = readTextFile("data.sav");
+		//SaveData g = json::parse(text);
+	}
+
+	void GameState::Save()
+	{
+		SaveData save;
+		save.currentLevelIndex = currentLevelIndex;
+		save.invalidPoolIndices = invalidPoolIndices;
+		save.levels = levels;
+		save.messageLog = messageLog;
+		save.playerId = playerId;
+		std::swap(poolEntities, save.poolEntities);
+		json j = save;
+		writeTextFile("data.sav",j.dump());
+		std::swap(poolEntities, save.poolEntities);
+	}
 }

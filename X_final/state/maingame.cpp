@@ -25,6 +25,13 @@ namespace rlf
 			auto& g = GameState::Instance();
 			auto player = GameState::Instance().Player().Entity();
 
+			// End the game state if player is dead, so that we can move to the death screen
+			if (player->GetCreatureData()->hp <= 0)
+				return Status::Success;
+
+			if (Input::GetKeyDown(GLFW_KEY_F1))
+				GameState::Instance().Save();
+
 			if (player != nullptr)
 			{
 				auto playerPos = player->GetLocation().position;

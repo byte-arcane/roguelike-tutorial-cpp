@@ -3,6 +3,7 @@
 #include "graphics.h"
 #include "eventhandlers.h"
 #include "grid.h"
+#include "signals.h"
 
 using namespace glm;
 
@@ -165,8 +166,7 @@ namespace rlf
 		}
 		if (state != oldState)
 		{
-			GameState::Instance().CurrentLevel().OnObjectStateChanged(object);
-			Graphics::Instance().OnObjectStateChanged(object);
+			sig::onObjectStateChanged.fire(object);
 		}
 	}
 }

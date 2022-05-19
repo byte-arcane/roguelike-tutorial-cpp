@@ -8,6 +8,7 @@
 #include "eventhandlers.h"
 #include "astar.h"
 #include "grid.h"
+#include "signals.h"
 
 using namespace glm;
 
@@ -27,7 +28,21 @@ namespace rlf
 		}
 	}
 
-	void Level::OnEntityAdded(const Entity& entity)
+	void Level::startListening()
+	{
+		sig::onObjectStateChanged.connect<Level, &Level::OnObjectStateChanged>(this);
+		sig::onEntityAdded.connect<Level, &Level::OnEntityAdded>(this);
+		sig::onEntityRemoved.connect<Level, &Level::OnEntityRemoved>(this);
+	}
+
+	void Level::stopListening()
+	{
+		sig::onObjectStateChanged.disconnect<Level, &Level::OnObjectStateChanged>(this);
+		sig::onEntityAdded.disconnect<Level, &Level::OnEntityAdded>(this);
+		sig::onEntityRemoved.disconnect<Level, &Level::OnEntityRemoved>(this);
+	}
+
+	void Level::OnEntityAdded(Entity& entity)
 	{
 		entities.push_back(entity.Id());
 
@@ -36,7 +51,7 @@ namespace rlf
 			UpdateFogOfWar();
 	}
 
-	void Level::OnEntityRemoved(const Entity& entity)
+	void Level::OnEntityRemoved(Entity& entity)
 	{
 		auto id = entity.Id();
 		entities.erase(std::remove_if(entities.begin(), entities.end(), [id](const EntityId& eref) { return eref == id; }), entities.end());
@@ -74,7 +89,7 @@ namespace rlf
 		auto cb_on_visible = [&](const glm::ivec2& p) { fogOfWar(p.x, p.y) = FogOfWarStatus::Visible; };
 		calculate_fov(player->GetLocation().position, player->DbCfg().Cfg()->creatureCfg.lineOfSightRadius, map_size, cb_is_opaque, cb_on_visible);
 
-		Graphics::Instance().OnFogOfWarChanged();
+		sig::onFogOfWarChanged.fire();
 	}
 
 	bool Level::EntityCanMoveTo(const Entity& e, const glm::ivec2& position) const

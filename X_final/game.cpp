@@ -3,6 +3,7 @@
 #include "graphics.h"
 #include "utility.h"
 #include "dungen.h"
+#include "signals.h"
 
 namespace rlf
 {
@@ -50,6 +51,8 @@ namespace rlf
 
 	void GameState::SetCurrentLevelIndex(int iLevel)
 	{
+		if (currentLevelIndex >= 0)
+			levels[currentLevelIndex].stopListening();
 		currentLevelIndex = iLevel;
 		if (levels.size() <= currentLevelIndex)
 		{
@@ -65,6 +68,7 @@ namespace rlf
 			levels.push_back({});
 			levels.back().Init(layout, entityConfigs, currentLevelIndex);
 		}
+		levels[iLevel].startListening();
 	}
 
 	void GameState::SetPlayer(const Entity& entity) 
@@ -72,7 +76,7 @@ namespace rlf
 		playerId = entity.Id();
 		CurrentLevel().UpdateFogOfWar();
 		Graphics::Instance().CenterCameraAtPoint(entity.GetLocation().position);
-		Graphics::Instance().OnGuiUpdated();
+		sig::onGuiUpdated.fire();
 	}
 
 	void GameState::WriteToMessageLog(const std::string& msg)
@@ -81,7 +85,7 @@ namespace rlf
 			++messageLog.back().second;
 		else
 			messageLog.emplace_back(msg, 1);
-		Graphics::Instance().OnGuiUpdated();
+		sig::onGuiUpdated.fire();
 	}
 
 	void GameState::EndTurn()

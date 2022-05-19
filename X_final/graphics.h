@@ -49,7 +49,8 @@ namespace rlf
 		glm::ivec2 RowStartAndNum(const std::string& guiSegment) const;
 		const glm::ivec2& ScreenSize() const { return screenSize; }
 
-		// Response functions
+	private:
+		// Signal-slots
 		void OnEntityMoved(const Entity& e);
 		void OnEntityAdded(Entity& e);
 		void OnEntityRemoved(Entity& e);
@@ -57,7 +58,8 @@ namespace rlf
 		void OnFogOfWarChanged();
 		void OnObjectStateChanged(const Entity& e);
 		void OnGuiUpdated() { isGuiDirty = true; }
-		
+		void OnGameLoaded();
+
 	private:
 		
 		uint32_t BeginDenseShader(int numRows);

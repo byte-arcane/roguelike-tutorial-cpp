@@ -30,8 +30,11 @@ namespace rlf
 
 			static void updateStack(StateStack& stateStack);
 			static void renderStack(StateStack& stateStack);
+			static void pushToStack(StateStack& stateStack, std::unique_ptr<State>& state);
 
 		protected:
+			virtual void startListening() {}
+			virtual void stopListening() {}
 			virtual void onResumeFrom(const State* state) {}
 			virtual void render() = 0;
 			virtual Status updateImpl(StateStack& stateStack) = 0;
@@ -42,6 +45,6 @@ namespace rlf
 		};
 
 		int addTextToLine(std::vector<glm::uvec4>& buf, const std::string& text, int col, int row, const glm::vec4& color);
-		void addSeparatorLine(std::vector<glm::uvec4>& buf, int row, const glm::vec4& color, int numCols, const std::string& centeredText = "");
+		void addSeparatorLine(std::vector<glm::uvec4>& buf, int row, const glm::vec4& color, int numCols, const std::string& centeredText = "", char fillChar = '-');
 	}
 }

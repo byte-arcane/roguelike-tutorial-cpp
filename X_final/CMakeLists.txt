@@ -20,11 +20,14 @@ SET(SOURCE_FILES
 	dungen.cpp
 	db.cpp
 	action.cpp
+	signals.cpp
 	state/inventory.cpp
 	state/maingame.cpp
 	state/menu.cpp
 	state/selecttarget.cpp
 	state/state.cpp
+	state/death.cpp
+	state/createchar.cpp
 )
 
 SET(HEADER_FILES
@@ -48,11 +51,14 @@ SET(HEADER_FILES
 	inventory.h
 	effect.h
 	dungen.h
+	signals.h
 	state/inventory.h
 	state/maingame.h
 	state/menu.h
 	state/selecttarget.h
 	state/state.h
+	state/death.h 
+	state/createchar.h
 )
 
 SET(ALL_SOURCE_FILES

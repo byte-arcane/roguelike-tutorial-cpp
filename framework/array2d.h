@@ -19,7 +19,7 @@ namespace rlf
 
 		// Get size and the underlying raw data
 		const glm::ivec2& Size() const { return size; }
-		const std::vector<T>& RawVec() const { return data; }
+		const std::vector<T>& Data() const { return data; }
 		const T* Raw() const { return data.data(); }
 
 		// element access

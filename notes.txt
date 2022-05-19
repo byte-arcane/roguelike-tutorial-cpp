@@ -1,10 +1,13 @@
 TODO:
-
-	refactor w/ signals-slots library
 	
 	save/load via json
 	
-	main menu, handle death
+		levels
+		poolEntities
+		re-hooking up signals
+		rebuilding state
+		
+	fix up state
 		
 "Advanced" C++ patterns
 
