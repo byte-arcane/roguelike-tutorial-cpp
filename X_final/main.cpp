@@ -36,7 +36,7 @@ enum class GameMode
 
 class Game : public rlf::FrameworkApp
 {
-	std::vector<std::unique_ptr<state::IState>> gameStates;
+	std::vector<std::unique_ptr<state::State>> gameStates;
 
 	GameMode gameMode = GameMode::InGame;
 	int inventoryModePageIndex = 0;
@@ -79,7 +79,7 @@ class Game : public rlf::FrameworkApp
 		if (!gameStates.empty())
 		{
 			Graphics::Instance().BeginRender();
-			gameStates.back()->render();
+			state::State::renderStack(gameStates);
 			Graphics::Instance().EndRender();
 		}
 	}
@@ -87,13 +87,9 @@ class Game : public rlf::FrameworkApp
 	// Put here any update related code. Called before render
 	void onUpdate() override
 	{
-		bool doneWithState = gameStates.back()->update(gameStates);
-		if (doneWithState)
-		{
-			state::IState::terminate(gameStates);
-			if (gameStates.empty())
-				exit(0); // Be nicer!
-		}
+		state::State::updateStack(gameStates);
+		if(gameStates.empty())
+			exit(0); // Be nicer!
 	}
 
 	// Put here any GUI related code. Called after render

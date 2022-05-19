@@ -204,6 +204,11 @@ bool initializeDearImGui()
 
 namespace rlf
 {
+    double FrameworkApp::Time()
+    {
+        return glfwGetTime();
+    }
+
 	int FrameworkApp::run()
 	{
         // framework initialisation

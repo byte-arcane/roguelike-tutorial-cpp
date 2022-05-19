@@ -1,44 +1,19 @@
 TODO:
 
-	Actions
-		// TODO: have access to current ActionData
-		2 stages: immediate (bump attack) or not (ranged attack, or multiple handle targets)
-		during state (e.g. maingame) press key
-		key activates action (via mapping)
-			on player turn we "activate" a new ActionData in GameState
-		during action:
-			we might do something and return immediately (e.g. Move command)
-			we might push a new gui state
-				pickup: push inventory state. on inventory action pass the turn (register action data)
-				handle: 
-					if we have >1 targets, push "target" state with a callback of what constitutes a valid target
-					on confirm, we run the "onSuccess" callback, 
-					
-		
-	
-	? How, after targetting, we know how to resume with any action that required targetting?
-		
-		before pushing into stack, store player_action enum
-			default: move/bump
-			ranged: ranged attack
-			
-		onResume gets called, based on enum
-
-	ranged attack support + look support
-		"T" targets for ranged weapons
-			takes over arrow keys
-			allow to MOVE the cursor anywhere, but only confirm on visible tiles (maybe highlight w/ color)
-		when projectile is fired, render all distinct points in the path, N times per frame (default to 2) WHILE other things are happening -- who cares
-	
-	
 	refactor w/ signals-slots library
 	
 	save/load via json
 	
 	main menu, handle death
-	
-	multiple tilemap (fonts/images) suppoort
-		no
+		
+"Advanced" C++ patterns
+
+	std::unique_ptr
+	std::move
+	default/deleted constructors
+	.emplace
+	brace initialization
+	lambdas and predicates
 
 Rationale:
 	Trying to keep things simple, sometimes at the expense of doing things "properly" or efficiently

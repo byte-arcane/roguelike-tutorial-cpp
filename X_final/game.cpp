@@ -84,17 +84,11 @@ namespace rlf
 		Graphics::Instance().OnGuiUpdated();
 	}
 
-	void GameState::ExecuteActionData()
+	void GameState::EndTurn()
 	{
-		// Execute the action
-		ExecuteAction(actionData.type);
-		// Store the action in history
-		actionHistory.push_back(actionData);
 		// tell the turn system that the player has played
 		turnSystem.SetWaitingForPlayerAction(false);
 		// process everybody else in the turn system
 		turnSystem.Process();
-		// reset the action data
-		actionData = {};
 	}
 }

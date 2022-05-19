@@ -119,6 +119,8 @@ namespace rlf
 
 	Entity* Level::GetEntity(const glm::ivec2& position, bool blocksMovement) const
 	{
+		if (!bg.InBounds(position))
+			return nullptr;
 		for (const auto& entityId : entities)
 		{
 			auto entity = entityId.Entity();

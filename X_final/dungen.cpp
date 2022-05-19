@@ -67,8 +67,12 @@ namespace rlf
 			for (int x = 0; x < layout.Size().x; ++x)
 				if (!layout(x, y).blocksMovement)
 					availablePositions.emplace_back(x, y);
+#ifndef _DEBUG
 		std::random_device rd;
 		std::mt19937 g(rd());
+#else
+		std::mt19937 g(2);
+#endif
 		std::shuffle(availablePositions.begin(), availablePositions.end(),g);
 
 		auto fnPopPosition = [&availablePositions]()
@@ -113,7 +117,7 @@ namespace rlf
 					{
 						auto pnb = position + nb4;
 						if (layout.InBounds(pnb) && !layout(pnb.x, pnb.y).blocksMovement)
-							numFloorNbs++;
+							numFloorNbs++;							
 					}
 					// if we don't have 3 walkable neighbours, then skip this one
 					if (numFloorNbs < 3)

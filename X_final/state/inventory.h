@@ -10,7 +10,7 @@ namespace rlf
 {
 	namespace state
 	{
-		class Inventory : public IState
+		class Inventory : public State
 		{
 		public:
 
@@ -21,12 +21,14 @@ namespace rlf
 				Drop
 			};
 
-			Inventory(Mode mode) :mode(mode) {}
+			Inventory(Mode mode, std::function<void(bool, const State*)> onDone) :State(onDone),mode(mode) {}
 
-			bool update(StateStack& stateStack) override;
-			void render() override;
-		
+			
 			int PageIndex() const { return pageIndex; }
+
+		private:
+			void render() override;
+			Status updateImpl(StateStack& stateStack) override;
 
 		private:
 			Mode mode;

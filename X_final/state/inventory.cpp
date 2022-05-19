@@ -42,8 +42,9 @@ namespace rlf
 				});
 		}
 
-		void inventoryAction(int itemIdx, Inventory::Mode inventoryMode, Entity& entity)
+		bool inventoryAction(int itemIdx, Inventory::Mode inventoryMode, Entity& entity)
 		{
+			bool doneSomething = true;
 			const auto& items = entity.GetInventory()->items;
 			auto item = items[itemIdx].Entity();
 			if (inventoryMode == Inventory::Mode::EquipOrUse)
@@ -65,6 +66,8 @@ namespace rlf
 				}
 				else if (itemCategory == ItemCategory::Consumable)
 					UseItem(entity, itemIdx);
+				else
+					doneSomething = false;
 			}
 			else // pick up or drop
 			{
@@ -75,10 +78,13 @@ namespace rlf
 					// can't drop equipped items!
 					if (!item->GetItemData()->equipped)
 						Drop(entity, items[itemIdx]);
+					else
+						doneSomething = false;
 				}
 				else
 					PickUp(*player.Entity(), entity, items[itemIdx]);
 			}
+			return doneSomething;
 		}
 
 		Entity& GetRelevantEntity(Inventory::Mode mode)
@@ -94,13 +100,10 @@ namespace rlf
 			}
 		}
 
-		bool Inventory::update(StateStack& stateStack)
+		Status Inventory::updateImpl(StateStack& stateStack)
 		{
 			if (rlf::Input::GetKeyDown(GLFW_KEY_ESCAPE))
-			{
-				pageIndex = -1;
-				return true;
-			}
+				return Status::Abort;
 
 			const auto itemsPerPage = ItemsPerPage();
 			auto& entity = GetRelevantEntity(mode);
@@ -113,10 +116,12 @@ namespace rlf
 			{
 				if (rlf::Input::GetKeyDown(GLFW_KEY_A + i))
 				{
-					inventoryAction(firstIdxAtPage + i, mode, entity);
+					auto doneSomething = inventoryAction(firstIdxAtPage + i, mode, entity);
+					if (doneSomething)
+						GameState::Instance().EndTurn();
 					isGuiDirty = true;
 					if (entity.GetInventory()->items.empty())
-						return true;
+						return Status::Abort;
 				}
 			}
 			if (hasNextPage && rlf::Input::GetKeyDown(GLFW_KEY_KP_ADD))
@@ -129,21 +134,17 @@ namespace rlf
 				pageIndex--;
 				isGuiDirty = true;
 			}
-			return false;
+			return Status::Running;
 		}
 
 		void Inventory::render()
 		{
-			auto& g = Graphics::Instance();
 			const auto itemsPerPage = ItemsPerPage();
-
-			static const std::string SPARSE_BUFFER_NAME_INV = "inventory";
-			static const std::string SPARSE_BUFFER_NAME_HEADER = "header";
 			auto& gfx = Graphics::Instance();
-			auto& sparseBufferInv = gfx.RequestBuffer(SPARSE_BUFFER_NAME_INV);
+			auto& sparseBufferInv = gfx.RequestBuffer("inventory");
 			if (!sparseBufferInv.IsInitialized())
 				sparseBufferInv.Init(sizeof(uvec4), 2000);
-			auto& sparseBufferHeader = gfx.RequestBuffer(SPARSE_BUFFER_NAME_HEADER);
+			auto& sparseBufferHeader = gfx.RequestBuffer("header");
 			if (!sparseBufferHeader.IsInitialized())
 				sparseBufferHeader.Init(sizeof(uvec4), 200);
 
@@ -179,7 +180,7 @@ namespace rlf
 					break;
 				}
 				auto rowStartAndNum = Graphics::Instance().RowStartAndNum("main");
-				auto screenSize = g.ScreenSize();
+				auto screenSize = gfx.ScreenSize();
 				addSeparatorLine(bufferHeader, 0, color::BROWN, screenSize.x, "Inventory: " + inventoryModeText);
 				addTextToLine(bufferMain, fmt::format("Total weight: {0} stones", entity.GetInventory()->Weight()), 0, rowStartAndNum.y-2, color::BROWN);
 				int rowItems0 = rowStartAndNum.y - 4;
@@ -221,7 +222,7 @@ namespace rlf
 			}
 			
 			Graphics::Instance().RenderGui();
-			Graphics::Instance().RenderGameOverlay(sparseBufferInv,"gui");
+			Graphics::Instance().RenderGameOverlay(sparseBufferInv);
 			Graphics::Instance().RenderHeader();
 		}
 	}

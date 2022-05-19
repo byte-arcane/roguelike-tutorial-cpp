@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <functional>
 #include <memory>
 #include <string>
 
@@ -10,24 +11,34 @@ namespace rlf
 {
 	namespace state
 	{
-		class IState;
-		using StateStack = std::vector<std::unique_ptr<IState>>;
+		enum class Status
+		{
+			Running = 0,
+			Success,
+			Abort
+		};
 
-		class IState
+		class State;
+		using StateStack = std::vector<std::unique_ptr<State>>;
+
+		class State
 		{
 		public:
-			virtual ~IState() = default;
-			// return true when done
-			virtual bool update(StateStack& stateStack) = 0;
-			virtual void render() = 0;
-			virtual void onResumeFrom(const IState* state) {}
+			virtual ~State() = default;
 
-			static void terminate(StateStack& stateStack) {
-				auto thisState = std::move(stateStack.back());
-				stateStack.pop_back();
-				if(!stateStack.empty())
-					stateStack.back()->onResumeFrom(thisState.get());
-			}
+			State(std::function<void(bool, const State *)> onDone = {}) :onDone(onDone) {}
+
+			static void updateStack(StateStack& stateStack);
+			static void renderStack(StateStack& stateStack);
+
+		protected:
+			virtual void onResumeFrom(const State* state) {}
+			virtual void render() = 0;
+			virtual Status updateImpl(StateStack& stateStack) = 0;
+		private:
+			void update(StateStack& stateStack);
+		private:
+			std::function<void(bool, const State*)> onDone;
 		};
 
 		int addTextToLine(std::vector<glm::uvec4>& buf, const std::string& text, int col, int row, const glm::vec4& color);

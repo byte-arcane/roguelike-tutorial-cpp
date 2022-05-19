@@ -62,6 +62,7 @@ namespace rlf
 		std::vector<EntityId> items;
 
 		int Weight() const;
+		int EquippedItemAtSlot(ItemCategory itemCategory) const;
 	};
 
 	// Creature-specific data

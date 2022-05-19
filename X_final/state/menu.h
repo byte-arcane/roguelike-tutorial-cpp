@@ -6,13 +6,13 @@ namespace rlf
 {
 	namespace state
 	{
-		class Menu : public IState
+		class Menu : public State
 		{
 		public:
-			bool update(StateStack& stateStack) override;
+			int option = 0;
+		private:
 			void render() override;
-
-			int option = -1;
+			Status updateImpl(StateStack& stateStack) override;
 		};
 	}
 }

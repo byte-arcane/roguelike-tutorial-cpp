@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <functional>
 #include <unordered_map>
 
 #include <glm/glm.hpp>
@@ -34,7 +35,8 @@ namespace rlf
 		void RenderGui();
 		void RenderHeader();
 		void RenderGame();
-		void RenderGameOverlay(const SparseBuffer& buffer, const std::string& shaderName);
+		void RenderGameOverlay(const SparseBuffer& buffer);
+		void RenderTargets(const SparseBuffer& buffer, int targetIdx);
 		void RenderBg(const Spritemap& spritemap);
 		void RenderMenu(const SparseBuffer& buffer);
 
@@ -43,6 +45,7 @@ namespace rlf
 
 		void CenterCameraAtPoint(const glm::ivec2& point);
 		glm::ivec2 MouseCursorTile() const;
+		glm::ivec2 WorldToScreen(const glm::ivec2& point) const;
 		glm::ivec2 RowStartAndNum(const std::string& guiSegment) const;
 		const glm::ivec2& ScreenSize() const { return screenSize; }
 
@@ -60,7 +63,6 @@ namespace rlf
 		uint32_t BeginDenseShader(int numRows);
 		uint32_t BeginSparseShader(int numRows);
 		void UpdateRenderableEntity(const Entity& e);
-		void SetupShaderCommon(uint32_t program, int numRows);
 
 	private:
 		

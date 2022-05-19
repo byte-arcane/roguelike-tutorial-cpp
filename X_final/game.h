@@ -34,12 +34,7 @@ namespace rlf
 		const std::vector<std::pair<std::string, int>>& MessageLog() const { return messageLog; }
 		void WriteToMessageLog(const std::string& msg);
 
-		TurnSystem& GetTurnSystem() { return turnSystem; }
-
-		// Set the action data (or some of it, if it needs to be done over multiple stages)
-		ActionData& GetActionData() { return actionData; }
-		// execute the action
-		void ExecuteActionData();
+		void EndTurn();
 
 	private:
 
@@ -52,13 +47,7 @@ namespace rlf
 		std::vector<Level> levels;
 		int currentLevelIndex = -1;
 
-		ActionData actionData;
 		TurnSystem turnSystem;
-		std::vector<ActionData> actionHistory;
-
-		// gui
-
-		// game menu?
 
 		// message log: messages and how many times each is encountered
 		std::vector<std::pair<std::string,int>> messageLog;

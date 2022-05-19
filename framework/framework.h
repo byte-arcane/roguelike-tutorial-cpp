@@ -41,6 +41,7 @@ namespace rlf
 
 		static int ViewportWidth() { return viewportWidth; }
 		static int ViewportHeight() { return viewportHeight; }
+		static double Time();
 
 	protected: 
 		// Allow subclasses to modify settings, e.g. via the configure method
