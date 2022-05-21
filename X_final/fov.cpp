@@ -84,7 +84,7 @@ void cast_light(
 namespace rlf
 {
     // http://www.roguebasin.com/index.php/C%2B%2B_shadowcasting_implementation
-	void calculate_fov(
+	void CalculateFieldOfView(
         const glm::ivec2& start, 
         int radius, 
         const glm::ivec2& map_size, 

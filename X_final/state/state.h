@@ -19,6 +19,7 @@ namespace rlf
 		};
 
 		class State;
+		// Stack of game states, top of the stack is the back of the vector
 		using StateStack = std::vector<std::unique_ptr<State>>;
 
 		class State
@@ -28,23 +29,21 @@ namespace rlf
 
 			State(std::function<void(bool, const State *)> onDone = {}) :onDone(onDone) {}
 
-			static void updateStack(StateStack& stateStack);
-			static void renderStack(StateStack& stateStack);
-			static void pushToStack(StateStack& stateStack, std::unique_ptr<State>& state);
+			virtual void StartListening() {}
+			virtual void StopListening() {}
+			virtual void Render() = 0;
+			void Update(StateStack& stateStack);
 
 		protected:
-			virtual void startListening() {}
-			virtual void stopListening() {}
-			virtual void onResumeFrom(const State* state) {}
-			virtual void render() = 0;
-			virtual Status updateImpl(StateStack& stateStack) = 0;
+			virtual void ResumeFrom(const State* state) {}
+			virtual Status UpdateImpl() = 0;
 		private:
-			void update(StateStack& stateStack);
+			
 		private:
 			std::function<void(bool, const State*)> onDone;
 		};
 
-		int addTextToLine(std::vector<glm::uvec4>& buf, const std::string& text, int col, int row, const glm::vec4& color);
-		void addSeparatorLine(std::vector<glm::uvec4>& buf, int row, const glm::vec4& color, int numCols, const std::string& centeredText = "", char fillChar = '-');
+		int AddTextToLine(std::vector<glm::uvec4>& buf, const std::string& text, int col, int row, const glm::vec4& color);
+		void AddSeparatorLine(std::vector<glm::uvec4>& buf, int row, const glm::vec4& color, int numCols, const std::string& centeredText = "", char fillChar = '-');
 	}
 }

@@ -10,25 +10,25 @@ namespace rlf
 	public:
 
 		// Release the texture
-		~Tilemap() { Dispose(); }
+		~Tilemap()  { Dispose(); }
 
 		// Load the texture
 		void Load(const char* imgFilename, const glm::ivec2& tileSize);
 
 		// Accessors
-		uint32_t Texture() const { return texture; }
-		const glm::ivec2& TileSize() const { return tileSize; }
-		const glm::ivec2& TileNum() const { return tileNum; }
+		uint32_t Texture() const  { return texture; }
+		const glm::ivec2& TileSize() const  { return tileSize; }
+		const glm::ivec2& TileNum() const  { return tileNum; }
 
-		void Dispose();
+		void Dispose() ;
 
 	private:
 		// texture object
 		uint32_t texture=0;
 		// pixels for each tile
-		glm::ivec2 tileSize;
+		glm::ivec2 tileSize = {0,0};
 		// number of tiles in each dimension
-		glm::ivec2 tileNum;
+		glm::ivec2 tileNum = {0,0};
 
 	};
 
@@ -36,10 +36,10 @@ namespace rlf
 	struct TileData
 	{
 		int spriteIndex = -1;
-		glm::vec4 color;
+		glm::vec4 color = {0,0,0,0};
 
 		TileData() = default;
-		TileData(int si, const glm::vec4& c) :spriteIndex(si), color(c) {}
+		TileData(int si, const glm::vec4& c)  :spriteIndex(si), color(c) {}
 
 		// Pack sprite data (which sprite and what color tint) for use with a dense 2D grid (position of sprite is given implicitly by grid cell)
 		glm::uvec2 PackDense() const;

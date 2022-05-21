@@ -1,13 +1,9 @@
 TODO:
-	
-	save/load via json
-	
-		levels
-		poolEntities
-		re-hooking up signals
-		rebuilding state
-		
-	fix up state
+
+	bugs:
+		can't use last items -- key not recognized
+		drinking some potions (after picking up??) causes issues
+		stacking not working
 		
 "Advanced" C++ patterns
 

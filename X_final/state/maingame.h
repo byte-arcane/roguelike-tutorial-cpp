@@ -9,13 +9,13 @@ namespace rlf
 		class MainGame : public State
 		{			
 		private:
-			void render() override;
-			void onResumeFrom(const State* state) override { isHeaderDirty = true; }
-			Status updateImpl(StateStack& stateStack) override;
+			void Render() override;
+			void ResumeFrom(const State* state) override { isHeaderDirty = true; }
+			Status UpdateImpl() override;
 		private:
 			bool isHeaderDirty = true;
 			std::vector<glm::ivec2> projectilePath;
-			float projectileFireTime;
+			float projectileFireTime = 0.0f;
 		};
 	}
 }

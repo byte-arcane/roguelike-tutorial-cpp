@@ -10,7 +10,6 @@
 #include "tilemap.h"
 #include "spritemap.h"
 #include "sparsebuffer.h"
-#include "inventory.h"
 
 template <class T>
 class MyHash;
@@ -37,7 +36,6 @@ namespace rlf
 		void RenderGame();
 		void RenderGameOverlay(const SparseBuffer& buffer);
 		void RenderTargets(const SparseBuffer& buffer, int targetIdx);
-		void RenderBg(const Spritemap& spritemap);
 		void RenderMenu(const SparseBuffer& buffer);
 
 		SparseBuffer& RequestBuffer(const std::string& name) { return bufferMap[name];  }
@@ -48,6 +46,8 @@ namespace rlf
 		glm::ivec2 WorldToScreen(const glm::ivec2& point) const;
 		glm::ivec2 RowStartAndNum(const std::string& guiSegment) const;
 		const glm::ivec2& ScreenSize() const { return screenSize; }
+
+		void ReloadShaders();
 
 	private:
 		// Signal-slots
@@ -77,20 +77,17 @@ namespace rlf
 		glm::ivec2 cameraOffset = {0,0};
 
 		// viewport-specific, measured in CELLs
-		glm::ivec2 screenSize;
+		glm::ivec2 screenSize = {0,0};
 
 		// The viewport coordinates for the entire window
-		glm::ivec2 screenOffsetPx;
-		glm::ivec2 viewSizePx;
+		glm::ivec2 screenOffsetPx = {0,0};
+		glm::ivec2 viewSizePx = {0,0};
 
 		// Quad
 		unsigned int VBO = 0, VAO = 0;
 		int numVerticesQuad = 0;
 
 		// shaders
-		uint32_t shaderTilemapDense = 0;
-		uint32_t shaderTilemapSparse = 0;
-
 		std::unordered_map<std::string, uint32_t> shaderDb;
 
 		// tilemap

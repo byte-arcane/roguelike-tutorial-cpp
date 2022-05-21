@@ -37,7 +37,7 @@ namespace rlf
 		std::reverse(path.begin(), path.end());
 	}
 
-	vector<ivec2> calcPath(const ivec2& start, const ivec2& goal, const ivec2& mapSize, const function<float(const glm::ivec2&)>& fnCost)
+	vector<ivec2> CalculatePath(const ivec2& start, const ivec2& goal, const ivec2& mapSize, const function<float(const glm::ivec2&)>& fnCost)
 	{
 		constexpr float INF_COST = std::numeric_limits<float>::infinity();
 		

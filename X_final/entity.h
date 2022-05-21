@@ -15,7 +15,7 @@
 
 namespace rlf
 {
-	class GameState;
+	class Game;
 	class Entity;
 	
 	// allow 8 bits per type, so a max of 255 subtypes
@@ -36,8 +36,8 @@ namespace rlf
 		Other
 	};
 
-	constexpr int NUM_EQUIPMENT_SLOTS = int(ItemCategory::Other) -1;
-	constexpr int NUM_ITEM_CATEGORIES = int(ItemCategory::Other)+1;
+	constexpr int NUM_EQUIPMENT_SLOTS = int(ItemCategory::Other) - 1;
+	constexpr int NUM_ITEM_CATEGORIES = int(ItemCategory::Other) + 1;
 
 	enum class CombatStat
 	{
@@ -96,7 +96,7 @@ namespace rlf
 
 	struct ItemConfig
 	{
-		bool defaultStackSize = 0;
+		int defaultStackSize = 0;
 		int weight = 1; // in stones
 		ItemCategory category = ItemCategory::Other;
 
@@ -107,9 +107,9 @@ namespace rlf
 		int attackRange = 1;
 		
 		// consumable-specific
-		Effect effect; 
+		Effect effect = Effect(-1);
 
-		bool IsStackable() const { return defaultStackSize != 0; }
+		bool IsStackable() const  { return defaultStackSize != 0; }
 	};
 
 	struct CreatureConfig
@@ -132,7 +132,7 @@ namespace rlf
 	struct INonCopyable
 	{
 		INonCopyable() = default;
-		INonCopyable(INonCopyable&&) noexcept = default; // movable
+		INonCopyable(INonCopyable&&)  = default; // movable
 		INonCopyable(const INonCopyable&) = delete; // non construction-copyable    
 		INonCopyable& operator=(const INonCopyable&) = delete; // non copyable
 		INonCopyable& operator=(INonCopyable&&) = default;
@@ -152,7 +152,7 @@ namespace rlf
 
 	struct EntityDynamicConfig
 	{
-		glm::ivec2 position;
+		glm::ivec2 position{-1,-1};
 		std::string nameOverride;
 		EntityId itemOwner;
 		std::vector<DbIndex> inventory;
@@ -163,28 +163,28 @@ namespace rlf
 	{
 	public:
 
-		EntityType Type() const { return type; }
+		EntityType Type() const  { return type; }
 
-		const DbIndex& DbCfg() const { return dbIndex; }
-		const EntityId& Id() const { return id; }
-		const std::string& Name() { return name; }
+		const DbIndex& DbCfg() const  { return dbIndex; }
+		const EntityId& Id() const  { return id; }
+		const std::string& Name()  { return name; }
 
 		bool BlocksMovement() const;
 		bool BlocksVision() const;
 		bool CanInteractFromAdjacentTile() const { return BlocksMovement(); }
 
-		void SetLocation(const Location& newLocation) { location = newLocation; }
-		const Location& GetLocation() const { return location; }
-		Inventory* GetInventory() const { return inventory.get(); }
-		CreatureData* GetCreatureData() const { return creatureData.get(); }
-		ObjectData* GetObjectData() const { return objectData.get(); }
-		ItemData* GetItemData() const { return itemData.get(); }
+		void SetLocation(const Location& newLocation)  { location = newLocation; }
+		const Location& GetLocation() const  { return location; }
+		Inventory* GetInventory() const  { return inventory.get(); }
+		CreatureData* GetCreatureData() const  { return creatureData.get(); }
+		ObjectData* GetObjectData() const  { return objectData.get(); }
+		ItemData* GetItemData() const  { return itemData.get(); }
 
-		// how do we render this entity given its current state?
+		// how do we Render this entity given its current state?
 		const TileData& CurrentTileData() const;
 
 	private:
-		friend class GameState;
+		friend class Game;
 		void Initialize(EntityId id, DbIndex dbIndex, const EntityDynamicConfig& dcfg);
 
 		// friends for easy serialization
@@ -201,7 +201,7 @@ namespace rlf
 
 		// Entity data here
 		std::string name;
-		EntityType type;
+		EntityType type = EntityType(-1);
 
 		// Location (level and position), useful for creatures and objects
 		Location location;

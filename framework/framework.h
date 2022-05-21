@@ -16,6 +16,8 @@ namespace rlf
 			int samples = -1; // for multisampling. By default don't force any option
 		};
 
+		~FrameworkApp() = default;
+
 		virtual void configure(int argc, char ** argv) {}
 		
 		// Put here any initialisation code. Happens once, before the main loop and after initialisation of GLFW/GLEW/ImGui

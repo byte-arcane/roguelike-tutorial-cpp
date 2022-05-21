@@ -12,7 +12,7 @@ namespace rlf
 		int version = 0;
 		int id = 0;
 
-		bool operator == (const EntityId& other) const { return id == other.id && version == other.version; }
+		bool operator == (const EntityId& other) const  { return id == other.id && version == other.version; }
 
 		Entity* Entity() const;
 	};
@@ -22,10 +22,10 @@ namespace rlf
 template<>
 struct std::hash<rlf::EntityId>
 {
-	std::size_t operator()(rlf::EntityId const& eid) const noexcept
+	std::size_t operator()(rlf::EntityId const& eid) const 
 	{
-		std::size_t h1 = std::hash<int>{}(eid.id);
-		std::size_t h2 = std::hash<int>{}(eid.version);
+		const std::size_t h1 = std::hash<int>{}(eid.id);
+		const std::size_t h2 = std::hash<int>{}(eid.version);
 		return h1 ^ (h2 << 1); // or use boost::hash_combine
 	}
 };

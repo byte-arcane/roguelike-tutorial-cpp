@@ -13,8 +13,8 @@ namespace rlf
 			std::string charName;
 		private:
 
-			void render() override;
-			Status updateImpl(StateStack& stateStack) override;
+			void Render() override;
+			Status UpdateImpl() override;
 
 		private:
 			bool isGuiDirty = true;

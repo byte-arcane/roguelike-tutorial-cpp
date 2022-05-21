@@ -6,6 +6,6 @@ namespace rlf
 	Entity* EntityId::Entity() const
 	{
 		// ask gamestate to do it
-		return GameState::Instance().GetEntity(*this);
+		return Game::Instance().GetEntity(*this);
 	}
 }

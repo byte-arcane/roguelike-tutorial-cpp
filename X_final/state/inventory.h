@@ -14,7 +14,7 @@ namespace rlf
 		{
 		public:
 
-			enum Mode
+			enum class Mode
 			{
 				EquipOrUse = 0,
 				PickUp,
@@ -27,8 +27,8 @@ namespace rlf
 			int PageIndex() const { return pageIndex; }
 
 		private:
-			void render() override;
-			Status updateImpl(StateStack& stateStack) override;
+			void Render() override;
+			Status UpdateImpl() override;
 
 		private:
 			Mode mode;

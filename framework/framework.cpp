@@ -260,6 +260,7 @@ namespace rlf
             glfwSwapBuffers(glfWindow);
 
             // continuous rendering, even if window is not visible or minimized
+            Input::OnNewFrame();
             glfwPollEvents();
         }
 

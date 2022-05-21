@@ -7,7 +7,6 @@ SET(SOURCE_FILES
 	entity.cpp
 	graphics.cpp
 	spritemap.cpp
-	player.cpp
 	eventhandlers.cpp
 	fov.cpp
 	entityid.cpp
@@ -15,11 +14,9 @@ SET(SOURCE_FILES
 	astar.cpp
 	grid.cpp
 	turn.cpp
-	inventory.cpp
 	effect.cpp
 	dungen.cpp
 	db.cpp
-	action.cpp
 	signals.cpp
 	state/inventory.cpp
 	state/maingame.cpp
@@ -31,7 +28,6 @@ SET(SOURCE_FILES
 )
 
 SET(HEADER_FILES
-	action.h
 	tilemap.h
 	sparsebuffer.h
 	level.h
@@ -39,7 +35,6 @@ SET(HEADER_FILES
 	entity.h
 	graphics.h
 	spritemap.h
-	player.h
 	eventhandlers.h
 	db.h
 	fov.h
@@ -48,7 +43,6 @@ SET(HEADER_FILES
 	astar.h
 	grid.h
 	turn.h
-	inventory.h
 	effect.h
 	dungen.h
 	signals.h

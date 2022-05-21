@@ -22,7 +22,7 @@ namespace rlf
 		glBindTextureUnit(1, texLayer);
 		glUniform1i(glGetUniformLocation(program, "spritemap"), 1);
 
-		// render the quad
+		// Render the quad
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 

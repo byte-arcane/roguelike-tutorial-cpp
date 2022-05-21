@@ -35,15 +35,15 @@ namespace rlf
 			freeSlots.erase(it);
 		}
 
-		// update the data and return the slot
+		// Update the data and return the slot
 		Update(slot, data);
 		return slot;
 	}
 
-	// update the data at a given slot
-	void SparseBuffer::Update(int slot, const void* data)
+	// Update the data at a given slot
+	void SparseBuffer::Update(int idx, const void* data)
 	{
-		rlf::updateSSBO(buffer, slot*stride, stride, data);
+		rlf::updateSSBO(buffer, idx *stride, stride, data);
 	}
 
 	void SparseBuffer::Set(int numElements, const void* data)
@@ -57,9 +57,9 @@ namespace rlf
 	}
 
 	// Free up a slot
-	void SparseBuffer::Remove(int slot)
+	void SparseBuffer::Remove(int idx)
 	{
-		freeSlots.insert(slot);
+		freeSlots.insert(idx);
 		auto memory = MapMemory(GL_MAP_WRITE_BIT);
 		memset((char*)memory+ firstFreeSlotAtEnd * stride, 0, stride);
 		UnmapMemory();

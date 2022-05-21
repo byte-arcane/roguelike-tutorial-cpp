@@ -186,7 +186,8 @@
         "itemCfg": {
             "category": "Consumable",
             "weight": 1,
-            "effect": "MinorHeal"
+            "effect": "MinorHeal",
+			"defaultStackSize" : 1
         }
     },
     "potion of healing": {
@@ -199,7 +200,8 @@
         "itemCfg": {
             "category": "Consumable",
             "weight": 1,
-            "effect": "Heal"
+            "effect": "Heal",
+			"defaultStackSize" : 1
         }
     },
     "major potion of healing": {
@@ -212,7 +214,8 @@
         "itemCfg": {
             "category": "Consumable",
             "weight": 1,
-            "effect": "MajorHeal"
+            "effect": "MajorHeal",
+			"defaultStackSize" : 1
         }
     },
     "pool of healing": {

@@ -37,7 +37,7 @@ namespace rlf
 	{
 		buffer.resize(0);
 		const int maxShownLines = numRows - 2;
-		auto player = GameState::Instance().Player().Entity();
+		auto player = Game::Instance().PlayerId().Entity();
 		if (player != nullptr)
 		{
 			auto loc = player->GetLocation();
@@ -51,7 +51,7 @@ namespace rlf
 			auto cs = AccumulateCombatStats(*player);
 			AddTextSprites(buffer, fmt::format("{0} - {1},{2} Lvl:{3} ATT:{4} DEF:{5} DMG:{6} RES:{7} HP:{8}({9}) XP:{10} ${11}", player->Name(), p.x, p.y, loc.levelId + 1, cs.x, cs.y, cs.z, cs.w, cd->hp, hpMax, cd->xp, gold), maxShownLines, glm::vec4(1));
 		}
-		const auto& messages = GameState::Instance().MessageLog();
+		const auto& messages = Game::Instance().MessageLog();
 		
 		vec4 color{ .7,.7, .7, 1 };
 		for (int iLine = 0; iLine < maxShownLines; ++iLine)
@@ -87,12 +87,14 @@ namespace rlf
 		VAO = rlf::buildVAO(VBO, sizeof(vec3));
 		numVerticesQuad = int(quadVertices.size());
 
-		// build and compile our shader program
-		shaderTilemapDense = rlf::buildShader(rlf::readTextFile(rlf::mediaSearch("shaders/tilemap_dense.vert")).c_str(), rlf::readTextFile(rlf::mediaSearch("shaders/tilemap_dense.frag")).c_str());
-		shaderTilemapSparse = rlf::buildShader(rlf::readTextFile(rlf::mediaSearch("shaders/tilemap_sparse.vert")).c_str(), rlf::readTextFile(rlf::mediaSearch("shaders/tilemap_sparse.frag")).c_str());
-		shaderDb["gui"] = rlf::buildShader(rlf::readTextFile(rlf::mediaSearch("shaders/tilemap_sparse_gui.vert")).c_str(), rlf::readTextFile(rlf::mediaSearch("shaders/tilemap_sparse_gui.frag")).c_str());
-		shaderDb["gui_highlight"] = rlf::buildShader(rlf::readTextFile(rlf::mediaSearch("shaders/tilemap_sparse_guih.vert")).c_str(), rlf::readTextFile(rlf::mediaSearch("shaders/tilemap_sparse_guih.frag")).c_str());
-		// TODO: add highlighting shader
+		// specify the shader names for now
+		shaderDb = {
+			{"tilemap_dense",0},
+			{"tilemap_sparse",0},
+			{"tilemap_sparse_gui",0},
+			{"tilemap_sparse_gui_highlight",0},
+		};
+		ReloadShaders();
 
 		// Tilemap setup
 		tilemap.Load(rlf::mediaSearch("textures/Curses_1920x900.png").c_str(), ivec2(24, 36));
@@ -130,6 +132,23 @@ namespace rlf
 		sig::onFogOfWarChanged.connect<Graphics, &Graphics::OnFogOfWarChanged>(this);
 		sig::onObjectStateChanged.connect<Graphics, &Graphics::OnObjectStateChanged>(this);
 		sig::onGuiUpdated.connect<Graphics, &Graphics::OnGuiUpdated>(this);
+		sig::onGameLoaded.connect<Graphics, &Graphics::OnGameLoaded>(this);
+	}
+
+	void Graphics::ReloadShaders()
+	{
+		for (auto& nameAndProgram : shaderDb)
+		{
+			auto vertexShaderFilename = rlf::mediaSearch(fmt::format("shaders/{0}.vert", nameAndProgram.first));
+			auto fragmentShaderFilename = rlf::mediaSearch(fmt::format("shaders/{0}.frag", nameAndProgram.first));
+			auto newProgram = rlf::buildShader(rlf::readTextFile(vertexShaderFilename).c_str(), rlf::readTextFile(fragmentShaderFilename).c_str());;
+			if (newProgram != 0)
+			{
+				if (nameAndProgram.second != 0)
+					glDeleteProgram(nameAndProgram.second);
+				nameAndProgram.second = newProgram;
+			}
+		}
 	}
 
 	void Graphics::Dispose()
@@ -142,11 +161,13 @@ namespace rlf
 			kv.second.Dispose();
 		for (auto& kv : spritemapMap)
 			kv.second.Dispose();
+		for (auto& kv : shaderDb)
+			if(kv.second != 0)
+				glDeleteProgram(kv.second);
+
 
 		glDeleteVertexArrays(1, &VAO);
 		glDeleteBuffers(1, &VBO);
-		glDeleteProgram(shaderTilemapDense);
-		glDeleteProgram(shaderTilemapSparse);
 		tilemap.Dispose();
 	}
 
@@ -191,6 +212,7 @@ namespace rlf
 
 	uint32_t Graphics::BeginDenseShader(int numRows)
 	{
+		auto shaderTilemapDense = shaderDb.at("tilemap_dense");
 		glUseProgram(shaderTilemapDense);
 		SetupTilemapAndGrid(shaderTilemapDense, tilemap, { screenSize.x, numRows });
 		SetupCameraAndFow(shaderTilemapDense, cameraOffset, texFogOfWar);
@@ -200,9 +222,10 @@ namespace rlf
 	uint32_t Graphics::BeginSparseShader(int numRows)
 	{
 		// activate the sparse shader
+		auto shaderTilemapSparse = shaderDb.at("tilemap_sparse");
 		glUseProgram(shaderTilemapSparse);
 		SetupTilemapAndGrid(shaderTilemapSparse, tilemap, { screenSize.x, numRows });
-		SetupCameraAndFow(shaderTilemapDense, cameraOffset, texFogOfWar);
+		SetupCameraAndFow(shaderTilemapSparse, cameraOffset, texFogOfWar);
 		return shaderTilemapSparse;
 	}
 
@@ -236,7 +259,7 @@ namespace rlf
 		// add the camera offset to calculate the level coordinates
 		p += cameraOffset;
 		// if we're out of map bounds, return invalid coordinates
-		auto mapSize = GameState::Instance().CurrentLevel().Bg().Size();
+		auto mapSize = Game::Instance().CurrentLevel().Bg().Size();
 		if (p.x < 0 || p.y < 0 || p.x >= mapSize.x || p.y >= mapSize.y)
 			return { -1,-1 }; // return invalid coordinates
 		printf("cursor: %d %d\n", p.x, p.y);
@@ -249,7 +272,7 @@ namespace rlf
 		auto viewGridSize = ivec2{screenSize.x, gameRowStartAndNum.y};
 		auto halfScreenGridSize = viewGridSize / 2;
 		cameraOffset = point - halfScreenGridSize;
-		const auto& levelSize = GameState::Instance().CurrentLevel().Bg().Size();
+		const auto& levelSize = Game::Instance().CurrentLevel().Bg().Size();
 		cameraOffset = clamp(cameraOffset, ivec2(0), levelSize- viewGridSize);
 	}
 
@@ -275,7 +298,7 @@ namespace rlf
 		else
 			buffer.Update(it->second, &bufferData);
 		
-		if (GameState::Instance().IsPlayer(e))
+		if (Game::Instance().IsPlayer(e))
 			CenterCameraAtPoint(position);
 	}
 
@@ -286,7 +309,8 @@ namespace rlf
 
 	void Graphics::OnEntityAdded(Entity& e)
 	{
-		UpdateRenderableEntity(e);
+		if(e.Type() != EntityType::Item)
+			UpdateRenderableEntity(e);
 	}
 
 	void Graphics::OnEntityRemoved(Entity& e)
@@ -326,7 +350,7 @@ namespace rlf
 
 	void Graphics::OnFogOfWarChanged()
 	{
-		const auto& fogOfWar = GameState::Instance().CurrentLevel().FogOfWar();
+		const auto& fogOfWar = Game::Instance().CurrentLevel().FogOfWar();
 		auto size = fogOfWar.Size();
 		glTextureSubImage2D(texFogOfWar, 0, 0, 0, size.x, size.y, GL_RED, GL_UNSIGNED_BYTE, fogOfWar.Raw());
 	}
@@ -349,12 +373,12 @@ namespace rlf
 				guiSparseBuffer.Init(sizeof(uvec4), 8192);
 			guiSparseBuffer.Set(guiBuffer.size(), guiBuffer.data());
 		}
-		// set the viewport so that we don't render the padding
+		// set the viewport so that we don't Render the padding
 		auto guiOffsetPx = screenOffsetPx + tilemap.TileSize() * ivec2(0, rowStartAndNum.x);
 		auto guiSizePx = tilemap.TileSize() * ivec2(screenSize.x, rowStartAndNum.y);
 		glViewport(guiOffsetPx.x, guiOffsetPx.y, guiSizePx.x, guiSizePx.y);
 
-		auto program = shaderDb["gui"];
+		auto program = shaderDb["tilemap_sparse_gui"];
 		glUseProgram(program);
 		SetupTilemapAndGrid(program, tilemap, { screenSize.x, rowStartAndNum.y });
 		guiSparseBuffer.Draw();
@@ -365,12 +389,12 @@ namespace rlf
 		auto& guiSparseBuffer = RequestBuffer("header");
 		auto rowStartAndNum = RowStartAndNum("status");
 		
-		// set the viewport so that we don't render the padding
+		// set the viewport so that we don't Render the padding
 		auto guiOffsetPx = screenOffsetPx + tilemap.TileSize() * ivec2(0, rowStartAndNum.x);
 		auto guiSizePx = tilemap.TileSize() * ivec2(screenSize.x, rowStartAndNum.y);
 		glViewport(guiOffsetPx.x, guiOffsetPx.y, guiSizePx.x, guiSizePx.y);
 
-		auto program = shaderDb["gui"];
+		auto program = shaderDb["tilemap_sparse_gui"];
 		glUseProgram(program);
 		SetupTilemapAndGrid(program, tilemap, { screenSize.x, rowStartAndNum.y });
 		guiSparseBuffer.Draw();
@@ -378,17 +402,17 @@ namespace rlf
 
 	void Graphics::RenderGame()
 	{
-		// set the viewport so that we don't render the padding
+		// set the viewport so that we don't Render the padding
 		auto rowStartAndNum = RowStartAndNum("main");
 		auto gameViewOffsetPx = screenOffsetPx + ivec2(0, rowStartAndNum.x) * tilemap.TileSize();
 		auto gameViewSizePx = ivec2(screenSize.x, rowStartAndNum.y) * tilemap.TileSize();
 		glViewport(gameViewOffsetPx.x, gameViewOffsetPx.y, gameViewSizePx.x, gameViewSizePx.y);
 
-		// render bg layer(s) first
+		// Render bg layer(s) first
 		auto program = Graphics::Instance().BeginDenseShader(rowStartAndNum.y);
 		texBg.Draw(program);
 
-		// render all sparse buffers using given order
+		// Render all sparse buffers using given order
 		program = Graphics::Instance().BeginSparseShader(rowStartAndNum.y);
 		glUniform1f(glGetUniformLocation(program, "show_in_explored_areas"), 1.0f);
 		bufferObjects.Draw();
@@ -400,12 +424,12 @@ namespace rlf
 	{
 		auto rowStartAndNum = RowStartAndNum("main");
 
-		// set the viewport so that we don't render the padding
+		// set the viewport so that we don't Render the padding
 		auto guiOffsetPx = screenOffsetPx + tilemap.TileSize() * ivec2(0, rowStartAndNum.x);
 		auto guiSizePx = tilemap.TileSize() * ivec2(screenSize.x, rowStartAndNum.y);
 		glViewport(guiOffsetPx.x, guiOffsetPx.y, guiSizePx.x, guiSizePx.y);
 
-		auto program = shaderDb["gui"];
+		auto program = shaderDb["tilemap_sparse_gui"];
 		glUseProgram(program);
 		SetupTilemapAndGrid(program, tilemap, { screenSize.x, rowStartAndNum.y });
 		guiSparseBuffer.Draw();
@@ -415,12 +439,12 @@ namespace rlf
 	{
 		auto rowStartAndNum = RowStartAndNum("main");
 
-		// set the viewport so that we don't render the padding
+		// set the viewport so that we don't Render the padding
 		auto guiOffsetPx = screenOffsetPx + tilemap.TileSize() * ivec2(0, rowStartAndNum.x);
 		auto guiSizePx = tilemap.TileSize() * ivec2(screenSize.x, rowStartAndNum.y);
 		glViewport(guiOffsetPx.x, guiOffsetPx.y, guiSizePx.x, guiSizePx.y);
 
-		auto program = shaderDb["gui_highlight"];
+		auto program = shaderDb["tilemap_sparse_gui_highlight"];
 		glUseProgram(program);
 		SetupTilemapAndGrid(program, tilemap, { screenSize.x, rowStartAndNum.y });
 		auto blink = ((int(FrameworkApp::Time() * 1000) / 530) % 2) != 0;
@@ -428,19 +452,14 @@ namespace rlf
 		guiSparseBuffer.Draw();
 	}
 
-	void Graphics::RenderBg(const Spritemap& spritemap)
-	{
-		// TODO: variant of a dense pass
-	}
-
 	void Graphics::RenderMenu(const SparseBuffer& buffer)
 	{
-		// set the viewport so that we don't render the padding
+		// set the viewport so that we don't Render the padding
 		auto guiOffsetPx = screenOffsetPx;
 		auto guiSizePx = tilemap.TileSize() * screenSize;
 		glViewport(guiOffsetPx.x, guiOffsetPx.y, guiSizePx.x, guiSizePx.y);
 
-		auto program = shaderDb["gui"];
+		auto program = shaderDb["tilemap_sparse_gui"];
 		glUseProgram(program);
 		SetupTilemapAndGrid(program, tilemap, screenSize);
 		buffer.Draw();
@@ -448,6 +467,10 @@ namespace rlf
 
 	void Graphics::OnGameLoaded()
 	{
-		assert(false);
+		// redo the level and gui
+		const auto& level = Game::Instance().CurrentLevel();
+		OnLevelChanged(level);
+		OnFogOfWarChanged();
+		isGuiDirty = true;
 	}
 }

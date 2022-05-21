@@ -16,21 +16,23 @@ namespace rlf
 {
 	namespace state
 	{
-		Status MainGame::updateImpl(StateStack& stateStack)
+		Status MainGame::UpdateImpl()
 		{
 			// Too easy to accidentally exit the game, so avoid unless we implement quick-save
 			//if (Input::GetKeyDown(GLFW_KEY_ESCAPE))
 			//	return true;
 
-			auto& g = GameState::Instance();
-			auto player = GameState::Instance().Player().Entity();
+			auto& g = Game::Instance();
+			if (Input::GetKeyDown(GLFW_KEY_F5))
+				g.Save();
+			if (Input::GetKeyDown(GLFW_KEY_F8))
+				g.Load();
+
+			auto player = Game::Instance().PlayerId().Entity();
 
 			// End the game state if player is dead, so that we can move to the death screen
 			if (player->GetCreatureData()->hp <= 0)
 				return Status::Success;
-
-			if (Input::GetKeyDown(GLFW_KEY_F1))
-				GameState::Instance().Save();
 
 			if (player != nullptr)
 			{
@@ -48,7 +50,7 @@ namespace rlf
 				if (direction != glm::ivec2(0, 0))
 				{
 					MoveAdj(*player, direction);
-					GameState::Instance().EndTurn();
+					Game::Instance().EndTurn();
 				}
 
 				if (Input::GetKeyDown(GLFW_KEY_ENTER))
@@ -74,7 +76,7 @@ namespace rlf
 					{
 						auto& handledObject = *handleTargets[0].Entity();
 						handledObject.GetObjectData()->Handle(handledObject, *player);
-						GameState::Instance().EndTurn();
+						Game::Instance().EndTurn();
 					}
 					//if we have > 1 handle targets, start targetting state
 					else if (handleTargets.size() > 1)
@@ -82,17 +84,18 @@ namespace rlf
 						std::vector<glm::ivec2> handlePositions;
 						for (const auto& ht : handleTargets)
 							handlePositions.push_back(ht.Entity()->GetLocation().position);
-						stateStack.emplace_back(new state::SelectTarget(handlePositions, [handleTargets](bool success, const State* state) {
+						std::unique_ptr<State> newState(new state::SelectTarget(handlePositions, [handleTargets](bool success, const State* state) {
 							// if success, handle that target and end turn
 							if (success)
 							{
-								auto player = GameState::Instance().Player().Entity();
+								auto player = Game::Instance().PlayerId().Entity();
 								auto targetIndex = static_cast<const state::SelectTarget*>(state)->targetIndex;
 								auto& handledObject = *handleTargets[targetIndex].Entity();
 								handledObject.GetObjectData()->Handle(handledObject, *player);
-								GameState::Instance().EndTurn();
+								Game::Instance().EndTurn();
 							}
-						}));
+							}));
+						Game::Instance().PushState(newState);
 					}
 				}
 
@@ -128,22 +131,23 @@ namespace rlf
 							{
 								auto& projPath = projectilePath;
 								auto& projFireTime = projectileFireTime;
-								stateStack.emplace_back(new state::SelectTarget(validTargetPositions, [validTargetPositions,&projPath,&projFireTime](bool success, const State* state) {
+								std::unique_ptr<State> newState(new state::SelectTarget(validTargetPositions, [validTargetPositions,&projPath,&projFireTime](bool success, const State* state) {
 									// if success, handle that target and end turn
 									if (success)
 									{
-										auto& g = GameState::Instance();
+										auto& g = Game::Instance();
 										auto targetIndex = static_cast<const state::SelectTarget*>(state)->targetIndex;
 										auto targetPosition = validTargetPositions[targetIndex];
 										auto target = g.CurrentLevel().GetEntity(targetPosition, true);
 										assert(target != nullptr);
-										auto player = g.Player().Entity();
+										auto player = g.PlayerId().Entity();
 										AttackEntity(*player, *target);
 										Line(projPath, player->GetLocation().position, targetPosition);
 										projFireTime = FrameworkApp::Time();
-										GameState::Instance().EndTurn();
+										Game::Instance().EndTurn();
 									}
 									}));
+								Game::Instance().PushState(newState);
 							}
 						}
 					}
@@ -153,18 +157,27 @@ namespace rlf
 				{
 					auto itemPile = g.CurrentLevel().GetEntity(playerPos, false);
 					if (itemPile != nullptr && itemPile->DbCfg() == DbIndex::ItemPile())
-						stateStack.emplace_back(new Inventory(Inventory::Mode::PickUp, {}));
+					{
+						std::unique_ptr<State> newState(new Inventory(Inventory::Mode::PickUp, {}));
+						Game::Instance().PushState(newState);
+					}
 				}
 				if (Input::GetKeyDown(GLFW_KEY_D))
-					stateStack.emplace_back(new Inventory(Inventory::Mode::Drop, {}));
+				{
+					std::unique_ptr<State> newState(new Inventory(Inventory::Mode::Drop, {}));
+					Game::Instance().PushState(newState);
+				}
 				if (Input::GetKeyDown(GLFW_KEY_E))
-					stateStack.emplace_back(new Inventory(Inventory::Mode::EquipOrUse, {}));
+				{
+					std::unique_ptr<State> newState(new Inventory(Inventory::Mode::EquipOrUse, {}));
+					Game::Instance().PushState(newState);
+				}
 
 #if 0 // Debugging
 				if (Input::GetKey(GLFW_KEY_LEFT_CONTROL))
 				{
 					auto tgt = Graphics::Instance().MouseCursorTile();
-					auto path = GameState::Instance().CurrentLevel().CalcPath(*player, tgt);
+					auto path = Game::Instance().CurrentLevel().CalcPath(*player, tgt);
 					//std::vector<ivec2> path; Square(path, player->GetLocation().position, 2,false);
 					Graphics::Instance().SetHighlightedTiles(path);
 				}
@@ -176,7 +189,7 @@ namespace rlf
 			return Status::Running;
 		}
 
-		void MainGame::render()
+		void MainGame::Render()
 		{
 			auto& gfx = Graphics::Instance();
 			if (isHeaderDirty)
@@ -186,7 +199,7 @@ namespace rlf
 				std::vector<glm::uvec4> bufferHeader;
 				auto& gfx = Graphics::Instance();
 				auto screenSize = gfx.ScreenSize();
-				addSeparatorLine(bufferHeader, 0, glm::vec4(1,1,1,1), screenSize.x, "The Tutorial Caverns");
+				AddSeparatorLine(bufferHeader, 0, glm::vec4(1,1,1,1), screenSize.x, "The Tutorial Caverns");
 
 				auto& sparseBufferHeader = gfx.RequestBuffer("header");
 				if (!sparseBufferHeader.IsInitialized())
@@ -201,7 +214,7 @@ namespace rlf
 			gfx.RenderGui();
 			gfx.RenderHeader();
 
-			// render a projectile. since this is the only effect, this is VERY inefficient, and the render pass would be better utilised if more things were rendered
+			// Render a projectile. since this is the only effect, this is VERY inefficient, and the Render pass would be better utilised if more things were rendered
 			if (!projectilePath.empty())
 			{
 				auto time = FrameworkApp::Time() - projectileFireTime;

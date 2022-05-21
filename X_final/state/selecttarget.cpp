@@ -8,7 +8,7 @@ namespace rlf
 {
 	namespace state
 	{
-		Status SelectTarget::updateImpl(StateStack& stateStack)
+		Status SelectTarget::UpdateImpl()
 		{
 			if (rlf::Input::GetKeyDown(GLFW_KEY_ESCAPE))
 			{
@@ -22,7 +22,7 @@ namespace rlf
 			return Status::Running;
 		}
 
-		void SelectTarget::render()
+		void SelectTarget::Render()
 		{
 			auto& gfx = Graphics::Instance();
 			auto& sparseBuffer = gfx.RequestBuffer("target");
@@ -35,7 +35,7 @@ namespace rlf
 				// Build the header
 				std::vector<glm::uvec4> buffer;
 				auto screenSize = gfx.ScreenSize();
-				addSeparatorLine(buffer, 0, glm::vec4(1, 1, 1, 1), screenSize.x, "Select target");
+				AddSeparatorLine(buffer, 0, glm::vec4(1, 1, 1, 1), screenSize.x, "Select target");
 
 				auto& sparseBufferHeader = gfx.RequestBuffer("header");
 				if (!sparseBufferHeader.IsInitialized())

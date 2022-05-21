@@ -15,8 +15,8 @@ namespace rlf
 			
 			int targetIndex = 0;
 		private:
-			Status updateImpl(StateStack& stateStack) override;
-			void render() override;
+			Status UpdateImpl() override;
+			void Render() override;
 		private:
 			bool isDirty = true;
 			std::vector<glm::ivec2> validTargets;

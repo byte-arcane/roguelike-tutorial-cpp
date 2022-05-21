@@ -15,6 +15,7 @@ namespace rlf
 		static bool GetMouseButtonDown(int btn);
 
 		static void Initialise();
+		static void OnNewFrame();
 		static void KeyCallback(int key, int action);
 		static void MouseButtonCallback(int button, int action);
 		static void MouseCursorCallback(float x, float y);

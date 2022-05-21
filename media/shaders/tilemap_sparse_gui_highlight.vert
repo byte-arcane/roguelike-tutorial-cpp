@@ -44,7 +44,6 @@ void main()
 	// expand it in [-1,1], for OpenGL
 	pos = pos*2-1;
 
-	// when we're supposed to be blinking, push the quad far away to make it disappear for the blink duration
 	if(gl_InstanceID == targetIdx)
 		pos += 1000000;
 

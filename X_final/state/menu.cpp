@@ -20,25 +20,26 @@ namespace rlf
 {
 	namespace state
 	{
-		Status Menu::updateImpl(StateStack& stateStack)
+		Status Menu::UpdateImpl()
 		{
 			if (Input::GetKeyDown(GLFW_KEY_ESCAPE))
 				return Status::Abort;
 			else if (Input::GetKeyDown(GLFW_KEY_1))
 			{
-				std::unique_ptr<State> uptr(new CreateChar([&](bool success, const State* state) {
+				std::unique_ptr<State> newState(new CreateChar([&](bool success, const State* state) {
 					if (success)
 					{
 						auto charName = static_cast<const CreateChar*>(state)->charName;
-						startNewGame(charName, stateStack);
+						StartNewGame(charName);
 					}
 					}));
-				pushToStack(stateStack, uptr);
+				Game::Instance().PushState(newState);
 			}
 			else if (Input::GetKeyDown(GLFW_KEY_2))
 			{
 				// continue game
-				continueGame(stateStack);
+				ContinueGame();
+				
 			}
 			else if (Input::GetKeyDown(GLFW_KEY_3))
 			{
@@ -50,37 +51,39 @@ namespace rlf
 			if (changeToDeathState)
 			{
 				changeToDeathState = false;
-				stateStack.emplace_back(new Death());
+				std::unique_ptr<State> newState(new state::Death());
+				Game::Instance().PushState(newState);
 			}
 
 			return Status::Running;
 		}
 
-		void Menu::startListening()
+		void Menu::StartListening()
 		{
-			sig::onPlayerDied.connect<Menu,&Menu::onPlayerDied>(this);
+			sig::onPlayerDied.connect<Menu,&Menu::OnPlayerDied>(this);
 		}
-		void Menu::stopListening()
+		void Menu::StopListening()
 		{
-			sig::onPlayerDied.disconnect<&Menu::onPlayerDied>(this);
+			sig::onPlayerDied.disconnect<&Menu::OnPlayerDied>(this);
 		}
 
-		void Menu::onPlayerDied()
+		void Menu::OnPlayerDied()
 		{
 			changeToDeathState = true;
 		}
 
-		void Menu::startNewGame(const std::string& charName, StateStack& stateStack)
+		void Menu::StartNewGame(const std::string& charName)
 		{
-			GameState::Instance() = GameState();
+			Game::Instance().New();
 
 			// Set level
 			ChangeLevel(0);
 
-			stateStack.emplace_back(new state::MainGame());
+			std::unique_ptr<State> newState(new state::MainGame());
+			Game::Instance().PushState(newState);
 
 			// find suitable position (entry staircase)
-			const auto& entities = GameState::Instance().CurrentLevel().Entities();
+			const auto& entities = Game::Instance().CurrentLevel().Entities();
 			auto itFound = std::find_if(entities.begin(), entities.end(), [](const EntityId& entityId) {
 				return entityId.Entity()->DbCfg() == DbIndex::StairsUp();
 			});
@@ -93,18 +96,20 @@ namespace rlf
 				if (kv.second.allowRandomSpawn && kv.second.type == EntityType::Item)
 					dcfg.inventory.emplace_back(kv.first);
 			DbIndex cfgdb{ "player" };
-			auto& player = SpawnEntity(cfgdb, dcfg);
-			GameState::Instance().SetPlayer(player);
+			auto player = Game::Instance().CreateEntity(cfgdb, dcfg, true).Entity();
+			Game::Instance().SetPlayer(*player);
 		}
 
-		void Menu::continueGame(StateStack& stateStack)
+		void Menu::ContinueGame()
 		{
-			assert(false);
+			Game::Instance().Load();
+			std::unique_ptr<State> uptr(new state::MainGame());
+			Game::Instance().PushState(uptr);
 		}
 
-		void Menu::render()
+		void Menu::Render()
 		{
-			// if we're about to change to the death state, don't render anything. 
+			// if we're about to change to the death state, don't Render anything. 
 			// If this is removed, at death the screen flashes for a single instant, displaying the menu screen, before starting the death screen state
 			if (changeToDeathState)
 				return;
@@ -133,9 +138,9 @@ namespace rlf
 						++col;
 					}
 				}
-				addSeparatorLine(buffer, row - 4, glm::vec4(1), screenSize.x, "   [1. New Game ]   ",' ');
-				addSeparatorLine(buffer, row - 5, glm::vec4(1), screenSize.x, "   [2. Continue ]   ", ' ');
-				addSeparatorLine(buffer, row - 6, glm::vec4(1), screenSize.x, "   [3.   Exit   ]   ", ' ');
+				AddSeparatorLine(buffer, row - 4, glm::vec4(1), screenSize.x, "   [1. New Game ]   ",' ');
+				AddSeparatorLine(buffer, row - 5, glm::vec4(1), screenSize.x, "   [2. Continue ]   ", ' ');
+				AddSeparatorLine(buffer, row - 6, glm::vec4(1), screenSize.x, "   [3.   Exit   ]   ", ' ');
 				sparseBuffer.Set(buffer.size(), buffer.data());
 			}
 			gfx.RenderMenu(sparseBuffer);

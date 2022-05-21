@@ -12,8 +12,8 @@ namespace rlf
 	public:
 		// This is called every frame, and processes all turns until it reaches the player
 		void Process();
-		void SetWaitingForPlayerAction(bool value) { waitingForPlayerAction = value; }
-		bool WaitingForPlayerAction() const { return waitingForPlayerAction; }
+		void SetWaitingForPlayerAction(bool value)  { waitingForPlayerAction = value; }
+		bool WaitingForPlayerAction() const  { return waitingForPlayerAction; }
 	private:
 		bool waitingForPlayerAction = true;
 	};

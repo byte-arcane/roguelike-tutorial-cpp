@@ -17,17 +17,17 @@ namespace rlf
 			};
 			Option option = Option(-1);
 		private:
-			void startListening() override;
-			void stopListening() override;
+			void StartListening() override;
+			void StopListening() override;
 
 			// signals-slots
-			void onPlayerDied();
+			void OnPlayerDied();
 
-			void startNewGame(const std::string& charName, StateStack& stateStack);
-			void continueGame(StateStack& stateStack);
+			void StartNewGame(const std::string& charName);
+			void ContinueGame();
 		
-			void render() override;
-			Status updateImpl(StateStack& stateStack) override;
+			void Render() override;
+			Status UpdateImpl() override;
 
 		private:
 

@@ -9,14 +9,14 @@ namespace rlf
 	class SparseBuffer
 	{
 	public:
-		~SparseBuffer() { Dispose(); }
+		~SparseBuffer()  { Dispose(); }
 
 		void Init(int stride, int numElementsMax);
 		bool IsInitialized() const { return stride > 0; }
 
 		// Add some data (num bytes == stride) at a free slot and return the slot
 		int Add(const void* data);
-		// update the data at a given slot
+		// Update the data at a given slot
 		void Update(int slot, const void* data);
 		// Free up a slot
 		void Remove(int slot);
@@ -25,7 +25,7 @@ namespace rlf
 		void Set(int numElements, const void* data);
 
 		// Release the buffer
-		void Dispose();
+		void Dispose() ;
 
 		void Draw() const;
 

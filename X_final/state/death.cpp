@@ -13,14 +13,14 @@ namespace rlf
 {
 	namespace state
 	{
-		Status Death::updateImpl(StateStack& stateStack)
+		Status Death::UpdateImpl()
 		{
 			if (Input::GetKeyDown(GLFW_KEY_ENTER))
 				return Status::Success;
 			return Status::Running;
 		}
 
-		void Death::render()
+		void Death::Render()
 		{
 			auto& gfx = Graphics::Instance();
 			auto& sparseBufferDeath = gfx.RequestBuffer("death");
@@ -37,23 +37,23 @@ namespace rlf
 				// Set the header
 				std::vector<uvec4> bufferHeader;
 				auto screenSize = gfx.ScreenSize();
-				addSeparatorLine(bufferHeader, 0, vec4(1), screenSize.x, "You have died");
+				AddSeparatorLine(bufferHeader, 0, vec4(1), screenSize.x, "You have died");
 				sparseBufferHeader.Set(bufferHeader.size(), bufferHeader.data());
 
 				// Set the info text
-				auto player = GameState::Instance().Player().Entity();
+				auto player = Game::Instance().PlayerId().Entity();
 				std::vector<uvec4> bufferMain;
 				int row0 = gfx.RowStartAndNum("main").y - 1; // First row from the top of the game view
-				addTextToLine(bufferMain, 
+				AddTextToLine(bufferMain, 
 					fmt::format("{0} died on level {1} of the tutorial caverns",player->Name(), player->GetLocation().levelId+1),
 					0, row0--, vec4(1));
-				addTextToLine(bufferMain,
+				AddTextToLine(bufferMain,
 					fmt::format("Killed {0} monsters", player->GetCreatureData()->xp),
 					0, row0--, vec4(1));
-				addTextToLine(bufferMain,
+				AddTextToLine(bufferMain,
 					fmt::format("Gathered {0} items", player->GetInventory()->items.size()),
 					0, row0--, vec4(1));
-				addSeparatorLine(bufferMain, 0, vec4(1), screenSize.x, "Press ENTER to return to the main menu");
+				AddSeparatorLine(bufferMain, 0, vec4(1), screenSize.x, "Press ENTER to return to the main menu");
 				sparseBufferDeath.Set(bufferMain.size(), bufferMain.data());
 			}
 

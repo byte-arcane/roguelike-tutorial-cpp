@@ -32,6 +32,7 @@ namespace rlf
 	class Level
 	{
 	public:
+		~Level() { StopListening(); }
 		void Init(const Array2D<LevelBgElement>& data, const std::vector<std::pair<DbIndex, EntityDynamicConfig>>& entityCfgs, int locationIndex);
 		
 		const Array2D<LevelBgElement>& Bg() const { return bg; }
@@ -43,13 +44,10 @@ namespace rlf
 		bool EntityHasLineOfSightTo(const Entity& e, const glm::ivec2& position) const;
 		Entity* GetEntity(const glm::ivec2& position, bool blocksMovement) const;
 
-		
-		
-
 		std::vector<glm::ivec2> CalcPath(const Entity& e, const glm::ivec2& tgt) const;
 
-		void startListening();
-		void stopListening();
+		void StartListening();
+		void StopListening();
 
 	private:
 		void OnEntityAdded(Entity& entity);

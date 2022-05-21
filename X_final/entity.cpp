@@ -65,7 +65,7 @@ namespace rlf
 		
 		if (type != EntityType::Item)
 		{
-			location = { GameState::Instance().GetCurrentLevelIndex(), dcfg.position };
+			location = { Game::Instance().GetCurrentLevelIndex(), dcfg.position };
 		}
 		else
 		{
@@ -79,7 +79,7 @@ namespace rlf
 			EntityDynamicConfig dcfgItem;
 			dcfgItem.itemOwner = id;
 			for (const auto& itemCfg : dcfg.inventory)
-				inventory->items.push_back( GameState::Instance().CreateEntity(itemCfg, dcfgItem));
+				inventory->items.push_back( Game::Instance().CreateEntity(itemCfg, dcfgItem,true));
 		}
 
 		if (dbIndex == DbIndex::Door())
@@ -150,18 +150,18 @@ namespace rlf
 		}
 		else if (object.DbCfg() == DbIndex::StairsUp())
 		{
-			auto& g = GameState::Instance();
+			auto& g = Game::Instance();
 			if (g.GetCurrentLevelIndex() > 0)
 				ChangeLevel(g.GetCurrentLevelIndex() - 1);
 		}
 		else if (object.DbCfg() == DbIndex::StairsDown())
 		{
-			auto& g = GameState::Instance();
+			auto& g = Game::Instance();
 			ChangeLevel(g.GetCurrentLevelIndex() + 1);
 		}
 		else if (int(object.DbCfg().Cfg()->objectCfg.effect) >= 0)
 		{
-			auto& g = GameState::Instance();
+			auto& g = Game::Instance();
 			ApplyEffect(handler, object.DbCfg().Cfg()->objectCfg.effect);
 		}
 		if (state != oldState)

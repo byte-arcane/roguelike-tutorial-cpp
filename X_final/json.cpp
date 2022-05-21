@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 
 #include "utility.h"
+#include "signals.h"
 
 namespace glm
 {
@@ -59,13 +60,32 @@ namespace rlf
 		db = j;
 	}
 
-	void GameState::Load()
+	void Game::New()
 	{
-		auto text = readTextFile("data.sav");
-		//SaveData g = json::parse(text);
+		currentLevelIndex = -1;
+		invalidPoolIndices.clear();
+		levels.clear();
+		messageLog.clear();
+		playerId = {};
+		poolEntities.clear();
 	}
 
-	void GameState::Save()
+	void Game::Load()
+	{
+		auto text = readTextFile("data.sav");
+		SaveData save = json::parse(text);
+		currentLevelIndex = save.currentLevelIndex;
+		invalidPoolIndices = save.invalidPoolIndices;
+		levels = save.levels;
+		messageLog = save.messageLog;
+		playerId = save.playerId;
+		std::swap(poolEntities, save.poolEntities);
+		levels.back().StartListening();
+		sig::onGameLoaded.fire();
+		WriteToMessageLog("Game loaded.");
+	}
+
+	void Game::Save()
 	{
 		SaveData save;
 		save.currentLevelIndex = currentLevelIndex;
@@ -77,5 +97,6 @@ namespace rlf
 		json j = save;
 		writeTextFile("data.sav",j.dump());
 		std::swap(poolEntities, save.poolEntities);
+		WriteToMessageLog("Game saved.");
 	}
 }

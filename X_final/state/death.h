@@ -11,8 +11,8 @@ namespace rlf
 		public:
 			int option = 0;
 		private:
-			void render() override;
-			Status updateImpl(StateStack& stateStack) override;
+			void Render() override;
+			Status UpdateImpl() override;
 		private:
 			bool isGuiDirty = true;
 		};

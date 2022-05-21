@@ -20,7 +20,7 @@ namespace rlf
 {
 	namespace state
 	{
-		Status CreateChar::updateImpl(StateStack& stateStack)
+		Status CreateChar::UpdateImpl()
 		{
 			if (Input::GetKeyDown(GLFW_KEY_ESCAPE))
 				return Status::Abort;
@@ -52,7 +52,7 @@ namespace rlf
 			return Status::Running;
 		}
 
-		void CreateChar::render()
+		void CreateChar::Render()
 		{
 			auto& gfx = Graphics::Instance();
 			auto& sparseBuffer = gfx.RequestBuffer("createchar");
@@ -65,10 +65,10 @@ namespace rlf
 				auto screenSize = gfx.ScreenSize();
 				int col = 10;
 				int row = screenSize.y - 4;
-				addTextToLine(buffer, fmt::format("Enter your name: {0}",charName),col, row, glm::vec4(1));
+				AddTextToLine(buffer, fmt::format("Enter your name: {0}",charName),col, row, glm::vec4(1));
 				
 				if(!charName.empty())
-					addSeparatorLine(buffer, 1, glm::vec4(0.5), screenSize.x, "Press ENTER to continue", ' ');
+					AddSeparatorLine(buffer, 1, glm::vec4(0.5), screenSize.x, "Press ENTER to continue", ' ');
 				sparseBuffer.Set(buffer.size(), buffer.data());
 			}
 			gfx.RenderMenu(sparseBuffer);

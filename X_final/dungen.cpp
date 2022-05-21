@@ -31,7 +31,7 @@ namespace rlf
 		}
 	}
 
-	Array2D<LevelBgElement> generateDungeon(const glm::ivec2& size)
+	Array2D<LevelBgElement> GenerateDungeon(const glm::ivec2& size)
 	{
 		Array2D<LevelBgElement> layout(size, bgWall);
 		auto center = size / 2;
@@ -44,7 +44,7 @@ namespace rlf
 		return layout;
 	}
 
-	std::vector<std::pair<DbIndex, EntityDynamicConfig>> populateDungeon(const Array2D<LevelBgElement>& layout, int numMonsters, int numFeatures, int numTreasures, bool addStairsDown, bool addStairsUp)
+	std::vector<std::pair<DbIndex, EntityDynamicConfig>> PopulateDungeon(const Array2D<LevelBgElement>& layout, int numMonsters, int numFeatures, int numTreasures, bool addStairsDown, bool addStairsUp)
 	{
 		// Get all available monsters/treasures/features
 		const auto& db = Db::Instance().All();

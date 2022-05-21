@@ -21,21 +21,21 @@ namespace rlf
 
 		for (auto& ecfg : entityCfgs)
 		{
-			auto entityId = GameState::Instance().CreateEntity(ecfg.first, ecfg.second);
+			auto entityId = Game::Instance().CreateEntity(ecfg.first, ecfg.second,false);
 			auto entity = entityId.Entity();
 			entity->SetLocation({ locationIndex, entity->GetLocation().position });
 			entities.push_back(entityId);
 		}
 	}
 
-	void Level::startListening()
+	void Level::StartListening()
 	{
 		sig::onObjectStateChanged.connect<Level, &Level::OnObjectStateChanged>(this);
 		sig::onEntityAdded.connect<Level, &Level::OnEntityAdded>(this);
 		sig::onEntityRemoved.connect<Level, &Level::OnEntityRemoved>(this);
 	}
 
-	void Level::stopListening()
+	void Level::StopListening()
 	{
 		sig::onObjectStateChanged.disconnect<Level, &Level::OnObjectStateChanged>(this);
 		sig::onEntityAdded.disconnect<Level, &Level::OnEntityAdded>(this);
@@ -44,11 +44,14 @@ namespace rlf
 
 	void Level::OnEntityAdded(Entity& entity)
 	{
-		entities.push_back(entity.Id());
+		if (entity.Type() != EntityType::Item)
+		{
+			entities.push_back(entity.Id());
 
-		// if it's the player who was added to the level, recalculate visibility
-		if (GameState::Instance().IsPlayer(entity))
-			UpdateFogOfWar();
+			// if it's the player who was added to the level, recalculate visibility
+			if (Game::Instance().IsPlayer(entity))
+				UpdateFogOfWar();
+		}
 	}
 
 	void Level::OnEntityRemoved(Entity& entity)
@@ -83,11 +86,11 @@ namespace rlf
 					fowValue = FogOfWarStatus::Explored;
 			}
 
-		auto player = GameState::Instance().Player().Entity();
+		auto player = Game::Instance().PlayerId().Entity();
 		auto posPlayer = player->GetLocation().position;
 		auto cb_is_opaque = [&](const glm::ivec2& p) {return !PositionIsVisible(p); };
 		auto cb_on_visible = [&](const glm::ivec2& p) { fogOfWar(p.x, p.y) = FogOfWarStatus::Visible; };
-		calculate_fov(player->GetLocation().position, player->DbCfg().Cfg()->creatureCfg.lineOfSightRadius, map_size, cb_is_opaque, cb_on_visible);
+		CalculateFieldOfView(player->GetLocation().position, player->DbCfg().Cfg()->creatureCfg.lineOfSightRadius, map_size, cb_is_opaque, cb_on_visible);
 
 		sig::onFogOfWarChanged.fire();
 	}
@@ -151,13 +154,13 @@ namespace rlf
 
 	void Level::OnObjectStateChanged(const Entity& e)
 	{
-		// The change in the object's state might affect visibility, so update it for good measure
+		// The change in the object's state might affect visibility, so Update it for good measure
 		UpdateFogOfWar();
 	}
 
 	std::vector<glm::ivec2> Level::CalcPath(const Entity& e, const glm::ivec2& tgt) const
 	{
-		return calcPath(e.GetLocation().position, tgt, bg.Size(), [&](const glm::ivec2& p) { return EntityCanMoveTo(e, p) ? 1.0f : std::numeric_limits<float>::infinity(); });
+		return CalculatePath(e.GetLocation().position, tgt, bg.Size(), [&](const glm::ivec2& p) { return EntityCanMoveTo(e, p) ? 1.0f : std::numeric_limits<float>::infinity(); });
 	}
 
 

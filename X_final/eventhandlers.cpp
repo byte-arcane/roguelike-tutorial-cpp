@@ -11,14 +11,6 @@ using namespace glm;
 
 namespace rlf
 {
-	Entity& SpawnEntity(const DbIndex& cfg, const EntityDynamicConfig& dcfg)
-	{
-		auto& e = *GameState::Instance().CreateEntity(cfg, dcfg).Entity();
-		if (e.Type() != EntityType::Item)
-			sig::onEntityAdded.fire(e);
-		return e;
-	}
-
 	// Kill a creature
 	void DestroyEntity(Entity& e)
 	{
@@ -31,13 +23,13 @@ namespace rlf
 				return eref == e.Id();
 			}), items.end());
 		}
-		GameState::Instance().RemoveEntity(e);
+		Game::Instance().RemoveEntity(e);
 	}
 
 	void Teleport(Entity& entity, const glm::ivec2& position)
 	{
 		assert(entity.Type() != EntityType::Item);
-		const auto& level = GameState::Instance().CurrentLevel();
+		const auto& level = Game::Instance().CurrentLevel();
 		
 		// Check if we can! If not, spawn a message
 		if (!level.EntityCanMoveTo(entity, position))
@@ -48,10 +40,10 @@ namespace rlf
 		entity.SetLocation(loc);
 		sig::onEntityMoved.fire(entity);
 
-		if (GameState::Instance().IsPlayer(entity))
+		if (Game::Instance().IsPlayer(entity))
 		{
-			GameState::Instance().CurrentLevel().UpdateFogOfWar();
-			sig::onGuiUpdated.fire();// movement should cause GUI update
+			Game::Instance().CurrentLevel().UpdateFogOfWar();
+			sig::onGuiUpdated.fire();// movement should cause GUI Update
 		}
 	}
 
@@ -81,7 +73,7 @@ namespace rlf
 	void MoveAdj(Entity& entity, const glm::ivec2& direction)
 	{
 		assert(entity.Type() != EntityType::Item);
-		const auto& level = GameState::Instance().CurrentLevel();
+		const auto& level = Game::Instance().CurrentLevel();
 
 		auto position = entity.GetLocation().position + direction;
 
@@ -93,11 +85,11 @@ namespace rlf
 			entity.SetLocation(loc);
 			sig::onEntityMoved.fire(entity);
 
-			if (GameState::Instance().IsPlayer(entity))
+			if (Game::Instance().IsPlayer(entity))
 			{
-				GameState::Instance().WriteToMessageLog(fmt::format("You move {0}", DirectionString(direction)));
-				GameState::Instance().CurrentLevel().UpdateFogOfWar();
-				sig::onGuiUpdated.fire();// movement should cause GUI update
+				Game::Instance().WriteToMessageLog(fmt::format("You move {0}", DirectionString(direction)));
+				Game::Instance().CurrentLevel().UpdateFogOfWar();
+				sig::onGuiUpdated.fire();// movement should cause GUI Update
 			}
 		}
 		else // ok, we can't move. Get entity at the tile
@@ -117,7 +109,7 @@ namespace rlf
 					}
 					case EntityType::Object:
 					{
-						GameState::Instance().WriteToMessageLog(fmt::format("You handle {0}", entityAtPosition->Name()));
+						Game::Instance().WriteToMessageLog(fmt::format("You handle {0}", entityAtPosition->Name()));
 						entityAtPosition->GetObjectData()->Handle(*entityAtPosition, entity);
 						break;
 					}
@@ -135,7 +127,7 @@ namespace rlf
 		std::string text;
 		if (died)
 		{
-			auto isPlayer = GameState::Instance().IsPlayer(entity);
+			auto isPlayer = Game::Instance().IsPlayer(entity);
 			text = isPlayer 
 				? "You have died" 
 				: fmt::format("{0} has died!", entity.Name());
@@ -147,15 +139,15 @@ namespace rlf
 		else
 		{
 			if (hpMod <= 0)
-				text = GameState::Instance().IsPlayer(entity) 
+				text = Game::Instance().IsPlayer(entity) 
 					? fmt::format("You suffer {0} damage",-hpMod) 
 					: fmt::format("{0} suffers {1} damage", entity.Name(), -hpMod);
 			else
-				text = GameState::Instance().IsPlayer(entity) 
+				text = Game::Instance().IsPlayer(entity) 
 					? fmt::format("You heal for {0} HP", hpMod) 
 					: fmt::format("{0} heals for {1} HP", entity.Name(), hpMod);
 		}
-		GameState::Instance().WriteToMessageLog(text);
+		Game::Instance().WriteToMessageLog(text);
 		return died;
 	}
 	
@@ -171,7 +163,7 @@ namespace rlf
 	void AttackEntity(Entity& attacker, Entity& defender)
 	{
 		// DestroyEntity(*entityAtPosition);
-		auto& g = GameState::Instance();
+		auto& g = Game::Instance();
 #if 0	// Super-simple combat
 		auto text = g.IsPlayer(attacker)
 			? fmt::format("You attack {0}", defender.Name())
@@ -243,7 +235,7 @@ namespace rlf
 
 	void PickUpEverythingOrHandle(Entity& handler)
 	{
-		auto& g = GameState::Instance();
+		auto& g = Game::Instance();
 		const auto& level = g.CurrentLevel();
 		auto position = handler.GetLocation().position;
 		auto entityAtPosition = level.GetEntity(position, false);
@@ -254,7 +246,7 @@ namespace rlf
 				for (const auto& itemId : entityAtPosition->GetInventory()->items)
 					TransferItem(handler.Id(), itemId, *entityAtPosition);
 				if (g.IsPlayer(handler))
-					GameState::Instance().WriteToMessageLog("You pick up some items");
+					Game::Instance().WriteToMessageLog("You pick up some items");
 			}
 			else
 			{
@@ -266,40 +258,40 @@ namespace rlf
 	void PickUp(Entity& handler, Entity& itemPile, const EntityId& itemId)
 	{
 		TransferItem(handler.Id(), itemId, itemPile);
-		if (GameState::Instance().IsPlayer(handler))
-			GameState::Instance().WriteToMessageLog(fmt::format("You pick up {0}", itemId.Entity()->Name()));
+		if (Game::Instance().IsPlayer(handler))
+			Game::Instance().WriteToMessageLog(fmt::format("You pick up {0}", itemId.Entity()->Name()));
 	}
 
 	void Drop(Entity& handler, const EntityId& itemId)
 	{
-		const auto& level = GameState::Instance().CurrentLevel();
+		const auto& level = Game::Instance().CurrentLevel();
 		auto position = handler.GetLocation().position;
 		auto itemPile = level.GetEntity(position, false);
 		if (itemPile == nullptr)
 		{
 			EntityDynamicConfig dcfg;
 			dcfg.position = position;
-			itemPile = &SpawnEntity(DbIndex{"item_pile"}, dcfg);
+			itemPile = Game::Instance().CreateEntity(DbIndex{"item_pile"}, dcfg, true).Entity();
 		}
 		TransferItem(itemPile->Id(), itemId, handler);
-		if (GameState::Instance().IsPlayer(handler))
-			GameState::Instance().WriteToMessageLog(fmt::format("You drop {0}", itemId.Entity()->Name()));
+		if (Game::Instance().IsPlayer(handler))
+			Game::Instance().WriteToMessageLog(fmt::format("You drop {0}", itemId.Entity()->Name()));
 	}
 
 	void ChangeLevel(int levelIndex)
 	{
-		auto& g = GameState::Instance();
+		auto& g = Game::Instance();
 
 		auto delveDirectionForward = g.GetCurrentLevelIndex() < levelIndex;
 
-		auto playerId = g.Player();
+		auto playerId = g.PlayerId();
 
 		// remove player from old level
 		if (playerId.Entity() != nullptr && g.GetCurrentLevelIndex() >= 0)
 			sig::onEntityRemoved.fire(*playerId.Entity());
 
 		// Change the level
-		g.SetCurrentLevelIndex(levelIndex);
+		g.ChangeLevel(levelIndex);
 
 		auto& level = g.CurrentLevel();
 		sig::onLevelChanged.fire(level);
@@ -319,7 +311,7 @@ namespace rlf
 		}
 
 		std::string msgtext = delveDirectionForward ? "You delve deeper into the dungeon" : "You take the stairs up";
-		GameState::Instance().WriteToMessageLog(msgtext); // This triggers a gui update
+		Game::Instance().WriteToMessageLog(msgtext); // This triggers a gui Update
 	}
 
 	void ChangeEquippedItem(Entity& owner, int newEquippedIdx, int oldEquippedIdx)
@@ -336,8 +328,8 @@ namespace rlf
 		auto& items = owner.GetInventory()->items;
 		auto& item = *items[itemIdx].Entity();
 		ApplyEffect(owner, item.DbCfg().Cfg()->itemCfg.effect);
-		if(GameState::Instance().IsPlayer(owner))
-			GameState::Instance().WriteToMessageLog("You used " + item.Name());
+		if(Game::Instance().IsPlayer(owner))
+			Game::Instance().WriteToMessageLog("You used " + item.Name());
 		auto& stackSize = item.GetItemData()->stackSize;
 		--stackSize;
 		if (stackSize == 0)

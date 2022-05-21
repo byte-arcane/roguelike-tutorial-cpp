@@ -71,8 +71,8 @@ namespace rlf
 			}
 			else // pick up or drop
 			{
-				auto player = GameState::Instance().Player();
-				auto isPlayer = GameState::Instance().IsPlayer(entity);
+				auto player = Game::Instance().PlayerId();
+				auto isPlayer = Game::Instance().IsPlayer(entity);
 				if (isPlayer)
 				{
 					// can't drop equipped items!
@@ -89,18 +89,18 @@ namespace rlf
 
 		Entity& GetRelevantEntity(Inventory::Mode mode)
 		{
-			auto player = GameState::Instance().Player().Entity();
+			auto player = Game::Instance().PlayerId().Entity();
 			if (mode != Inventory::Mode::PickUp)
 				return *player;
 			else
 			{
-				auto itemPile = GameState::Instance().CurrentLevel().GetEntity(player->GetLocation().position, false);
+				auto itemPile = Game::Instance().CurrentLevel().GetEntity(player->GetLocation().position, false);
 				assert(itemPile->DbCfg() == DbIndex::ItemPile());
 				return *itemPile;
 			}
 		}
 
-		Status Inventory::updateImpl(StateStack& stateStack)
+		Status Inventory::UpdateImpl()
 		{
 			if (rlf::Input::GetKeyDown(GLFW_KEY_ESCAPE))
 				return Status::Abort;
@@ -118,7 +118,7 @@ namespace rlf
 				{
 					auto doneSomething = inventoryAction(firstIdxAtPage + i, mode, entity);
 					if (doneSomething)
-						GameState::Instance().EndTurn();
+						Game::Instance().EndTurn();
 					isGuiDirty = true;
 					if (entity.GetInventory()->items.empty())
 						return Status::Abort;
@@ -137,7 +137,7 @@ namespace rlf
 			return Status::Running;
 		}
 
-		void Inventory::render()
+		void Inventory::Render()
 		{
 			const auto itemsPerPage = ItemsPerPage();
 			auto& gfx = Graphics::Instance();
@@ -155,7 +155,7 @@ namespace rlf
 				
 				bufferMain.resize(0);
 				bufferHeader.resize(0);
-				auto isPlayer = GameState::Instance().IsPlayer(entity);
+				auto isPlayer = Game::Instance().IsPlayer(entity);
 				auto& items = entity.GetInventory()->items;
 				sortItems(items);
 				auto numPages = (items.size() + itemsPerPage - 1) / itemsPerPage;
@@ -167,13 +167,13 @@ namespace rlf
 				std::string inventoryModeText;
 				switch (mode)
 				{
-				case rlf::state::Inventory::EquipOrUse:
+				case rlf::state::Inventory::Mode::EquipOrUse:
 					inventoryModeText = "Equip/Use";
 					break;
-				case rlf::state::Inventory::PickUp:
+				case rlf::state::Inventory::Mode::PickUp:
 					inventoryModeText = "Pick up";
 					break;
-				case rlf::state::Inventory::Drop:
+				case rlf::state::Inventory::Mode::Drop:
 					inventoryModeText = "Drop";
 					break;
 				default:
@@ -181,8 +181,8 @@ namespace rlf
 				}
 				auto rowStartAndNum = Graphics::Instance().RowStartAndNum("main");
 				auto screenSize = gfx.ScreenSize();
-				addSeparatorLine(bufferHeader, 0, color::BROWN, screenSize.x, "Inventory: " + inventoryModeText);
-				addTextToLine(bufferMain, fmt::format("Total weight: {0} stones", entity.GetInventory()->Weight()), 0, rowStartAndNum.y-2, color::BROWN);
+				AddSeparatorLine(bufferHeader, 0, color::BROWN, screenSize.x, "Inventory: " + inventoryModeText);
+				AddTextToLine(bufferMain, fmt::format("Total weight: {0} stones", entity.GetInventory()->Weight()), 0, rowStartAndNum.y-2, color::BROWN);
 				int rowItems0 = rowStartAndNum.y - 4;
 				ItemCategory category = ItemCategory(-1);
 				const int maxNameSize = 40;
@@ -199,12 +199,15 @@ namespace rlf
 
 					text += isEquipped ? ") [E] " : ")     ";
 					text += item->Name();
+					const auto stackSize = item->GetItemData()->stackSize;
+					if (stackSize > 1)
+						text += fmt::format(" x{0}", stackSize);
 					int pad = maxNameSize - item->Name().size();
 					for (int i = 0; i < pad; ++i)
 						text.push_back(' ');
 					if (changedCategory)
 						text += fmt::format(" [{0}]", magic_enum::enum_name(category));
-					addTextToLine(bufferMain, text, 0, rowItems0 - iItem, color::BROWN);
+					AddTextToLine(bufferMain, text, 0, rowItems0 - iItem, color::BROWN);
 				}
 				auto lastLine = fmt::format("[a-{0}] {1}", char('a' + itemsInPage - 1), inventoryModeText);
 				if (hasPrevPage && hasNextPage)
@@ -214,9 +217,9 @@ namespace rlf
 				if (hasNextPage)
 					lastLine += " - [+] Next page";
 				lastLine += fmt::format(" - Page {0}/{1} - [Esc] Exit inventory", pageIndex + 1, glm::max(int(numPages), 1));
-				addTextToLine(bufferMain, lastLine, 0, 1, color::BROWN);
-				addSeparatorLine(bufferMain, 0, color::BROWN, screenSize.x);
-				// update the GPU buffers
+				AddTextToLine(bufferMain, lastLine, 0, 1, color::BROWN);
+				AddSeparatorLine(bufferMain, 0, color::BROWN, screenSize.x);
+				// Update the GPU buffers
 				sparseBufferInv.Set(bufferMain.size(), bufferMain.data());
 				sparseBufferHeader.Set(bufferHeader.size(), bufferHeader.data());
 			}

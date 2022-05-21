@@ -11,8 +11,6 @@ namespace rlf
 	struct EntityDynamicConfig;
 	struct DbIndex;
 
-	Entity& SpawnEntity(const DbIndex& cfg, const EntityDynamicConfig& dcfg);
-
 	// entity moves 
 	void Teleport(Entity& entity, const glm::ivec2& position);
 	void MoveAdj(Entity& entity, const glm::ivec2& direction);

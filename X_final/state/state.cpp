@@ -13,41 +13,22 @@ namespace rlf
 {
 	namespace state
 	{
-		void State::updateStack(StateStack& stateStack)
+		void State::Update(StateStack& stateStack)
 		{
-			if (!stateStack.empty())
-				stateStack.back()->update(stateStack);
-		}
-
-		void State::renderStack(StateStack& stateStack)
-		{
-			if (!stateStack.empty())
-				stateStack.back()->render();
-
-		}
-
-		void State::pushToStack(StateStack& stateStack, std::unique_ptr<State>& state)
-		{
-			stateStack.push_back(std::move(state));
-			stateStack.back()->startListening();
-		}
-
-		void State::update(StateStack& stateStack)
-		{
-			auto status = updateImpl(stateStack);
+			auto status = UpdateImpl();
 			if (status != Status::Running)
 			{
-				stateStack.back()->stopListening();
+				stateStack.back()->StopListening();
 				auto thisState = std::move(stateStack.back());
 				stateStack.pop_back();
 				if (onDone)
 					onDone(status == Status::Success, this);
 				if (!stateStack.empty())
-					stateStack.back()->onResumeFrom(thisState.get());
+					stateStack.back()->ResumeFrom(thisState.get());
 			}
 		}
 
-		int addTextToLine(std::vector<glm::uvec4>& buf, const std::string& text, int col, int row, const glm::vec4& color)
+		int AddTextToLine(std::vector<glm::uvec4>& buf, const std::string& text, int col, int row, const glm::vec4& color)
 		{
 			for (const auto c : text)
 			{
@@ -62,7 +43,7 @@ namespace rlf
 			return col;
 		}
 
-		void addSeparatorLine(std::vector<glm::uvec4>& buf, int row, const glm::vec4& color, int numCols, const std::string& centeredText, char fillChar)
+		void AddSeparatorLine(std::vector<glm::uvec4>& buf, int row, const glm::vec4& color, int numCols, const std::string& centeredText, char fillChar)
 		{
 			const auto dashTileData = TileData{ fillChar,color };
 

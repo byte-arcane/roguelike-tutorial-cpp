@@ -17,7 +17,7 @@ namespace rlf
 
 		const EntityConfig * Get(const std::string& name) const { return &db.at(name); }
 		void Add(const std::string& name, EntityConfig& cfg) { db.emplace(name, std::move(cfg)); }
-		const std::unordered_map<std::string, EntityConfig>& All() const { return db; }
+		const std::unordered_map<std::string, EntityConfig>& All() const  { return db; }
 		
 	private:
 		std::unordered_map<std::string, EntityConfig> db;
@@ -27,8 +27,8 @@ namespace rlf
 	{
 		DbIndex() = default;
 		DbIndex(const std::string& name) :name(name) {};
-		bool IsValid() const { return !name.empty(); }
-		bool operator == (const DbIndex& other) const { return name == other.name; }
+		bool IsValid() const  { return !name.empty(); }
+		bool operator == (const DbIndex& other) const  { return name == other.name; }
 		const EntityConfig* Cfg() const { return Db::Instance().Get(name); }
 
 		// Special ones

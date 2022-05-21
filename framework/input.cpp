@@ -11,26 +11,24 @@ namespace rlf
 {
 	struct KeyBtnState
 	{
+		bool wasPressed = false;
 		bool isPressed = false;
-		bool consumedPress = false;
 
 		bool GetKeyBtn() 
 		{ 
-			consumedPress = true;
 			return isPressed;
 		}
 
 		bool GetKeyBtnDown() 
 		{ 
-			auto ret = isPressed && !consumedPress;
-			consumedPress = true;
-			return ret;
+			return isPressed && !wasPressed;
 		}
 		
 		void Set(int value)
 		{
+			wasPressed = isPressed;
 			isPressed = value != GLFW_RELEASE;
-			consumedPress = false;
+			printf("%d -> %d\n", wasPressed ? 1 : 0, isPressed ? 1 : 0);
 		}
 	};
 
@@ -39,6 +37,11 @@ namespace rlf
 	vec2 mouseCursor;
 	vec2 mouseCursorDelta;
 
+	void Input::OnNewFrame()
+	{
+		keyState.fill({});
+		mouseBtnState.fill({});
+	}
 
 	bool Input::GetKey(int key)
 	{

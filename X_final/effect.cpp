@@ -11,7 +11,7 @@ namespace rlf
 {
 	void ApplyEffect(Entity& entity, Effect effect)
 	{
-		auto& g = GameState::Instance();
+		auto& g = Game::Instance();
 		switch (effect)
 		{
 		case rlf::Effect::MinorHeal:
