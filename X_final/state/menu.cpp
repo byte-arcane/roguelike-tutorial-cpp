@@ -11,7 +11,7 @@
 #include "maingame.h"
 #include "createchar.h"
 
-#include "../eventhandlers.h"
+#include "../commands.h"
 #include "../graphics.h"
 #include "../signals.h"
 #include "../game.h"
@@ -44,7 +44,6 @@ namespace rlf
 			else if (Input::GetKeyDown(GLFW_KEY_3))
 			{
 				// quit game
-				option = Option::Exit;
 				return Status::Success;
 			}
 
@@ -120,7 +119,7 @@ namespace rlf
 			{
 				sparseBuffer.Init(sizeof(glm::uvec4), 4000);
 				std::vector<glm::uvec4> buffer;
-				auto text = readTextFile(mediaSearch("misc/titlescreen.txt"));
+				auto text = ReadTextFile(MediaSearch("misc/titlescreen.txt"));
 				buffer.reserve(text.size());
 				auto screenSize = gfx.ScreenSize();
 				int row = screenSize.y - 1;

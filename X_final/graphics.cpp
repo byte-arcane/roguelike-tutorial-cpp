@@ -11,7 +11,7 @@
 #include "entity.h"
 #include "game.h"
 #include "input.h"
-#include "eventhandlers.h"
+#include "commands.h"
 #include "signals.h"
 
 using namespace glm;
@@ -82,9 +82,9 @@ namespace rlf
 			vec3(0,0,0), // lower left
 		};
 		// provide the address of the first float element in the vertices array, and the TOTAL size in bytes
-		VBO = rlf::buildVBO(&quadVertices[0].x, int(quadVertices.size() * sizeof(vec3)));
+		VBO = BuildVBO(&quadVertices[0].x, int(quadVertices.size() * sizeof(vec3)));
 		// create the VAO which stores the 
-		VAO = rlf::buildVAO(VBO, sizeof(vec3));
+		VAO = BuildVAO(VBO, sizeof(vec3));
 		numVerticesQuad = int(quadVertices.size());
 
 		// specify the shader names for now
@@ -97,14 +97,14 @@ namespace rlf
 		ReloadShaders();
 
 		// Tilemap setup
-		tilemap.Load(rlf::mediaSearch("textures/Curses_1920x900.png").c_str(), ivec2(24, 36));
-		//tilemap.Load(rlf::mediaSearch("textures/Acorntileset8x8.png").c_str(), ivec2(8, 8));
-		//tilemap.Load(rlf::mediaSearch("textures/Kjammer_square_1616_v02.png").c_str(), ivec2(16, 16));
-		//tilemap.Load(rlf::mediaSearch("textures/Curses-square-24.png").c_str(), ivec2(24, 24));
+		tilemap.Load(MediaSearch("textures/Curses_1920x900.png").c_str(), ivec2(24, 36));
+		//tilemap.Load(MediaSearch("textures/Acorntileset8x8.png").c_str(), ivec2(8, 8));
+		//tilemap.Load(MediaSearch("textures/Kjammer_square_1616_v02.png").c_str(), ivec2(16, 16));
+		//tilemap.Load(MediaSearch("textures/Curses-square-24.png").c_str(), ivec2(24, 24));
 		
 		glTextureParameteri(tilemap.Texture(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTextureParameteri(tilemap.Texture(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		const ivec2 screenSizePx = ivec2(rlf::FrameworkApp::ViewportWidth(), rlf::FrameworkApp::ViewportHeight());
+		const ivec2 screenSizePx = ivec2(FrameworkApp::ViewportWidth(), FrameworkApp::ViewportHeight());
 		const auto& tileSize = tilemap.TileSize();
 		screenSize = screenSizePx / tileSize;
 		viewSizePx = screenSize * tileSize;
@@ -139,9 +139,9 @@ namespace rlf
 	{
 		for (auto& nameAndProgram : shaderDb)
 		{
-			auto vertexShaderFilename = rlf::mediaSearch(fmt::format("shaders/{0}.vert", nameAndProgram.first));
-			auto fragmentShaderFilename = rlf::mediaSearch(fmt::format("shaders/{0}.frag", nameAndProgram.first));
-			auto newProgram = rlf::buildShader(rlf::readTextFile(vertexShaderFilename).c_str(), rlf::readTextFile(fragmentShaderFilename).c_str());;
+			auto vertexShaderFilename = MediaSearch(fmt::format("shaders/{0}.vert", nameAndProgram.first));
+			auto fragmentShaderFilename = MediaSearch(fmt::format("shaders/{0}.frag", nameAndProgram.first));
+			auto newProgram = BuildShader(ReadTextFile(vertexShaderFilename).c_str(), ReadTextFile(fragmentShaderFilename).c_str());;
 			if (newProgram != 0)
 			{
 				if (nameAndProgram.second != 0)
@@ -246,9 +246,9 @@ namespace rlf
 		auto gameRowStartAndNum = RowStartAndNum("main");
 		auto gameViewOffsetPx = screenOffsetPx + tilemap.TileSize() * ivec2(0, gameRowStartAndNum.x);
 		auto gameViewSizePx = tilemap.TileSize() * ivec2(screenSize.x, gameRowStartAndNum.y);
-		auto cursor = ivec2(rlf::Input::MouseCursor());
+		auto cursor = ivec2(Input::MouseCursor());
 		// mouse cursor from GLFW starts at top-left. Change the .y so that it starts from bottom-left
-		cursor.y = rlf::FrameworkApp::ViewportHeight() - 1 - cursor.y;
+		cursor.y = FrameworkApp::ViewportHeight() - 1 - cursor.y;
 		// calculate the coordinates relative to the game view
 		auto p = (cursor - gameViewOffsetPx);
 		// if we're outside of the game view, return invalid coordinates
@@ -332,7 +332,7 @@ namespace rlf
 		bufferObjects.Clear();
 		entityToBufferIndex.clear();
 		texBg.Dispose();
-		rlf::deleteTexture(texFogOfWar);
+		DeleteTexture(texFogOfWar);
 
 		// Populate with new data
 		const auto& bg = level.Bg();
@@ -342,7 +342,7 @@ namespace rlf
 			return td.PackDense();
 		});
 		texBg.Init(bg.Size(), renderData.data());	
-		texFogOfWar = rlf::createTexture(bg.Size(),GL_RED, GL_R8);
+		texFogOfWar = CreateTexture(bg.Size(),GL_RED, GL_R8);
 
 		for (const auto& entityId : level.Entities())
 			UpdateRenderableEntity(*entityId.Entity());
@@ -352,7 +352,7 @@ namespace rlf
 	{
 		const auto& fogOfWar = Game::Instance().CurrentLevel().FogOfWar();
 		auto size = fogOfWar.Size();
-		glTextureSubImage2D(texFogOfWar, 0, 0, 0, size.x, size.y, GL_RED, GL_UNSIGNED_BYTE, fogOfWar.Raw());
+		glTextureSubImage2D(texFogOfWar, 0, 0, 0, size.x, size.y, GL_RED, GL_UNSIGNED_BYTE, fogOfWar.Data().data());
 	}
 
 	void Graphics::OnObjectStateChanged(const Entity& object)

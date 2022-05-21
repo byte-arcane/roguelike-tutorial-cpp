@@ -13,7 +13,7 @@
 #include "../graphics.h"
 #include "../game.h"
 #include "../entity.h"
-#include "../eventhandlers.h"
+#include "../commands.h"
 
 using namespace std;
 using namespace glm;

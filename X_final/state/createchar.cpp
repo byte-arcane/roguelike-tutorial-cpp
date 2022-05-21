@@ -11,7 +11,7 @@
 #include "death.h"
 #include "maingame.h"
 
-#include "../eventhandlers.h"
+#include "../commands.h"
 #include "../graphics.h"
 #include "../signals.h"
 #include "../game.h"

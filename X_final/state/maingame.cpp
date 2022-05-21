@@ -5,7 +5,7 @@
 
 #include "../game.h"
 #include "../graphics.h"
-#include "../eventhandlers.h"
+#include "../commands.h"
 #include "../grid.h"
 
 #include "framework.h"
@@ -75,7 +75,7 @@ namespace rlf
 					if (handleTargets.size() == 1)
 					{
 						auto& handledObject = *handleTargets[0].Entity();
-						handledObject.GetObjectData()->Handle(handledObject, *player);
+						Handle(handledObject, *player);
 						Game::Instance().EndTurn();
 					}
 					//if we have > 1 handle targets, start targetting state
@@ -91,7 +91,7 @@ namespace rlf
 								auto player = Game::Instance().PlayerId().Entity();
 								auto targetIndex = static_cast<const state::SelectTarget*>(state)->targetIndex;
 								auto& handledObject = *handleTargets[targetIndex].Entity();
-								handledObject.GetObjectData()->Handle(handledObject, *player);
+								Handle(handledObject, *player);
 								Game::Instance().EndTurn();
 							}
 							}));

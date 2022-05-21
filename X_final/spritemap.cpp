@@ -11,7 +11,7 @@ namespace rlf
 {
 	void Spritemap::Init( const ivec2& size, const uvec2 * data)
 	{
-		texLayer = rlf::createTexture(size, GL_RG, GL_RG32UI);
+		texLayer = CreateTexture(size, GL_RG, GL_RG32UI);
 		glBindTexture(GL_TEXTURE_2D, texLayer);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, size.x, size.y, GL_RG_INTEGER, GL_UNSIGNED_INT, data);
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -28,6 +28,6 @@ namespace rlf
 
 	void Spritemap::Dispose()
 	{
-		rlf::deleteTexture(texLayer);
+		DeleteTexture(texLayer);
 	}
 }

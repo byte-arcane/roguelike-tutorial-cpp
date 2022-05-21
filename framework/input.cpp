@@ -28,7 +28,6 @@ namespace rlf
 		{
 			wasPressed = isPressed;
 			isPressed = value != GLFW_RELEASE;
-			printf("%d -> %d\n", wasPressed ? 1 : 0, isPressed ? 1 : 0);
 		}
 	};
 
@@ -37,7 +36,7 @@ namespace rlf
 	vec2 mouseCursor;
 	vec2 mouseCursorDelta;
 
-	void Input::OnNewFrame()
+	void Input::ResetState()
 	{
 		keyState.fill({});
 		mouseBtnState.fill({});
@@ -73,7 +72,7 @@ namespace rlf
 		return mouseBtnState[btn].GetKeyBtnDown();
 	}
 
-	void Input::Initialise()
+	void Input::Initialize()
 	{
 		keyState.fill({});
 		mouseBtnState.fill({});

@@ -7,49 +7,42 @@
 
 namespace rlf
 {
-	std::string readTextFile(const std::string& path);
-	void writeTextFile(const std::string& path, const std::string& text);
+	std::string ReadTextFile(const std::string& path);
+	void WriteTextFile(const std::string& path, const std::string& text);
 
 	// Searches a media filename (shader, texture, model, etc)
-	std::string mediaSearch(const std::string& path);
-
-	bool imguiTextboxAndButton(std::string& content, const std::string& label);
-
-	glm::vec3 simpleArcballCamera(glm::mat4& viewMatrix, glm::mat4& projMatrix);
+	std::string MediaSearch(const std::string& path);
 
 	// This takes as parameters the shader TEXT (not the filename)
-	GLuint buildShader(const char* vsource, const char* fsource);
-	
-	// Helper to reload a shader based on a keypress, e.g. GLFW_KEY_L
-	// This takes as parameters the filenames, to search in media folders
-	void reloadShaderOnKey(GLuint& program, const std::string& vs, const std::string& fs, int key);
+	GLuint BuildShader(const char* vsource, const char* fsource);
 
-	// Build a VBO that contains floats in any arrangement (array of floats, array of vec2, array of vec3, etc)
-	GLuint buildVBO(const float * vertexData, int size);
-	GLuint buildVAO(GLuint vbo, int vertexSize);
-	GLuint buildIBO(const int* indexData, int size);
+	// Build a vertex buffer object that contains floats in any arrangement (array of floats, array of vec2, array of vec3, etc)
+	GLuint BuildVBO(const float * vertexData, int size);
+
+	// Build a vertex array object
+	GLuint BuildVAO(GLuint vbo, int vertexSize);
 
 	// Load a simple 8-bit per channel texture (grayscale, RGB or RGBA)
-	GLuint loadTexture(const std::string& filename, bool generateMipmaps, glm::ivec2& textureSize);
+	GLuint LoadTexture(const std::string& filename, bool generateMipmaps, glm::ivec2& textureSize);
 
 	// Create a texture
-	GLuint createTexture(const glm::ivec2& textureSize, GLenum format, GLenum internalFormat);
+	GLuint CreateTexture(const glm::ivec2& textureSize, GLenum format, GLenum internalFormat);
 
-	void updateTexture(uint32_t texture, const void* data);
-
-	void deleteTexture(uint32_t& texture);
+	// Delete a texture and set the ID to 0
+	void DeleteTexture(uint32_t& texture);
 
 	// Create a buffer
-	GLuint createBuffer(size_t numBytes, const void* data, GLenum usage);
+	GLuint CreateBuffer(size_t numBytes, const void* data, GLenum usage);
 
-	void deleteBuffer(uint32_t& buffer);
+	// Delete a buffer and set the ID to 0
+	void DeleteBuffer(uint32_t& buffer);
 
 	// update an SSBO buffer
-	void updateSSBO(GLuint ssbo, size_t offset, size_t size, const void* data);
+	void UpdateSSBO(GLuint ssbo, size_t offset, size_t size, const void* data);
 
-	// Pack an RGBA color as a uint (1 byte per component)
-	uint32_t packColor(const glm::vec4& color);
+	// Pack an RGBA color as a uint (1 byte per component, LSB is red)
+	uint32_t PackColor(const glm::vec4& color);
 
-	// Unpack an RGBA color from a uint (1 byte per component)
-	glm::vec4 unpackColor(const uint32_t color);
+	// Unpack an RGBA color from a uint (1 byte per component, LSB is red)
+	glm::vec4 UnpackColor(const uint32_t color);
 }

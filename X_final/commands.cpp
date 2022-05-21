@@ -1,4 +1,4 @@
-#include "eventhandlers.h"
+#include "commands.h"
 
 #include <fmt/format.h>
 
@@ -11,6 +11,9 @@ using namespace glm;
 
 namespace rlf
 {
+	constexpr int STATE_DOOR_CLOSED = 0;
+	constexpr int STATE_DOOR_OPEN = 1;
+
 	// Kill a creature
 	void DestroyEntity(Entity& e)
 	{
@@ -110,7 +113,7 @@ namespace rlf
 					case EntityType::Object:
 					{
 						Game::Instance().WriteToMessageLog(fmt::format("You handle {0}", entityAtPosition->Name()));
-						entityAtPosition->GetObjectData()->Handle(*entityAtPosition, entity);
+						Handle(*entityAtPosition, entity);
 						break;
 					}
 				}
@@ -250,7 +253,7 @@ namespace rlf
 			}
 			else
 			{
-				entityAtPosition->GetObjectData()->Handle(*entityAtPosition, handler);
+				Handle(*entityAtPosition, handler);
 			}
 		}
 	}
@@ -276,6 +279,38 @@ namespace rlf
 		TransferItem(itemPile->Id(), itemId, handler);
 		if (Game::Instance().IsPlayer(handler))
 			Game::Instance().WriteToMessageLog(fmt::format("You drop {0}", itemId.Entity()->Name()));
+	}
+
+	void Handle(Entity& handled, Entity& handler)
+	{
+		auto& objData = *handled.GetObjectData();
+		auto oldState = objData.state;
+		if (handled.DbCfg() == DbIndex::Door())
+		{
+			objData.state = 1 - objData.state;
+			objData.blocksMovement = objData.state == STATE_DOOR_CLOSED;
+			objData.blocksVision = objData.state == STATE_DOOR_CLOSED;
+		}
+		else if (handled.DbCfg() == DbIndex::StairsUp())
+		{
+			auto& g = Game::Instance();
+			if (g.GetCurrentLevelIndex() > 0)
+				ChangeLevel(g.GetCurrentLevelIndex() - 1);
+		}
+		else if (handled.DbCfg() == DbIndex::StairsDown())
+		{
+			auto& g = Game::Instance();
+			ChangeLevel(g.GetCurrentLevelIndex() + 1);
+		}
+		else if (int(handled.DbCfg().Cfg()->objectCfg.effect) >= 0)
+		{
+			auto& g = Game::Instance();
+			ApplyEffect(handler, handled.DbCfg().Cfg()->objectCfg.effect);
+		}
+		if (objData.state != oldState)
+		{
+			sig::onObjectStateChanged.fire(handled);
+		}
 	}
 
 	void ChangeLevel(int levelIndex)

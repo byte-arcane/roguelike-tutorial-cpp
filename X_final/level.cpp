@@ -5,7 +5,7 @@
 #include "game.h"
 #include "entity.h"
 #include "fov.h"
-#include "eventhandlers.h"
+#include "commands.h"
 #include "astar.h"
 #include "grid.h"
 #include "signals.h"
@@ -60,7 +60,7 @@ namespace rlf
 		entities.erase(std::remove_if(entities.begin(), entities.end(), [id](const EntityId& eref) { return eref == id; }), entities.end());
 	}
 
-	bool Level::PositionIsVisible(const glm::ivec2& p) const
+	bool Level::DoesTileBlockVision(const glm::ivec2& p) const
 	{
 		if (bg(p.x, p.y).blocksVision)
 			return false;
@@ -88,7 +88,7 @@ namespace rlf
 
 		auto player = Game::Instance().PlayerId().Entity();
 		auto posPlayer = player->GetLocation().position;
-		auto cb_is_opaque = [&](const glm::ivec2& p) {return !PositionIsVisible(p); };
+		auto cb_is_opaque = [&](const glm::ivec2& p) {return !DoesTileBlockVision(p); };
 		auto cb_on_visible = [&](const glm::ivec2& p) { fogOfWar(p.x, p.y) = FogOfWarStatus::Visible; };
 		CalculateFieldOfView(player->GetLocation().position, player->DbCfg().Cfg()->creatureCfg.lineOfSightRadius, map_size, cb_is_opaque, cb_on_visible);
 
@@ -130,7 +130,7 @@ namespace rlf
 
 		// process all but first/last points, for vision blocking
 		for (int i = 1; i< int(points.size()) - 1; ++i) 
-			if (!PositionIsVisible(points[i]))
+			if (!DoesTileBlockVision(points[i]))
 				return false;
 		return true;
 	}
@@ -170,7 +170,7 @@ namespace rlf
 		static const LevelBgElement bgWall = { "wall", true, true, false, '#', glm::vec4(.7, .7, .7, 1) };
 		static const LevelBgElement bgWater = { "water", false, true, true, '=', glm::vec4(0, 0, 1, 1) };
 
-		auto text = rlf::readTextFile(filename);
+		auto text = ReadTextFile(filename);
 		
 		// remove all occurences of \r, for windows-style newlines, so we always split newlines with '\n'
 		text.erase(std::remove(text.begin(), text.end(), '\r'), text.end());

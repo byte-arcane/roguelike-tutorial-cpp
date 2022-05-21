@@ -1,7 +1,7 @@
 #include "entity.h"
 #include "game.h"
 #include "graphics.h"
-#include "eventhandlers.h"
+#include "commands.h"
 #include "grid.h"
 #include "signals.h"
 
@@ -135,38 +135,4 @@ namespace rlf
 	}
 
 	// Interaction functions
-
-	constexpr int STATE_DOOR_CLOSED = 0;
-	constexpr int STATE_DOOR_OPEN = 1;
-
-	void ObjectData::Handle(Entity& object, Entity& handler)
-	{
-		auto oldState = state;
-		if (object.DbCfg() == DbIndex::Door())
-		{
-			state = 1 - state;
-			blocksMovement = state == STATE_DOOR_CLOSED;
-			blocksVision = state == STATE_DOOR_CLOSED;
-		}
-		else if (object.DbCfg() == DbIndex::StairsUp())
-		{
-			auto& g = Game::Instance();
-			if (g.GetCurrentLevelIndex() > 0)
-				ChangeLevel(g.GetCurrentLevelIndex() - 1);
-		}
-		else if (object.DbCfg() == DbIndex::StairsDown())
-		{
-			auto& g = Game::Instance();
-			ChangeLevel(g.GetCurrentLevelIndex() + 1);
-		}
-		else if (int(object.DbCfg().Cfg()->objectCfg.effect) >= 0)
-		{
-			auto& g = Game::Instance();
-			ApplyEffect(handler, object.DbCfg().Cfg()->objectCfg.effect);
-		}
-		if (state != oldState)
-		{
-			sig::onObjectStateChanged.fire(object);
-		}
-	}
 }

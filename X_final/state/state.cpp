@@ -4,7 +4,7 @@
 
 #include "../entity.h"
 #include "../game.h"
-#include "../eventhandlers.h"
+#include "../commands.h"
 
 using namespace std;
 using namespace glm;

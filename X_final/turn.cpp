@@ -2,7 +2,7 @@
 #include "entity.h"
 
 #include "game.h"
-#include "eventhandlers.h"
+#include "commands.h"
 
 namespace rlf
 {

@@ -29,7 +29,7 @@ using namespace glm;
 
 namespace rlf
 {
-    std::string readTextFile(const std::string& path)
+    std::string ReadTextFile(const std::string& path)
     {
         std::stringstream buffer;
         std::ifstream ifsdb(path);
@@ -40,7 +40,7 @@ namespace rlf
         return buffer.str();
     }
 
-    void writeTextFile(const std::string& path, const std::string& text)
+    void WriteTextFile(const std::string& path, const std::string& text)
     {
         std::ofstream myfile(path);
         if (myfile.is_open())
@@ -49,7 +49,7 @@ namespace rlf
             std::cerr << "Error opening file for writing: " << path << std::endl;
     }
 
-    std::string mediaSearch(const std::string& filename)
+    std::string MediaSearch(const std::string& filename)
     {
         static const std::string media_path_prefixes[] = {
             "",                                                       // for absolute paths
@@ -73,56 +73,7 @@ namespace rlf
         return {};
     }
 
-    bool imguiTextboxAndButton(std::string& content, const std::string& label)
-    {
-        static const int CAPACITY = 1024;
-        if(content.capacity() != CAPACITY)
-        content.reserve(CAPACITY);
-        auto changed = ImGui::InputText(label.c_str(), content.data(), content.capacity(), ImGuiInputTextFlags_EnterReturnsTrue);
-        auto size = strlen(content.data());
-        if (size != content.size())
-            content.resize(size);
-        return changed;
-    }
-
-    glm::vec3 simpleArcballCamera(glm::mat4& viewMatrix, glm::mat4& projMatrix)
-    {
-        static float r = 15.0f;
-        static float theta = 0.0f; // latitude
-        static float phi = float(pi<float>() / 4.0f);   //longitude
-
-        float rotSpeed = 0.05f;
-        // rotation
-        if (rlf::Input::GetKey(GLFW_KEY_W))
-            phi -= rotSpeed;
-        if (rlf::Input::GetKey(GLFW_KEY_S))
-            phi += rotSpeed;
-        if (rlf::Input::GetKey(GLFW_KEY_A))
-            theta -= rotSpeed;
-        if (rlf::Input::GetKey(GLFW_KEY_D))
-            theta += rotSpeed;
-
-        phi = clamp(phi, 1e-05f, float(pi<float>() - 1e-05));
-
-        vec3 eye;
-        eye.z = r * sin(phi) * cos(theta);
-        eye.x = r * sin(phi) * sin(theta);
-        eye.y = r * cos(phi);
-        auto center = vec3(0);
-        auto fwd = normalize(center - eye);
-        auto right = normalize(cross(fwd, vec3(0, 1, 0)));
-        auto up = normalize(cross(right, fwd));
-        viewMatrix = lookAt(eye, center, up);
-
-        static float fovy = 54.0f;
-        static float aspect = FrameworkApp::ViewportWidth() / (float)FrameworkApp::ViewportHeight();;
-        static float zNear = 0.01f;
-        static float zFar = 1000.0f;
-        projMatrix = glm::perspective(radians(fovy), aspect, zNear, zFar);
-        return eye;
-    }
-
-    GLuint buildShader(const char* vsource, const char* fsource)
+    GLuint BuildShader(const char* vsource, const char* fsource)
     {
         GLuint shaderProgram = 0;
         // vertex shader
@@ -166,18 +117,7 @@ namespace rlf
         return shaderProgram;
     }
 
-    void reloadShaderOnKey(GLuint& program, const std::string& vs, const std::string& fs, int key)
-    {
-        if (Input::GetKeyDown(key))
-        {
-            auto vsText = rlf::readTextFile(rlf::mediaSearch(vs));
-            auto fsText = rlf::readTextFile(rlf::mediaSearch(fs));
-            if (!vsText.empty() && !fsText.empty())
-            program = rlf::buildShader(vsText.c_str(), fsText.c_str());
-        }
-    }
-
-    GLuint buildVBO(const float* vertexData, int size)
+    GLuint BuildVBO(const float* vertexData, int size)
     {
         GLuint vbo;
         glCreateBuffers(1, &vbo);
@@ -185,15 +125,7 @@ namespace rlf
         return vbo;
     }
 
-    GLuint buildIBO(const int* indexData, int size)
-    {
-        GLuint ibo;
-        glCreateBuffers(1, &ibo);
-        glNamedBufferStorage(ibo, size, indexData, GL_DYNAMIC_STORAGE_BIT);
-        return ibo;
-    }
-
-    GLuint buildVAO(GLuint vbo, int vertexSize)
+    GLuint BuildVAO(GLuint vbo, int vertexSize)
     {
         GLuint vao;
         
@@ -206,17 +138,7 @@ namespace rlf
         return vao;
     }
 
-    GLuint buildVAO(GLuint vbo, GLuint ibo, int vertexSize)
-    {
-        // https://github.com/fendevel/Guide-to-Modern-OpenGL-Functions#glcreatebuffers
-        GLuint vao;
-
-        glCreateVertexArrays(1, &vao);
-        
-        return vao;
-    }
-
-    GLuint loadTexture(const std::string& filename, bool generateMipmaps, ivec2& textureSize)
+    GLuint LoadTexture(const std::string& filename, bool generateMipmaps, ivec2& textureSize)
     {
         textureSize = ivec2(0, 0);
         GLuint tex = 0;
@@ -258,7 +180,7 @@ namespace rlf
         return tex;
     }
 
-    GLuint createTexture(const glm::ivec2& textureSize, GLenum format, GLenum internalFormat)
+    GLuint CreateTexture(const glm::ivec2& textureSize, GLenum format, GLenum internalFormat)
     {
         const int numLevels = 1;
         GLuint tex = 0;
@@ -267,7 +189,7 @@ namespace rlf
         return tex;
     }
 
-    void deleteTexture(uint32_t& texture)
+    void DeleteTexture(uint32_t& texture)
     {
         if (texture != 0)
         {
@@ -276,7 +198,7 @@ namespace rlf
         }
     }
 
-    GLuint createBuffer(size_t numBytes, const void* data, GLenum usage)
+    GLuint CreateBuffer(size_t numBytes, const void* data, GLenum usage)
     {
         GLuint ssbo;
         glCreateBuffers(1, &ssbo);
@@ -284,7 +206,7 @@ namespace rlf
         return ssbo;
     }
 
-    void deleteBuffer(uint32_t& buffer)
+    void DeleteBuffer(uint32_t& buffer)
     {
         if (buffer != 0)
         {
@@ -293,7 +215,7 @@ namespace rlf
         }
     }
    
-    void updateSSBO(GLuint ssbo, size_t offset, size_t size, const void* data)
+    void UpdateSSBO(GLuint ssbo, size_t offset, size_t size, const void* data)
     {
         // https://www.geeks3d.com/20140704/tutorial-introduction-to-opengl-4-3-shader-storage-buffers-objects-ssbo-demo/
         GLvoid* p = glMapNamedBufferRange(ssbo, offset, size, GL_MAP_WRITE_BIT);
@@ -301,13 +223,13 @@ namespace rlf
         glUnmapNamedBuffer(ssbo);
     }
 
-    uint32_t packColor(const vec4& color)
+    uint32_t PackColor(const vec4& color)
     {
         auto c = uvec4(clamp(color*255.0f, vec4(0), vec4(255)));
         return c.x | (c.y << 8) | (c.z << 16) | (c.w << 24);
     }
 
-    vec4 unpackColor(const uint32_t color)
+    vec4 UnpackColor(const uint32_t color)
     {
         vec4 c = { color & 255, (color >> 8) & 255, (color >> 16) & 255, (color >> 24) & 255 };
         return c / 255.0f;

@@ -54,8 +54,8 @@ namespace rlf
 
 	void Db::LoadFromDisk()
 	{
-		auto filename = rlf::mediaSearch("json/db.json");
-		auto text = rlf::readTextFile(filename);
+		auto filename = MediaSearch("json/db.json");
+		auto text = ReadTextFile(filename);
 		auto j = json::parse(text);
 		db = j;
 	}
@@ -72,7 +72,7 @@ namespace rlf
 
 	void Game::Load()
 	{
-		auto text = readTextFile("data.sav");
+		auto text = ReadTextFile("data.sav");
 		SaveData save = json::parse(text);
 		currentLevelIndex = save.currentLevelIndex;
 		invalidPoolIndices = save.invalidPoolIndices;
@@ -95,7 +95,7 @@ namespace rlf
 		save.playerId = playerId;
 		std::swap(poolEntities, save.poolEntities);
 		json j = save;
-		writeTextFile("data.sav",j.dump());
+		WriteTextFile("data.sav",j.dump());
 		std::swap(poolEntities, save.poolEntities);
 		WriteToMessageLog("Game saved.");
 	}

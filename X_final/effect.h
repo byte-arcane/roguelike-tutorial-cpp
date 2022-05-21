@@ -4,6 +4,7 @@ namespace rlf
 {
 	class Entity;
 
+	// Effects, for consumables
 	enum class Effect
 	{
 		MinorHeal=0,
@@ -12,5 +13,6 @@ namespace rlf
 		MinorDamage,
 	};
 
+	// Apply a given effect to an entity
 	void ApplyEffect(Entity& entity, Effect effect);
 }

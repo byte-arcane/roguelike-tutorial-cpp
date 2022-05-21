@@ -4,7 +4,6 @@ SET(SOURCE_FILES
     framework.cpp
     utility.cpp
 	input.cpp
-	shader.cpp
 )
 
 SET(HEADER_FILES
@@ -14,7 +13,6 @@ SET(HEADER_FILES
     framework.h
     utility.h
 	input.h
-	shader.h
 	array2d.h
 )
 

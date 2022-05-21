@@ -9,11 +9,14 @@ namespace rlf
 	// Serializable reference to an entity
 	struct EntityId
 	{
-		int version = 0;
+		// the id is the index in the pool where all entities are stored
 		int id = 0;
+		// the version is incremented every time we re-use a pool element to allocate a new entity (when an old one at that position gets destroyed)
+		int version = 0;
 
 		bool operator == (const EntityId& other) const  { return id == other.id && version == other.version; }
 
+		// get the entity pointer, return nullptr if it's not active anymore
 		Entity* Entity() const;
 	};
 }

@@ -7,7 +7,7 @@ SET(SOURCE_FILES
 	entity.cpp
 	graphics.cpp
 	spritemap.cpp
-	eventhandlers.cpp
+	commands.cpp
 	fov.cpp
 	entityid.cpp
     json.cpp
@@ -35,7 +35,7 @@ SET(HEADER_FILES
 	entity.h
 	graphics.h
 	spritemap.h
-	eventhandlers.h
+	commands.h
 	db.h
 	fov.h
 	entityid.h

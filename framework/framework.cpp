@@ -114,7 +114,7 @@ bool initializeGLFW(const rlf::FrameworkApp::WindowSettings& settings)
     // Set callback to handle any GLFW errors
     glfwSetErrorCallback(glfw_error_callback);
 
-    // Initialise GLFW library and create window
+    // Initialize GLFW library and create window
     if (!glfwInit())
     {
         std::cerr << "[ERROR] Couldn't initialize GLFW" << std::endl;
@@ -259,8 +259,7 @@ namespace rlf
             // swap the display buffer with the one we just rendered to
             glfwSwapBuffers(glfWindow);
 
-            // continuous rendering, even if window is not visible or minimized
-            Input::OnNewFrame();
+            Input::ResetState();
             glfwPollEvents();
         }
 

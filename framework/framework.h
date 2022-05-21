@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 
-// Computer graphics framework
+// Roguelike framework
 namespace rlf
 {
 	// This class is just an organisational unit for some basic functions
