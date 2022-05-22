@@ -85,5 +85,4 @@ SET( APP_INCLUDE_DIRECTORIES ${APP_INCLUDE_DIRECTORIES_FW} framework)
 SET( APP_LINK_LIBRARIES GLEW::GLEW fmt::fmt imgui::imgui glfw glm::glm nlohmann_json::nlohmann_json framework magic_enum::magic_enum)
 
 add_subdirectory(framework)
-add_subdirectory(test)
 add_subdirectory(X_final)
