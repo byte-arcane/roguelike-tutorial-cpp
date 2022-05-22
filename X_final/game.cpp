@@ -16,6 +16,7 @@ namespace rlf
 {
 	void Game::Init()
 	{
+		// The game initialization is nothing more than starting with the menu state
 		std::unique_ptr<state::State> menu = std::make_unique<state::Menu>();
 		PushState(menu);
 	}
@@ -32,25 +33,32 @@ namespace rlf
 		// is it an old version?
 		if (!entity || entity->Id().version != entityId.version)
 			return nullptr;
+		// ok, all good, get the entity
 		return entity.get();
 	}
 
 	EntityId Game::CreateEntity(const DbIndex& cfg, const EntityDynamicConfig& dcfg, bool fireMessage)
 	{
+		// Get an appropriate entity id. 
 		EntityId entityId;
+		// if we have some invalid ones
 		if (!invalidPoolIndices.empty())
 		{
+			// Get the first invalid one and increment the version
 			auto it = invalidPoolIndices.begin();
 			entityId.version = poolEntities[*it]->Id().version + 1;
 			entityId.id = *it;
 			invalidPoolIndices.erase(it);
 		}
+		// no invalid ones
 		else
 		{
+			// create a new one at the end of the pool
 			entityId.id = poolEntities.size();
 			entityId.version = 1;
 			poolEntities.resize(poolEntities.size() + 1);
 		}
+		// create a new entity and initialize it
 		poolEntities[entityId.id].reset(new Entity());
 		poolEntities[entityId.id]->Initialize(entityId,cfg, dcfg);
 
@@ -73,9 +81,9 @@ namespace rlf
 		currentLevelIndex = iLevel;
 		if (levels.size() <= currentLevelIndex)
 		{
-			// singlegen_OpenCavern_v0.txt
 #if 0
-			auto levelConfig = LoadLevelFromTxtFile(rlf::mediaSearch("maps/map2.txt"));
+			// singlegen_OpenCavern_v0.txt
+			auto levelConfig = LoadLevelFromTxtFile(rlf::MediaSearch("maps/map2.txt"));
 			const auto& layout = levelConfig.first;
 			const auto& entityConfigs = levelConfig.second;
 #else
@@ -101,8 +109,10 @@ namespace rlf
 
 	void Game::WriteToMessageLog(const std::string& msg)
 	{
+		// if this message is the same as the last one, increment the number of repeats of the last entry
 		if (!messageLog.empty() && messageLog.back().first == msg)
 			++messageLog.back().second;
+		// otherwise add it to the list
 		else
 			messageLog.emplace_back(msg, 1);
 		sig::onGuiUpdated.fire();

@@ -73,8 +73,8 @@ namespace rlf
 		// Start a new game
 		void New();
 
-		// Load a saved game
-		void Load();
+		// Load a saved game. Return if successful
+		bool Load();
 
 		// Save the game
 		void Save();

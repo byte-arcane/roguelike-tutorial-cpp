@@ -15,6 +15,7 @@ namespace rlf
 	{
 		Status Death::UpdateImpl()
 		{
+			// Enter ends this state
 			if (Input::GetKeyDown(GLFW_KEY_ENTER))
 				return Status::Success;
 			return Status::Running;
@@ -22,8 +23,10 @@ namespace rlf
 
 		void Death::Render()
 		{
+			// Get the unique buffers to write the data: for the death info screen and the header
 			auto& gfx = Graphics::Instance();
 			auto& sparseBufferDeath = gfx.RequestBuffer("death");
+			// Initialize if necessary. 
 			if (!sparseBufferDeath.IsInitialized())
 				sparseBufferDeath.Init(sizeof(uvec4), 2000);
 			auto& sparseBufferHeader = gfx.RequestBuffer("header");
@@ -56,7 +59,8 @@ namespace rlf
 				AddSeparatorLine(bufferMain, 0, vec4(1), screenSize.x, "Press ENTER to return to the main menu");
 				sparseBufferDeath.Set(bufferMain.size(), bufferMain.data());
 			}
-
+			
+			// Render the character info, the death info, and the header
 			Graphics::Instance().RenderGui();
 			Graphics::Instance().RenderGameOverlay(sparseBufferDeath);
 			Graphics::Instance().RenderHeader();

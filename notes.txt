@@ -2,6 +2,7 @@ TODO:
 
 	bugs:
 		can't use last items -- key not recognized
+			l == 76
 		drinking some potions (after picking up??) causes issues
 		stacking not working
 		
@@ -17,84 +18,15 @@ TODO:
 Rationale:
 	Trying to keep things simple, sometimes at the expense of doing things "properly" or efficiently
 	no templates, no shared pointers
-
-Codebase:
-	Graphics:
-		Select tile size (based e.g. on bitmap font)
-			Determine game grid size
-			Expose simple functions such as:
-			void SetTile(ivec2 position, int layerId, Tile tile) // layer info bad?
-			void SetBackgroundImage( string filename )
-			
-			int2 CursorPosition(), in Input class really
-			
-		Simple classes/enums like:
-			TileMap: a handle on the texture, plus info on what it contains ( default layer)
-			Tile: tile index, plus optional tint and optional layer override
-			Layer: Background, Objects, Creatures, Effects, FogOfWar, Gui
-			
-		It's worth to have a resizable buffer class (realloc at 2x capacity when growing)
-			
-			
-	Game state:
-		Different screens are different update/render loops
-		Single global game state that stores info about the game
-		
-		Basic widgets, e.g. buttons with different rendering for pressed/unpressed
-		
-	ECS:
-		
-		Common entity data:
-			name
-			Render info
-				array of Tiles (that's constant data, at entity creation)
-				current tile (default to 0, changes as needed)
-		
-		Entity types:
-			Creature:
-				position
-				location
-				container
-				equipment
-				hp
-			Item
-				weight
-				value
-				owner
-				stackSize = 1
-				
-				useInfo // can it be Used
-				meleeInfo // can it be wielded as a melee weapon?
-				throwInfo // can it be thrown?
-				rangedInfo // can it be used as a ranged weapon?
-				ammoInfo // can it be used as ammo?
-				armorInfo // can it be used as armor?
-			Object
-				position
-				location
-				blocksVision
-				blocksMovement
-				
-				bool canInteractFromAdjacentTile = true
-				
-				virtual void OnInteractWith()
-				
-				Subclasses:
-					Container
-					Fountain
-					Door
-					Stairs
-						stores connecting stairs id/name (name is easier as it doesn't require pre-instantiation, e.g. "stairs to level 1b")
-						
-			SpawnInfo class: configuration to assist with instantiation of an entity:
-				static info in database (render tiles, etc)
-				dynamic info as parameters (position, location, etc)
-				
-	GUI and interactions:
-		Melee, target, area of effect display
-						
-
-					
+	
+What it is
+	A tutorial on how to make the basis for a roguelike from scratch in mostly-modern C++ using a low-level OpenGL wrapper (GLFW) and few other libraries
+	
+What it is not
+	OpenGL tutorial
+	C++ tutorial
+	Library to use as-is for developing your roguelike
+	Best/optimal way of doing things: that has been sacrificed for simplicity
 
 Part 0 - Setting Up
 Part 1 - Drawing the ‘@’ symbol and moving it around

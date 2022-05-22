@@ -17,7 +17,7 @@ namespace rlf
 		this->numElementsMax = numElementsMax;
 	}
 
-	// Add some data (num bytes == stride) at a free slot and return the slot
+	// Add some data (num bytes == stride) at a free index and return the slot
 	int SparseBuffer::Add(const void* data)
 	{
 		// calculate the slot for the data
@@ -40,7 +40,6 @@ namespace rlf
 		return slot;
 	}
 
-	// Update the data at a given slot
 	void SparseBuffer::Update(int idx, const void* data)
 	{
 		rlf::UpdateSSBO(buffer, idx *stride, stride, data);
@@ -56,7 +55,6 @@ namespace rlf
 		firstFreeSlotAtEnd = numElements;
 	}
 
-	// Free up a slot
 	void SparseBuffer::Remove(int idx)
 	{
 		freeSlots.insert(idx);
@@ -65,14 +63,9 @@ namespace rlf
 		UnmapMemory();
 	}
 
-	// Free up a slot
 	void SparseBuffer::Dispose()
 	{
-		if (buffer != 0)
-		{
-			glDeleteBuffers(1, &buffer);
-			buffer = 0;
-		}
+		DeleteBuffer(buffer);
 	}
 
 	void SparseBuffer::Draw() const

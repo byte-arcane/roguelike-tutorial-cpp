@@ -1,5 +1,7 @@
 #include <framework.h>
 
+#include <imgui.h>
+
 #include "graphics.h"
 #include "game.h"
 #include "db.h"
@@ -38,6 +40,9 @@ class GameApp : public rlf::FrameworkApp
 	// Put here any GUI related code. Called after Render
 	void onGui() override
 	{
+		// A simple example: reload the database dynamically
+		if (ImGui::Button("Reload DB"))
+			Db::Instance().LoadFromDisk();
 	}
 };
 

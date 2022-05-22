@@ -17,7 +17,7 @@ namespace rlf
 	void Level::Init(const Array2D<LevelBgElement>& bg, const std::vector<std::pair<DbIndex,EntityDynamicConfig>>& entityCfgs, int locationIndex)
 	{
 		this->bg = bg;
-		fogOfWar = Array2D<FogOfWarStatus>(bg.Size(), {});
+		fogOfWar = Array2D<FogOfWarStatus>(bg.Size(), FogOfWarStatus::Unexplored);
 
 		for (auto& ecfg : entityCfgs)
 		{
@@ -47,7 +47,6 @@ namespace rlf
 		if (entity.Type() != EntityType::Item)
 		{
 			entities.push_back(entity.Id());
-
 			// if it's the player who was added to the level, recalculate visibility
 			if (Game::Instance().IsPlayer(entity))
 				UpdateFogOfWar();
@@ -56,14 +55,20 @@ namespace rlf
 
 	void Level::OnEntityRemoved(Entity& entity)
 	{
-		auto id = entity.Id();
-		entities.erase(std::remove_if(entities.begin(), entities.end(), [id](const EntityId& eref) { return eref == id; }), entities.end());
+		if (entity.Type() != EntityType::Item)
+		{
+			auto id = entity.Id();
+			// erase-remove idiom, removing all entity IDs that match this entity's id
+			entities.erase(std::remove_if(entities.begin(), entities.end(), [id](const EntityId& eref) { return eref == id; }), entities.end());
+		}
 	}
 
 	bool Level::DoesTileBlockVision(const glm::ivec2& p) const
 	{
+		// check the background tile
 		if (bg(p.x, p.y).blocksVision)
 			return false;
+		// check all entities on this tile
 		for (const auto& entityId : entities)
 		{
 			auto entity = entityId.Entity();
@@ -75,7 +80,7 @@ namespace rlf
 
 	void Level::UpdateFogOfWar()
 	{
-		// "reset" the fov map
+		// reset the fog of war by turning all previously visible tiles to definitely explored
 		auto map_size = bg.Size();
 		for (int y = 0; y < map_size.y; ++y)
 			for (int x = 0; x < map_size.x; ++x)
@@ -86,6 +91,7 @@ namespace rlf
 					fowValue = FogOfWarStatus::Explored;
 			}
 
+		// Now calculate the field of view, where if a tile is visible, it gets a "Visible" status
 		auto player = Game::Instance().PlayerId().Entity();
 		auto posPlayer = player->GetLocation().position;
 		auto cb_is_opaque = [&](const glm::ivec2& p) {return !DoesTileBlockVision(p); };
@@ -97,10 +103,10 @@ namespace rlf
 
 	bool Level::EntityCanMoveTo(const Entity& e, const glm::ivec2& position) const
 	{
-		// Check if we can! If not, spawn a message
+		// Check background first, e.g. if it's a wall
 		if (bg(position.x, position.y).blocksMovement)
 			return false;
-
+		// check if there are any blocker entities
 		for (const auto& entityId : entities)
 		{
 			auto entity = entityId.Entity();
@@ -124,6 +130,9 @@ namespace rlf
 		if (distance < 2.0f) 
 			return true; 
 
+		// Calculate a line from the entity to the target
+		// Now keep in mind that your fov function might not always return the same results as the line function, 
+		//	  so make sure they give compatible results if that's important for your game
 		std::vector<glm::ivec2> points;
 		Line(points, start, position);
 		assert(points.size() > 2); // not adjacent, so minimum of 3 points
@@ -137,8 +146,11 @@ namespace rlf
 
 	Entity* Level::GetEntity(const glm::ivec2& position, bool blocksMovement) const
 	{
+		// bounds check
 		if (!bg.InBounds(position))
 			return nullptr;
+		// go through all entities and check if any of them is at the requested position, if it matches the movement blocking parameter
+		//	  so that we can distinguish between creatures and item piles on the same tile for example
 		for (const auto& entityId : entities)
 		{
 			auto entity = entityId.Entity();
@@ -160,7 +172,9 @@ namespace rlf
 
 	std::vector<glm::ivec2> Level::CalcPath(const Entity& e, const glm::ivec2& tgt) const
 	{
-		return CalculatePath(e.GetLocation().position, tgt, bg.Size(), [&](const glm::ivec2& p) { return EntityCanMoveTo(e, p) ? 1.0f : std::numeric_limits<float>::infinity(); });
+		return CalculatePath(e.GetLocation().position, tgt, bg.Size(), [&](const glm::ivec2& p) { 
+			return EntityCanMoveTo(e, p) ? 1.0f : std::numeric_limits<float>::infinity(); 
+		});
 	}
 
 
@@ -185,14 +199,12 @@ namespace rlf
 
 		std::vector<std::pair<DbIndex,EntityDynamicConfig>> entityCfgs;
 
-		
-
-		// Go through the data, and remember that the file starts with highest Y value first (top-to-bottom)
-		//for (int y = height - 1; y >= 0; --y)
+		// Go through the data
 		for (int y = 0; y < height; ++y)
 		{
 			for (int x = 0; x < width; ++x)
 			{
+				// Remember that the file starts with highest Y value first (top-to-bottom)
 				auto c = text[x + (height-1-y) * (width + 1)];
 
 				// Set the bg element -- the floor is used if we can't find the glyph (e.g. if the glyph represents treasure, under the treasure we have a floor)
@@ -211,20 +223,20 @@ namespace rlf
 				switch (c)
 				{
 				case '+':
-					entityCfgs.emplace_back("door", dcfg);
+					entityCfgs.emplace_back(DbIndex::Door(), dcfg);
 					break;
 				case '>':
-					entityCfgs.emplace_back("stairs_down", dcfg);
+					entityCfgs.emplace_back(DbIndex::StairsDown(), dcfg);
 					break;
 				case '<':
-					entityCfgs.emplace_back("stairs_up", dcfg);
+					entityCfgs.emplace_back(DbIndex::StairsUp(), dcfg);
 					break;
 				case 'X':
 					entityCfgs.emplace_back("goblin", dcfg);
 					break;
 				case '$':
 					dcfg.inventory.emplace_back("gold");
-					entityCfgs.emplace_back("item_pile", dcfg);
+					entityCfgs.emplace_back(DbIndex::ItemPile(), dcfg);
 					break;
 				default:
 					break;
@@ -232,6 +244,7 @@ namespace rlf
 			}
 		}
 
+		// Add some random treasure
 		std::vector<std::string> spawnableItems = {
 			"helmet",
 			"sword",
@@ -246,7 +259,7 @@ namespace rlf
 			{
 				EntityDynamicConfig dcfg{ p };
 				dcfg.inventory.emplace_back(spawnableItems[rand()% spawnableItems.size()]);
-				entityCfgs.emplace_back("item_pile", dcfg);
+				entityCfgs.emplace_back(DbIndex::ItemPile(), dcfg);
 			}
 				
 		}

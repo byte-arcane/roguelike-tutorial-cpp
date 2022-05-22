@@ -8,7 +8,7 @@ namespace rlf
 	class Level;
 	struct sig
 	{
-		// Declare Nano::Signals using function signature syntax
+		// Declare here all the signals that we'll use
 		static Nano::Signal<void(const Entity&)> onEntityMoved;
 		static Nano::Signal<void(Entity&)> onEntityAdded;
 		static Nano::Signal<void(Entity&)> onEntityRemoved;

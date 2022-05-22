@@ -22,8 +22,10 @@ namespace rlf
 	{
 		Status Menu::UpdateImpl()
 		{
+			// Escape exits the game
 			if (Input::GetKeyDown(GLFW_KEY_ESCAPE))
 				return Status::Abort;
+			// 1 starts a new game
 			else if (Input::GetKeyDown(GLFW_KEY_1))
 			{
 				std::unique_ptr<State> newState(new CreateChar([&](bool success, const State* state) {
@@ -35,6 +37,7 @@ namespace rlf
 					}));
 				Game::Instance().PushState(newState);
 			}
+			// 2 loads a saved game from disk
 			else if (Input::GetKeyDown(GLFW_KEY_2))
 			{
 				// continue game
@@ -73,24 +76,28 @@ namespace rlf
 
 		void Menu::StartNewGame(const std::string& charName)
 		{
-			Game::Instance().New();
-
-			// Set level
-			ChangeLevel(0);
-
+			// Change the state to main game
 			std::unique_ptr<State> newState(new state::MainGame());
 			Game::Instance().PushState(newState);
 
-			// find suitable position (entry staircase)
+			// Initialize the game state
+			Game::Instance().New();
+
+			// set the level to first
+			ChangeLevel(0);
+
+			// find suitable position for the player (entry staircase)
 			const auto& entities = Game::Instance().CurrentLevel().Entities();
 			auto itFound = std::find_if(entities.begin(), entities.end(), [](const EntityId& entityId) {
 				return entityId.Entity()->DbCfg() == DbIndex::StairsUp();
 			});
 			auto startPosition = itFound->Entity()->GetLocation().position;
+
+			// Create the player entity
 			EntityDynamicConfig dcfg;
 			dcfg.position = startPosition;
 			dcfg.nameOverride = charName;
-			// add one of each item
+			// add one of each item, for debugging purposes!
 			for (const auto& kv : Db::Instance().All())
 				if (kv.second.allowRandomSpawn && kv.second.type == EntityType::Item)
 					dcfg.inventory.emplace_back(kv.first);
@@ -101,9 +108,11 @@ namespace rlf
 
 		void Menu::ContinueGame()
 		{
-			Game::Instance().Load();
-			std::unique_ptr<State> uptr(new state::MainGame());
-			Game::Instance().PushState(uptr);
+			if (Game::Instance().Load())
+			{
+				std::unique_ptr<State> uptr(new state::MainGame());
+				Game::Instance().PushState(uptr);
+			}
 		}
 
 		void Menu::Render()
@@ -114,11 +123,14 @@ namespace rlf
 				return;
 
 			auto& gfx = Graphics::Instance();
+			// Get a buffer to write to 
 			auto& sparseBuffer = gfx.RequestBuffer("menu");
 			if (!sparseBuffer.IsInitialized())
 			{
-				sparseBuffer.Init(sizeof(glm::uvec4), 4000);
+				// Build the cpu data buffer
 				std::vector<glm::uvec4> buffer;
+
+				// Add a title screen from file
 				auto text = ReadTextFile(MediaSearch("misc/titlescreen.txt"));
 				buffer.reserve(text.size());
 				auto screenSize = gfx.ScreenSize();
@@ -137,9 +149,12 @@ namespace rlf
 						++col;
 					}
 				}
+				// Add a few lines after that
 				AddSeparatorLine(buffer, row - 4, glm::vec4(1), screenSize.x, "   [1. New Game ]   ",' ');
 				AddSeparatorLine(buffer, row - 5, glm::vec4(1), screenSize.x, "   [2. Continue ]   ", ' ');
 				AddSeparatorLine(buffer, row - 6, glm::vec4(1), screenSize.x, "   [3.   Exit   ]   ", ' ');
+				// Set the gpu data
+				sparseBuffer.Init(sizeof(glm::uvec4), 4000);
 				sparseBuffer.Set(buffer.size(), buffer.data());
 			}
 			gfx.RenderMenu(sparseBuffer);

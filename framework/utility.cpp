@@ -169,6 +169,7 @@ namespace rlf
                 break;
             }
 
+            // calculate how many mip levels we need, based on the max dimension
             int numLevels = generateMipmaps ? int(ceil(log2(double(max(width,height))))) : 1;
 
             glTextureStorage2D(tex, numLevels, internalFormat, width, height);

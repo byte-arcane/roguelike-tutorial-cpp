@@ -10,11 +10,7 @@ namespace rlf
 	// Release the texture
 	void Tilemap::Dispose()
 	{
-		if (texture != 0)
-		{
-			glDeleteTextures(1, &texture);
-			texture = 0;
-		}
+		DeleteTexture(texture);
 	}
 
 	// Load the texture

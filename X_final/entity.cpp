@@ -11,6 +11,7 @@ namespace rlf
 {
 	int Inventory::Weight() const
 	{
+		// weight is the sum of weights of all items in inventory
 		int weight = 0;
 		for (const auto& item : items)
 			weight += item.Entity()->DbCfg().Cfg()->itemCfg.weight * item.Entity()->GetItemData()->stackSize;
@@ -41,13 +42,13 @@ namespace rlf
 		objectData.reset();
 		itemData.reset();
 
-		// TODO: any other work, now that the basics are done
-		
+		// any other work, now that the basics are done
+
+		// Initialization depending on the entity type
 		if (type == EntityType::Creature)
 		{
+			inventory = std::make_unique<Inventory>(); // Creatures always have inventory
 			creatureData = std::make_unique<CreatureData>();
-			inventory = std::make_unique<Inventory>();
-
 			creatureData->hp = cfg->creatureCfg.hp;
 		}
 		else if (type == EntityType::Object)
@@ -61,17 +62,14 @@ namespace rlf
 		{
 			itemData = std::make_unique<ItemData>();
 			itemData->stackSize = cfg->itemCfg.IsStackable() ? cfg->itemCfg.defaultStackSize : 1;
-		}
-		
-		if (type != EntityType::Item)
-		{
-			location = { Game::Instance().GetCurrentLevelIndex(), dcfg.position };
-		}
-		else
-		{
 			itemData->owner = dcfg.itemOwner;
 		}
+		
+		// items don't have a position
+		if (type != EntityType::Item)
+			location = { Game::Instance().GetCurrentLevelIndex(), dcfg.position };
 
+		// Add inventory items where applicable
 		if (DbCfg() == DbIndex::ItemPile() || !dcfg.inventory.empty())
 		{
 			if(!inventory)
@@ -123,8 +121,10 @@ namespace rlf
 	{
 		switch (Type())
 		{
+			// creatures don't block vision
 		case EntityType::Creature:
 			return false;
+			// objects may block vision
 		case EntityType::Object:
 			return objectData->blocksVision;
 		default:
@@ -133,6 +133,4 @@ namespace rlf
 		}
 		return false;
 	}
-
-	// Interaction functions
 }

@@ -11,15 +11,15 @@ using namespace glm;
 
 namespace rlf
 {
+	// The different door states, to be used with the state variable of the struct ObjectData
 	constexpr int STATE_DOOR_CLOSED = 0;
 	constexpr int STATE_DOOR_OPEN = 1;
 
 	// Kill a creature
 	void DestroyEntity(Entity& e)
 	{
-		if (e.Type() != EntityType::Item)
-			sig::onEntityRemoved.fire(e);
-		else // it's an item -- remove it from its owner!
+		sig::onEntityRemoved.fire(e);
+		if (e.Type() == EntityType::Item) // it's an item -- remove it from its owner!
 		{
 			auto& items = e.GetItemData()->owner.Entity()->GetInventory()->items;
 			items.erase(std::remove_if(items.begin(), items.end(), [&e](const EntityId& eref) {
@@ -61,14 +61,16 @@ namespace rlf
 		else if (direction == ivec2{ 0, -1 })
 			return "south";
 		else
-			return "unkwnown";
+			return "unknown";
 	}
 
 	const Entity * EquippedItemAtSlot(const Entity& entity, ItemCategory itemCategory)
 	{
+		// find the first item that is currently equipped and matches the given item category
 		const auto& items = entity.GetInventory()->items;
 		auto itFound = std::find_if(items.begin(), items.end(), [&itemCategory](const EntityId& itemId) {
-			return itemId.Entity()->GetItemData()->equipped && itemId.Entity()->DbCfg().Cfg()->itemCfg.category == itemCategory;
+			auto itemEntity = itemId.Entity();
+			return itemEntity->GetItemData()->equipped && itemEntity->DbCfg().Cfg()->itemCfg.category == itemCategory;
 		});
 		return itFound != items.end() ? itFound->Entity() : nullptr;
 	}
@@ -90,18 +92,19 @@ namespace rlf
 
 			if (Game::Instance().IsPlayer(entity))
 			{
-				Game::Instance().WriteToMessageLog(fmt::format("You move {0}", DirectionString(direction)));
+				Game::Instance().WriteToMessageLog(fmt::format("{0} moves {1}", entity.Name(), DirectionString(direction)));
 				Game::Instance().CurrentLevel().UpdateFogOfWar();
 				sig::onGuiUpdated.fire();// movement should cause GUI Update
 			}
 		}
-		else // ok, we can't move. Get entity at the tile
+		else // ok, we can't move. Get entity at the obstacle tile
 		{
 			auto entityAtPosition = level.GetEntity(position, true);
 			if (entityAtPosition != nullptr)
 			{
 				switch (entityAtPosition->Type())
 				{
+					// if it's a creature, attack it
 					case EntityType::Creature:
 					{
 						// Attack if we're attacking with bare hands or a melee weapon
@@ -110,9 +113,11 @@ namespace rlf
 							AttackEntity(entity, *entityAtPosition);
 						break;
 					}
+					// if it's an object, try to handle it
 					case EntityType::Object:
 					{
-						Game::Instance().WriteToMessageLog(fmt::format("You handle {0}", entityAtPosition->Name()));
+						if (Game::Instance().IsPlayer(entity))
+							Game::Instance().WriteToMessageLog(fmt::format("{0} handles {1}", entity.Name(), entityAtPosition->Name()));
 						Handle(*entityAtPosition, entity);
 						break;
 					}
@@ -124,38 +129,30 @@ namespace rlf
 	// return true if entity died
 	bool ModifyHp(Entity& entity, int hpMod)
 	{
+		// get the hp and update it
 		auto& hp = entity.GetCreatureData()->hp;
 		hp = glm::min(hp + hpMod, entity.DbCfg().Cfg()->creatureCfg.hp);
+		// check if the entity is dead, and handle accordingly
 		auto died = entity.GetCreatureData()->hp <= 0;
 		std::string text;
 		if (died)
 		{
-			auto isPlayer = Game::Instance().IsPlayer(entity);
-			text = isPlayer 
-				? "You have died" 
-				: fmt::format("{0} has died!", entity.Name());
-			if (!isPlayer)
+			text = fmt::format("{0} has died!", entity.Name());
+			if (!Game::Instance().IsPlayer(entity))
 				DestroyEntity(entity);
 			else
 				sig::onPlayerDied.fire();
 		}
 		else
-		{
-			if (hpMod <= 0)
-				text = Game::Instance().IsPlayer(entity) 
-					? fmt::format("You suffer {0} damage",-hpMod) 
-					: fmt::format("{0} suffers {1} damage", entity.Name(), -hpMod);
-			else
-				text = Game::Instance().IsPlayer(entity) 
-					? fmt::format("You heal for {0} HP", hpMod) 
-					: fmt::format("{0} heals for {1} HP", entity.Name(), hpMod);
-		}
-		Game::Instance().WriteToMessageLog(text);
+			text = hpMod <= 0 ? fmt::format("{0} suffers {1} damage", entity.Name(), -hpMod) : fmt::format("{0} heals for {1} HP", entity.Name(), hpMod);
+		if(!text.empty())
+			Game::Instance().WriteToMessageLog(text);
 		return died;
 	}
 	
 	ivec4 AccumulateCombatStats(const Entity& creature)
 	{
+		// Gather the stats from the creature configuration and the currently equipped items
 		auto stats = creature.DbCfg().Cfg()->creatureCfg.combatStats;
 		for (const auto& item : creature.GetInventory()->items)
 			if (item.Entity()->GetItemData()->equipped)
@@ -167,13 +164,11 @@ namespace rlf
 	{
 		// DestroyEntity(*entityAtPosition);
 		auto& g = Game::Instance();
-#if 0	// Super-simple combat
-		auto text = g.IsPlayer(attacker)
-			? fmt::format("You attack {0}", defender.Name())
-			: fmt::format("{0} attacks {1}", attacker.Name(), defender.Name());
+#if 0	// Super-simple combat - each bump is 1 damage
+		auto text = fmt::format("{0} attacks {1}", attacker.Name(), defender.Name());
 		g.WriteToMessageLog(text);
 		auto defenderDied = ModifyHp(defender, -1);
-#else
+#else	// combat using stats
 		bool defenderDied = false;
 		auto attackerStats = AccumulateCombatStats(attacker);
 		auto defenderStats = AccumulateCombatStats(defender);
@@ -223,13 +218,17 @@ namespace rlf
 			items.push_back(itemId);
 		}
 
+		// if giver is an item pile
 		if (giver.DbCfg() == DbIndex::ItemPile())
 		{
+			// if it just became empty, destroy it
 			if (giverItems.empty())
 				DestroyEntity(giver);
-			else if (giverItems.size() == 1)
+			// else update its state
+			else
 				sig::onObjectStateChanged.fire(giver);
 		}
+		// if taker is an item pile, update its state
 		const auto& taker = *takerId.Entity();
 		if (taker.DbCfg() == DbIndex::ItemPile())
 			sig::onObjectStateChanged.fire(taker);
@@ -241,19 +240,18 @@ namespace rlf
 		auto& g = Game::Instance();
 		const auto& level = g.CurrentLevel();
 		auto position = handler.GetLocation().position;
-		auto entityAtPosition = level.GetEntity(position, false);
-		if (entityAtPosition != nullptr)
+		auto entityOnGround = level.GetEntity(position, false);
+		if (entityOnGround != nullptr)
 		{
-			if (entityAtPosition->GetInventory())
+			if (entityOnGround->GetInventory())
 			{
-				for (const auto& itemId : entityAtPosition->GetInventory()->items)
-					TransferItem(handler.Id(), itemId, *entityAtPosition);
-				if (g.IsPlayer(handler))
-					Game::Instance().WriteToMessageLog("You pick up some items");
+				for (const auto& itemId : entityOnGround->GetInventory()->items)
+					TransferItem(handler.Id(), itemId, *entityOnGround);
+				Game::Instance().WriteToMessageLog(fmt::format("{0} picks up some items", handler.Name()));
 			}
 			else
 			{
-				Handle(*entityAtPosition, handler);
+				Handle(*entityOnGround, handler);
 			}
 		}
 	}
@@ -261,24 +259,23 @@ namespace rlf
 	void PickUp(Entity& handler, Entity& itemPile, const EntityId& itemId)
 	{
 		TransferItem(handler.Id(), itemId, itemPile);
-		if (Game::Instance().IsPlayer(handler))
-			Game::Instance().WriteToMessageLog(fmt::format("You pick up {0}", itemId.Entity()->Name()));
+		Game::Instance().WriteToMessageLog(fmt::format("{0} picks up {1}", handler.Name(), itemId.Entity()->Name()));
 	}
 
 	void Drop(Entity& handler, const EntityId& itemId)
 	{
 		const auto& level = Game::Instance().CurrentLevel();
 		auto position = handler.GetLocation().position;
+		// When dropping an item, if an item pile does not exist under our feet, we need to create one
 		auto itemPile = level.GetEntity(position, false);
 		if (itemPile == nullptr)
 		{
 			EntityDynamicConfig dcfg;
 			dcfg.position = position;
-			itemPile = Game::Instance().CreateEntity(DbIndex{"item_pile"}, dcfg, true).Entity();
+			itemPile = Game::Instance().CreateEntity(DbIndex::ItemPile(), dcfg, true).Entity();
 		}
 		TransferItem(itemPile->Id(), itemId, handler);
-		if (Game::Instance().IsPlayer(handler))
-			Game::Instance().WriteToMessageLog(fmt::format("You drop {0}", itemId.Entity()->Name()));
+		Game::Instance().WriteToMessageLog(fmt::format("{0} drops {1}", handler.Name(), itemId.Entity()->Name()));
 	}
 
 	void Handle(Entity& handled, Entity& handler)
@@ -340,6 +337,7 @@ namespace rlf
 				{
 					auto position = entity.Entity()->GetLocation().position;
 					playerId.Entity()->SetLocation({ levelIndex, position });
+					break;
 				}
 			sig::onEntityAdded.fire(*playerId.Entity());
 			level.UpdateFogOfWar();
@@ -363,8 +361,7 @@ namespace rlf
 		auto& items = owner.GetInventory()->items;
 		auto& item = *items[itemIdx].Entity();
 		ApplyEffect(owner, item.DbCfg().Cfg()->itemCfg.effect);
-		if(Game::Instance().IsPlayer(owner))
-			Game::Instance().WriteToMessageLog("You used " + item.Name());
+		Game::Instance().WriteToMessageLog(fmt::format("{0} used {1}",owner.Name(),item.Name()));
 		auto& stackSize = item.GetItemData()->stackSize;
 		--stackSize;
 		if (stackSize == 0)

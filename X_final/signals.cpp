@@ -2,7 +2,6 @@
 
 namespace rlf
 {
-	// Declare Nano::Signals using function signature syntax
 	Nano::Signal<void(const Entity&)> sig::onEntityMoved;
 	Nano::Signal<void(Entity&)> sig::onEntityAdded;
 	Nano::Signal<void(Entity&)> sig::onEntityRemoved;

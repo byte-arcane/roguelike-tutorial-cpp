@@ -1,5 +1,8 @@
 #include "fov.h"
 
+// This is a port off the roguebasin implementation, changing types as necessary
+// http://www.roguebasin.com/index.php/C%2B%2B_shadowcasting_implementation
+
 #include <cmath>
 
 typedef unsigned int uint;
@@ -83,7 +86,6 @@ void cast_light(
 
 namespace rlf
 {
-    // http://www.roguebasin.com/index.php/C%2B%2B_shadowcasting_implementation
 	void CalculateFieldOfView(
         const glm::ivec2& start, 
         int radius, 

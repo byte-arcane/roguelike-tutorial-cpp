@@ -5,10 +5,10 @@
 
 namespace rlf
 {
+	// A class that stores a grid of equally-sized tiles (square or rectangular), loaded from an image
 	class Tilemap
 	{
 	public:
-
 		// Release the texture
 		~Tilemap()  { Dispose(); }
 

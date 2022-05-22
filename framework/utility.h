@@ -40,9 +40,9 @@ namespace rlf
 	// update an SSBO buffer
 	void UpdateSSBO(GLuint ssbo, size_t offset, size_t size, const void* data);
 
-	// Pack an RGBA color as a uint (1 byte per component, LSB is red)
+	// Pack an RGBA color (in range 0..1) as a uint (1 byte per component, LSB is red)
 	uint32_t PackColor(const glm::vec4& color);
 
-	// Unpack an RGBA color from a uint (1 byte per component, LSB is red)
+	// Unpack an RGBA color (in range 0..1) from a uint (1 byte per component, LSB is red)
 	glm::vec4 UnpackColor(const uint32_t color);
 }
