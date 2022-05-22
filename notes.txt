@@ -1,15 +1,6 @@
-TODO:
+Nontrivial C++ patterns
 
-	bugs:
-		can't use last items -- key not recognized
-			l == 76
-		drinking some potions (after picking up??) causes issues
-		stacking not working
-		
-"Advanced" C++ patterns
-
-	std::unique_ptr
-	std::move
+	std::unique_ptr and std::move
 	default/deleted constructors
 	.emplace
 	brace initialization
