@@ -29,7 +29,7 @@ The project uses a number of libraries, which are handled/installed automaticall
 * [**GLEW**](http://glew.sourceforge.net/): OpenGL extension loading library
 * [**GLFW**](https://www.glfw.org/): API for creating an OpenGL window and context that can receive input and events
 * [**stb**](https://github.com/nothings/stb): Public domain single-file libraries, for functionality such as image read/write
-* [**nlohmann json*](https://json.nlohmann.me/): JSON libarary for modern C++
+* [**nlohmann json**](https://json.nlohmann.me/): JSON libarary for modern C++
 * [**Dear ImGui**](https://github.com/ocornut/imgui): Developer GUI library using the Immediate Mode GUI paradigm
 * [**magic enum**](https://github.com/Neargye/magic_enum): Static reflection for enums
 * [**nano signal slot**](https://github.com/NoAvailableAlias/nano-signal-slot): [Signals and slots](https://en.wikipedia.org/wiki/Signals_and_slots) library for event handling
