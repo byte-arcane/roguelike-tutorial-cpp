@@ -1,4 +1,7 @@
-Nontrivial C++ patterns
+TODO: 
+	first map should be premade with doors, stairs and water (and a few rats)
+
+Nontrivial C++ patterns, to be mentioned explicitly 
 
 	std::unique_ptr and std::move
 	default/deleted constructors
@@ -6,31 +9,40 @@ Nontrivial C++ patterns
 	brace initialization
 	lambdas and predicates
 
-Rationale:
-	Trying to keep things simple, sometimes at the expense of doing things "properly" or efficiently
-	no templates, no shared pointers
-	
-What it is
-	A tutorial on how to make the basis for a roguelike from scratch in mostly-modern C++ using a low-level OpenGL wrapper (GLFW) and few other libraries
-	
-What it is not
-	OpenGL tutorial
-	C++ tutorial
-	Library to use as-is for developing your roguelike
-	Best/optimal way of doing things: that has been sacrificed for simplicity
+Structure:
+==============
 
-TODO: align with existing tutorial
-	Part 0 - Setting Up
-	Part 1 - Drawing the ‘@’ symbol and moving it around
-	Part 2 - The generic Entity, the render functions, and the map
-	Part 3 - Generating a dungeon
-	Part 4 - Field of view
-	Part 5 - Placing enemies and kicking them (harmlessly)
-	Part 6 - Doing (and taking) some damage
-	Part 7 - Creating the Interface
-	Part 8 - Items and Inventory
-	Part 9 - Ranged Scrolls and Targeting
-	Part 10 - Saving and loading
-	Part 11 - Delving into the Dungeon
-	Part 12 - Increasing Difficulty
-	Part 13 - Gearing up
+* Setting up
+	How to display an openGL window
+* Drawing player and map, and basic player input
+	Tilemap, SparseBuffer, Spritemap, Input
+	camera offset?
+	show some non-tilemap visualization with UV colours
+* Creature entities and movement
+	game area is the entire screen
+	db, config, and per-creature data. movement blocking. destroy entities when bumping onto each other
+* User interface
+	start using the UI segments (header, char area)
+	character info / coords
+* Field of view
+	fov/los. 
+* Object entities
+	Add doors, dynamic blockage of movement/vision
+* Delving into the dungeon
+	add stairs up/down. changing-level code etc
+* Game states (menu)
+	how to move between states
+* Item entities and inventory
+	add item piles
+	add the new inventory state
+	have the different item categories, but don't do anything special with them yet
+* Equipment, consumables & effects
+	add the equip/use mode
+	also pools
+	this introduces the different stats, hitpoints and "combat system"
+	add stats in char gui
+* GUI-driven actions (ranged attack) and turn system
+	add bows & attackRange parameter
+	turn taking code (EndTurn & TurnSystem)
+* Saving/loading
+* Finishing touches: more screens/states (death, create char)
