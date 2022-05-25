@@ -81,18 +81,22 @@ namespace rlf
 		currentLevelIndex = iLevel;
 		if (levels.size() <= currentLevelIndex)
 		{
-#if 0
-			// singlegen_OpenCavern_v0.txt
-			auto levelConfig = LoadLevelFromTxtFile(rlf::MediaSearch("maps/map2.txt"));
-			const auto& layout = levelConfig.first;
-			const auto& entityConfigs = levelConfig.second;
-#else
-			auto numMonsters = 5 + iLevel;
-			auto numTreasures = 5 + iLevel;
-			auto numFeatures = glm::min(1 + iLevel, 10);
-			auto layout = GenerateDungeon({ 64,32 });
-			auto entityConfigs = PopulateDungeon(layout, numMonsters, numFeatures, numTreasures, true, true);
-#endif
+			Array2D<LevelBgElement> layout;
+			std::vector<std::pair<DbIndex, EntityDynamicConfig>> entityConfigs;
+			if (iLevel == 0)
+			{
+				auto levelConfig = LoadLevelFromTxtFile(rlf::MediaSearch("maps/starting_map.txt"));
+				layout = std::move(levelConfig.first);
+				entityConfigs = std::move(levelConfig.second);
+			}
+			else
+			{
+				auto numMonsters = 5 + iLevel;
+				auto numTreasures = 5 + iLevel;
+				auto numFeatures = glm::min(1 + iLevel, 10);
+				layout = GenerateDungeon({ 64,32 });
+				entityConfigs = PopulateDungeon(layout, numMonsters, numFeatures, numTreasures, true, true);
+			}
 			levels.push_back({});
 			levels.back().Init(layout, entityConfigs, currentLevelIndex);
 		}

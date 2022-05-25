@@ -250,7 +250,7 @@ namespace rlf
 			"sword",
 			"hat",
 		};
-		for (int i = 0; i < 200; ++i)
+		for (int i = 0; i < 10; ++i)
 		{
 			auto x = rand()%width;
 			auto y = rand() % height;

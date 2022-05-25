@@ -100,6 +100,9 @@ namespace rlf
 		};
 		ReloadShaders();
 
+		// Useful if we want to allocate 2D textures that have odd dimensions and store 1 byte per pixel.
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
 		// Tilemap setup -- ideally parameterize! from some application config object
 		tilemap.Load(MediaSearch("textures/Curses_1920x900.png").c_str(), ivec2(24, 36));
 		//tilemap.Load(MediaSearch("textures/Acorntileset8x8.png").c_str(), ivec2(8, 8));
