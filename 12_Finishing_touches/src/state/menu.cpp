@@ -31,7 +31,7 @@ namespace rlf
 				std::unique_ptr<State> newState(new CreateChar([&](bool success, const State* state) {
 					if (success)
 					{
-						auto charName = static_cast<const CreateChar*>(state)->charName;
+						const auto& charName = static_cast<const CreateChar*>(state)->CharName();
 						StartNewGame(charName);
 					}
 					}));
