@@ -36,4 +36,4 @@ The project uses a number of libraries, which are handled/installed automaticall
 
 # Structure
 
-[* 12. Finishing touches](12_Finishing_touches)
+* [12. Finishing touches](12_Finishing_touches)
