@@ -76,11 +76,6 @@ namespace rlf
 
 		void Menu::ContinueGame()
 		{
-			if (Game::Instance().Load())
-			{
-				std::unique_ptr<State> uptr(new state::MainGame());
-				Game::Instance().PushState(uptr);
-			}
 		}
 
 		void Menu::Render()

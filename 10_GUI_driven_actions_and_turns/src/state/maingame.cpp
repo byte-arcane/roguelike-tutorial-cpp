@@ -20,10 +20,6 @@ namespace rlf
 		{
 			// Quick save/load
 			auto& g = Game::Instance();
-			if (Input::GetKeyDown(GLFW_KEY_F5))
-				g.Save();
-			if (Input::GetKeyDown(GLFW_KEY_F8))
-				g.Load();
 
 			auto player = Game::Instance().PlayerId().Entity();
 			if (player == nullptr)

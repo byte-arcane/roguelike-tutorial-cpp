@@ -69,40 +69,4 @@ namespace rlf
 		playerId = {};
 		poolEntities.clear();
 	}
-
-	bool Game::Load()
-	{
-		auto text = ReadTextFile("data.sav");
-		if (text.empty())
-			return false;
-		SaveData save = json::parse(text);
-		currentLevelIndex = save.currentLevelIndex;
-		invalidPoolIndices = save.invalidPoolIndices;
-		levels = save.levels;
-		messageLog = save.messageLog;
-		playerId = save.playerId;
-		// swap, so the game state gets the save data, and the save object gets the current game state, which will be destructed at the end of the scope
-		std::swap(poolEntities, save.poolEntities);
-		levels.back().StartListening();
-		sig::onGameLoaded.fire();
-		WriteToMessageLog("Game loaded.");
-		return true;
-	}
-
-	void Game::Save()
-	{
-		SaveData save;
-		save.currentLevelIndex = currentLevelIndex;
-		save.invalidPoolIndices = invalidPoolIndices;
-		save.levels = levels;
-		save.messageLog = messageLog;
-		save.playerId = playerId;
-		// temp-swap, so the save object gets all the entities just before we convert to json
-		std::swap(poolEntities, save.poolEntities);
-		json j = save;
-		WriteTextFile("data.sav",j.dump());
-		// swap again, to get the entities back into the game state object
-		std::swap(poolEntities, save.poolEntities);
-		WriteToMessageLog("Game saved.");
-	}
 }

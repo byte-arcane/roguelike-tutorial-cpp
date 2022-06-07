@@ -9,18 +9,6 @@ namespace rlf
 {
 	class Entity;
 
-	// The data required for a savegame. It's most of the game state (except turn logic and game states)
-	// See Game member variables for information on the below
-	struct SaveData
-	{
-		std::vector<std::unique_ptr<Entity>> poolEntities;
-		std::unordered_set<int> invalidPoolIndices;
-		EntityId playerId;
-		std::vector<Level> levels;
-		int currentLevelIndex = -1;
-		std::vector<std::pair<std::string, int>> messageLog;
-	};
-
 	// The game class, storing the game state, and providing functionality for interacting with the stored data
 	class Game
 	{
@@ -72,12 +60,6 @@ namespace rlf
 
 		// Start a new game
 		void New();
-
-		// Load a saved game. Return if successful
-		bool Load();
-
-		// Save the game
-		void Save();
 
 		// Render the current game state
 		void RenderCurrentState();
