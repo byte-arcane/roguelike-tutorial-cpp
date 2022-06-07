@@ -61,7 +61,7 @@ SET(ALL_SOURCE_FILES
 )
 
 assign_source_group(${ALL_SOURCE_FILES})
-add_executable(X_final ${ALL_SOURCE_FILES})
-set_target_properties(X_final PROPERTIES OUTPUT_NAME X_final CLEAN_DIRECT_OUTPUT 1)
-target_link_libraries(X_final PRIVATE ${APP_LINK_LIBRARIES})
-target_include_directories(X_final PRIVATE ../framework)
+add_executable(12_Finishing_touches ${ALL_SOURCE_FILES})
+set_target_properties(12_Finishing_touches PROPERTIES OUTPUT_NAME 12_Finishing_touches CLEAN_DIRECT_OUTPUT 1)
+target_link_libraries(12_Finishing_touches PRIVATE ${APP_LINK_LIBRARIES})
+target_include_directories(12_Finishing_touches PRIVATE ../framework)
