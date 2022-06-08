@@ -90,14 +90,6 @@ namespace rlf
 						AttackEntity(entity, *entityAtPosition);
 						break;
 					}
-					// if it's an object, try to handle it
-					case EntityType::Object:
-					{
-						if (Game::Instance().IsPlayer(entity))
-							Game::Instance().WriteToMessageLog(fmt::format("{0} handles {1}", entity.Name(), entityAtPosition->Name()));
-						Handle(*entityAtPosition, entity);
-						break;
-					}
 				}
 			}
 		}
@@ -135,32 +127,6 @@ namespace rlf
 		auto defenderDied = ModifyHp(defender, -1);
 		if (defenderDied)
 			attacker.GetCreatureData()->xp++;
-	}
-
-	void HandleOnFloor(Entity& handler)
-	{
-		auto& g = Game::Instance();
-		const auto& level = g.CurrentLevel();
-		auto position = handler.GetLocation().position;
-		auto entityOnGround = level.GetEntity(position, false);
-		if (entityOnGround != nullptr)
-			Handle(*entityOnGround, handler);
-	}
-
-	void Handle(Entity& handled, Entity& handler)
-	{
-		auto& objData = *handled.GetObjectData();
-		auto oldState = objData.state;
-		if (handled.DbCfg() == DbIndex::Door())
-		{
-			objData.state = 1 - objData.state;
-			objData.blocksMovement = objData.state == STATE_DOOR_CLOSED;
-			objData.blocksVision = objData.state == STATE_DOOR_CLOSED;
-		}
-		if (objData.state != oldState)
-		{
-			sig::onObjectStateChanged.fire(handled);
-		}
 	}
 
 	void EnterLevel()

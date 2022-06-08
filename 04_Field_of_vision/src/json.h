@@ -34,6 +34,5 @@ namespace rlf
 
 	NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(DbIndex, name);
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(CreatureConfig, lineOfSightRadius, hp);
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(ObjectConfig, blocksMovement, blocksVision, defaultState);
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(EntityConfig, type, tileData, creatureCfg, objectCfg, allowRandomSpawn);
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(EntityConfig, type, tileData, creatureCfg, allowRandomSpawn);
 }

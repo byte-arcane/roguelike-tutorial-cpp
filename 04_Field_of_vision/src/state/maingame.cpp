@@ -60,32 +60,6 @@ namespace rlf
 			{
 				MoveAdj(*player, direction);
 			}
-
-			// Check if there's something to handle in the vicinity
-			if (Input::GetKeyDown(GLFW_KEY_ENTER))
-			{
-				// Gather potential candidates for handling: on the ground or in adjacent squares
-				std::vector<EntityId> handleTargets;
-				// check our feet for anything to interact with that is NOT an item pile (need to use "pick up" command)
-				auto entityOnGround = g.CurrentLevel().GetEntity(playerPos, false);
-				if (entityOnGround != nullptr)
-					handleTargets.push_back(entityOnGround->Id());
-
-				for (const auto& nb4 : Nb4())
-				{
-					auto pnb = playerPos + nb4;
-					auto entityNb = g.CurrentLevel().GetEntity(pnb, true);
-					if (entityNb != nullptr && entityNb->Type() == EntityType::Object)
-						handleTargets.push_back(entityNb->Id());
-				}
-
-				// if we have one or more handle targets, do the first
-				if (handleTargets.size() >= 1)
-				{
-					auto& handledObject = *handleTargets[0].Entity();
-					Handle(handledObject, *player);
-				}
-			}
 		}
 
 		void MainGameRender()

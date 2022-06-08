@@ -20,8 +20,7 @@ namespace rlf
 	// The entity type. For this project, either a creature, object or item.
 	enum class EntityType : uint32_t
 	{
-		Creature,
-		Object
+		Creature
 	};
 
 	///---------------------------------------------------------------------------
@@ -42,17 +41,6 @@ namespace rlf
 		int xp=0;
 	};
 
-	// Object-specific data
-	struct ObjectData
-	{
-		// The "state". What this means depends on the actual entity. E.g. for a door, it can be represent 0==closed/1==open
-		int state = 0;
-		// Does the object currently block movement?
-		bool blocksMovement = false;
-		// Does the object currently block vision?
-		bool blocksVision = false;
-	};
-
 	// Configuration data for creature entities
 	struct CreatureConfig
 	{
@@ -60,17 +48,6 @@ namespace rlf
 		int hp=10;
 		// max LoS radius
 		int lineOfSightRadius = 10;
-	};
-
-	// Configuration data for object entities
-	struct ObjectConfig
-	{
-		// Does it block movement at its initial state?
-		bool blocksMovement = false;
-		// Does it block vision at its initial state?
-		bool blocksVision = false;
-		// what's the default state?
-		bool defaultState = 0;
 	};
 
 	// An interface to inherit for classes/structs that should not be copied, but only moved
@@ -95,7 +72,6 @@ namespace rlf
 		bool allowRandomSpawn = true;
 		// configuration for creatures/objects/items. Only define those if necessary, depending on type
 		CreatureConfig creatureCfg;
-		ObjectConfig objectCfg;
 	};
 
 	// Entity-related data required for instantiation
@@ -105,8 +81,6 @@ namespace rlf
 		glm::ivec2 position{-1,-1};
 		// optional override for the entity name, otherwise use the configuration name
 		std::string nameOverride;
-		// if the entity is an item, who's the owner?
-		EntityId itemOwner;
 	};
 
 	// The main class to represent creature, object and item instances
@@ -122,7 +96,6 @@ namespace rlf
 		void SetLocation(const Location& newLocation)  { location = newLocation; }
 		const Location& GetLocation() const  { return location; }
 		CreatureData* GetCreatureData() const  { return creatureData.get(); }
-		ObjectData* GetObjectData() const  { return objectData.get(); }
 
 		// Does this entity block movement?
 		bool BlocksMovement() const;
@@ -156,6 +129,5 @@ namespace rlf
 		Location location;
 		// data specific to different entity types (a creature has creatureData, etc), null if N/A
 		std::unique_ptr<CreatureData> creatureData;
-		std::unique_ptr<ObjectData> objectData;
 	};
 }
