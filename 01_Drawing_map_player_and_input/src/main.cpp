@@ -4,7 +4,6 @@
 
 #include "graphics.h"
 #include "game.h"
-#include "db.h"
 
 using namespace rlf;
 
@@ -13,8 +12,6 @@ class GameApp : public rlf::FrameworkApp
 	// Put here any initialisation code. Happens once, before the main loop and after initialisation of GLFW/GLEW/ImGui
 	void onInit() override
 	{
-		// we can map this to a key for dynamic database reload!
-		Db::Instance().LoadFromDisk();
 		Graphics::Instance().Init();
 		Game::Instance().Init();
 	}
@@ -40,9 +37,6 @@ class GameApp : public rlf::FrameworkApp
 	// Put here any GUI related code. Called after Render
 	void onGui() override
 	{
-		// A simple example: reload the database dynamically
-		if (ImGui::Button("Reload DB"))
-			Db::Instance().LoadFromDisk();
 	}
 };
 

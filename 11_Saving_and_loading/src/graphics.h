@@ -48,12 +48,8 @@ namespace rlf
 		void RenderMenu(const SparseBuffer& buffer);
 		// Get a sparse buffer using a name
 		SparseBuffer& RequestBuffer(const std::string& name) { return bufferMap[name];  }
-		// the centered point is usually the player. This makes the view follow the player's positin
-		void CenterCameraAtPoint(const glm::ivec2& point);
 		// From a point in "world" space (e.g. level coordinates), calculate the cell coordinates for gui display, taking into account camera offset
 		glm::ivec2 WorldToScreen(const glm::ivec2& point) const;
-		// given the name of a segment, get the index of the first row, and how many rows does the segment occupy
-		glm::ivec2 RowStartAndNum(const std::string& guiSegment) const;
 		// Get the size of the screen in terms of tiles
 		const glm::ivec2& ScreenSize() const { return screenSize; }
 		// Reloads all shaders, allowing you to change the code and see the results immediately during the game

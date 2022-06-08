@@ -5,7 +5,6 @@
 
 #include "../game.h"
 #include "../graphics.h"
-#include "../commands.h"
 #include "../grid.h"
 
 #include "framework.h"
@@ -18,32 +17,11 @@ namespace rlf
 		{
 			// Initialize the game state
 			Game::Instance().New();
-
-			// set the level to first
-			EnterLevel();
-
-			// Create the player entity
-			EntityDynamicConfig dcfg;
-			dcfg.position = { 28,5 };
-			dcfg.nameOverride = "Sir Rodrick";
-			DbIndex cfgdb{ "player" };
-			auto player = Game::Instance().CreateEntity(cfgdb, dcfg, true).Entity();
-			Game::Instance().SetPlayer(*player);
+			Game::Instance().EnterLevel();
 		}
 
 		void MainGameUpdate()
 		{
-			// Quick save/load
-			auto& g = Game::Instance();
-
-			auto player = Game::Instance().PlayerId().Entity();
-			if (player == nullptr)
-				return;
-
-			// End the game state if player is dead, so that we can move to the death screen
-			if (player->GetCreatureData()->hp <= 0)
-				return;
-
 			// Check for direction keys (movement and related contextual actions)
 			auto playerPos = player->GetLocation().position;
 			glm::ivec2 direction{ 0,0 };

@@ -4,15 +4,9 @@ SET(SOURCE_FILES
 	src/sparsebuffer.cpp
 	src/level.cpp
 	src/game.cpp
-	src/entity.cpp
 	src/graphics.cpp
 	src/spritemap.cpp
-	src/commands.cpp
-	src/entityid.cpp
-    src/json.cpp
-	src/astar.cpp
 	src/grid.cpp
-	src/db.cpp
 	src/signals.cpp
 	src/state/maingame.cpp
 )
@@ -22,14 +16,8 @@ SET(HEADER_FILES
 	src/sparsebuffer.h
 	src/level.h
 	src/game.h
-	src/entity.h
 	src/graphics.h
 	src/spritemap.h
-	src/commands.h
-	src/db.h
-	src/entityid.h
-    src/json.h
-	src/astar.h
 	src/grid.h
 	src/signals.h
 	src/state/maingame.h

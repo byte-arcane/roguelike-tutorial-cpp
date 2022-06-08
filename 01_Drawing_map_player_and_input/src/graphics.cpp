@@ -8,66 +8,14 @@
 
 #include "utility.h"
 #include "framework.h"
-#include "entity.h"
 #include "game.h"
 #include "input.h"
-#include "commands.h"
 #include "signals.h"
 
 using namespace glm;
 
 namespace rlf
 {
-	void AddTextSprites(std::vector<uvec4>& buffer, const std::string& text, int row, const glm::vec4& color)
-	{
-		int x = 0;
-		for (const auto& c : text)
-		{
-			if (c != ' ')
-			{
-				auto td = TileData{ c,color };
-				auto bufferData = td.PackSparse({ x,row });
-				buffer.push_back(bufferData);
-			}
-			++x;
-		}
-	}
-
-	void BuildPlayerGui(std::vector<uvec4>& buffer, int numRows)
-	{
-		buffer.resize(0);
-		const int maxShownLogLines = numRows - 2;
-		
-		// Player info: a single line (2nd from top of the segment)
-		auto player = Game::Instance().PlayerId().Entity();
-		if (player != nullptr)
-		{
-			auto loc = player->GetLocation();
-			auto p = loc.position;
-			const auto& cd = player->GetCreatureData();
-			auto hpMax = player->DbCfg().Cfg()->creatureCfg.hp;
-			AddTextSprites(buffer, fmt::format("{0} - {1},{2} HP:{3}({4}) XP:{5}", player->Name(), p.x, p.y, cd->hp, hpMax, cd->xp), maxShownLogLines, glm::vec4(1));
-		}
-
-		// after the player info, display a few log messages
-		const auto& messages = Game::Instance().MessageLog();
-		vec4 color{ .7,.7, .7, 1 };
-		for (int iLine = 0; iLine < maxShownLogLines; ++iLine)
-		{
-			if (messages.size() > iLine)
-			{
-				const auto& textAndRepeats = messages.rbegin() + iLine;
-				std::string message = textAndRepeats->first;
-				if (textAndRepeats->second > 1)
-					message += fmt::format(" (x{0})", textAndRepeats->second);
-				AddTextSprites(buffer, message, maxShownLogLines - iLine - 1, color);
-				// further back messages get darker and darker
-				color *= 0.8f;
-				color.w = 1.0f;
-			}
-		}
-	}
-
 	void Graphics::Init()
 	{
 		// create a number of 3D vertices that form a triangle, specified in a counter-clockwise manner 
@@ -90,8 +38,6 @@ namespace rlf
 		shaderDb = {
 			{"tilemap_dense_nofow",0},
 			{"tilemap_sparse_nofow",0},
-			{"tilemap_sparse_gui",0},
-			{"tilemap_sparse_gui_highlight",0},
 		};
 		ReloadShaders();
 
@@ -117,26 +63,6 @@ namespace rlf
 
 		// Support up to 1024 elements for each, per level
 		bufferCreatures.Init(sizeof(uvec4), 1024);
-		bufferObjects.Init(sizeof(uvec4), 1024);
-
-		// Calculate the number of rows for the flexible element (typically the main screen)
-		int numRowsFixed = 0;
-		auto itUnfixed = guiSegments.end();
-		for (auto it = guiSegments.begin(); it != guiSegments.end(); ++it)
-			if (it->second >= 0)
-				numRowsFixed += it->second;
-			else
-				itUnfixed = it;
-		itUnfixed->second = screenSize.y - numRowsFixed;
-
-		// Start listening to signals here
-		sig::onEntityMoved.connect<Graphics, &Graphics::OnEntityMoved>(this);
-		sig::onEntityAdded.connect<Graphics, &Graphics::OnEntityAdded>(this);
-		sig::onEntityRemoved.connect<Graphics, &Graphics::OnEntityRemoved>(this);
-		sig::onLevelChanged.connect<Graphics, &Graphics::OnLevelChanged>(this);
-		sig::onObjectStateChanged.connect<Graphics, &Graphics::OnObjectStateChanged>(this);
-		sig::onGuiUpdated.connect<Graphics, &Graphics::OnGuiUpdated>(this);
-		sig::onGameLoaded.connect<Graphics, &Graphics::OnGameLoaded>(this);
 	}
 
 	void Graphics::ReloadShaders()
@@ -161,9 +87,6 @@ namespace rlf
 	{
 		texBg.Dispose();
 		bufferCreatures.Dispose();
-		bufferObjects.Dispose();
-		for (auto& kv : bufferMap)
-			kv.second.Dispose();
 		for (auto& kv : shaderDb)
 			if(kv.second != 0)
 				glDeleteProgram(kv.second);
@@ -209,104 +132,6 @@ namespace rlf
 		glUniform2i(glGetUniformLocation(program, "camera_offset"), cameraOffset.x, cameraOffset.y);
 	}
 
-	ivec2 Graphics::RowStartAndNum(const std::string& guiSegment) const
-	{
-		int iRow = 0;
-		for (const auto& seg : guiSegments)
-			if (seg.first == guiSegment)
-				return { iRow, seg.second };
-			else
-				iRow += seg.second;
-		// should not be here
-		assert(false);
-		return { -1,-1 };
-	}
-
-	void Graphics::CenterCameraAtPoint(const glm::ivec2& point)
-	{
-		auto gameRowStartAndNum = RowStartAndNum("main");
-		auto gameAreaGridSize = ivec2{screenSize.x, gameRowStartAndNum.y};
-		auto halfScreenGridSize = gameAreaGridSize / 2;
-		cameraOffset = point - halfScreenGridSize;
-		const auto& levelSize = Game::Instance().CurrentLevel().Bg().Size();
-		cameraOffset = clamp(cameraOffset, ivec2(0), levelSize- gameAreaGridSize);
-	}
-
-	glm::ivec2 Graphics::WorldToScreen(const glm::ivec2& point) const
-	{
-		// top-left based coordinates
-		auto q = point - cameraOffset;
-		return q;
-	}
-
-	void Graphics::UpdateRenderableEntity(const Entity& e)
-	{
-		// calculate the new data
-		auto position = e.GetLocation().position;
-		auto bufferData = e.CurrentTileData().PackSparse(position);
-		// get the buffer and the iterator that points to the relevant element in the buffer
-		auto& buffer = e.Type() == EntityType::Creature ? bufferCreatures : bufferObjects;
-		const auto& eid = e.Id();
-		auto it = entityToBufferIndex.find(eid);
-		// if we didn't find it, add a new element, otherwise update the old one
-		if (it == entityToBufferIndex.end())
-			entityToBufferIndex[eid] = buffer.Add(&bufferData);
-		else
-			buffer.Update(it->second, &bufferData);
-		// if we're updating player data, center the camera at the player
-		if (Game::Instance().IsPlayer(e))
-			CenterCameraAtPoint(position);
-	}
-
-	void Graphics::OnEntityMoved(const Entity& e)
-	{
-		UpdateRenderableEntity(e);
-	}
-
-	void Graphics::OnEntityAdded(Entity& e)
-	{
-		UpdateRenderableEntity(e);
-	}
-
-	void Graphics::OnEntityRemoved(Entity& e)
-	{
-		// when we remove an entity (objects and creatures, that can be visible in the map), we need to free the corresponding buffer element
-		auto it = entityToBufferIndex.find(e.Id());
-		if (it != entityToBufferIndex.end())
-		{
-			auto& buffer = e.Type() == EntityType::Creature ? bufferCreatures : bufferObjects;
-			constexpr uvec4 noData{ 0,0,0,0 };
-			buffer.Update(it->second, &noData);
-			entityToBufferIndex.erase(it);
-		}
-	}
-
-	void Graphics::OnLevelChanged(const Level& level)
-	{
-		// Clear the old data
-		bufferCreatures.Clear();
-		bufferObjects.Clear();
-		entityToBufferIndex.clear();
-		texBg.Dispose();
-
-		// Populate with new data
-		const auto& bg = level.Bg();
-		std::vector<uvec2> renderData(bg.Size().x * bg.Size().y);
-		std::transform(bg.Data().begin(), bg.Data().end(), renderData.begin(), [](const LevelBgElement& elem) {
-			TileData td{ elem.glyph, elem.color };
-			return td.PackDense();
-		});
-		texBg.Init(bg.Size(), renderData.data());	
-
-		for (const auto& entityId : level.Entities())
-			UpdateRenderableEntity(*entityId.Entity());
-	}
-
-	void Graphics::OnObjectStateChanged(const Entity& object)
-	{
-		UpdateRenderableEntity(object);
-	}
-
 	void Graphics::SetupViewport(const glm::ivec2& tileStart, const glm::ivec2& tileNum)
 	{
 		// set the viewport so that we don't render the margin area
@@ -333,49 +158,6 @@ namespace rlf
 		glUseProgram(shaderTilemapSparse);
 		SetupTilemapAndGrid(shaderTilemapSparse, tilemap, { screenSize.x, rowStartAndNum.y });
 		SetupCamera(shaderTilemapSparse, cameraOffset);
-		bufferObjects.Draw();
 		bufferCreatures.Draw();
-	}
-
-	void Graphics::RenderGameOverlay(const SparseBuffer& guiSparseBuffer)
-	{
-		auto rowStartAndNum = RowStartAndNum("main");
-		SetupViewport({ 0,rowStartAndNum.x }, { screenSize.x, rowStartAndNum.y });
-
-		auto program = shaderDb["tilemap_sparse_gui"];
-		glUseProgram(program);
-		SetupTilemapAndGrid(program, tilemap, { screenSize.x, rowStartAndNum.y });
-		guiSparseBuffer.Draw();
-	}
-
-	void Graphics::RenderTargets(const SparseBuffer& guiSparseBuffer, int targetIdx)
-	{
-		auto rowStartAndNum = RowStartAndNum("main");
-		SetupViewport({ 0,rowStartAndNum.x }, { screenSize.x, rowStartAndNum.y });
-
-		auto program = shaderDb["tilemap_sparse_gui_highlight"];
-		glUseProgram(program);
-		SetupTilemapAndGrid(program, tilemap, { screenSize.x, rowStartAndNum.y });
-		auto blink = ((int(FrameworkApp::Time() * 1000) / 530) % 2) != 0;
-		glUniform1i(glGetUniformLocation(program, "targetIdx"), blink ? -1 : targetIdx);
-		guiSparseBuffer.Draw();
-	}
-
-	void Graphics::RenderMenu(const SparseBuffer& buffer)
-	{
-		SetupViewport({ 0,0 }, screenSize);
-
-		auto program = shaderDb["tilemap_sparse_gui"];
-		glUseProgram(program);
-		SetupTilemapAndGrid(program, tilemap, screenSize);
-		buffer.Draw();
-	}
-
-	void Graphics::OnGameLoaded()
-	{
-		// redo the level and gui
-		const auto& level = Game::Instance().CurrentLevel();
-		OnLevelChanged(level);
-		isGuiDirty = true;
 	}
 }
