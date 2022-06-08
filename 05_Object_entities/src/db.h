@@ -45,9 +45,6 @@ namespace rlf
 
 		bool operator == (const DbIndex& other) const  { return name == other.name; }
 
-		// Special ones, they are expected to be in the database
-		static const DbIndex Door() { return DbIndex("door"); }
-
 		std::string name;
 	};
 }
