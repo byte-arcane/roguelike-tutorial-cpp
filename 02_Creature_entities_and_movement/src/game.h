@@ -2,7 +2,6 @@
 
 #include "level.h"
 #include "entity.h"
-#include "state/state.h"
 
 namespace rlf
 {

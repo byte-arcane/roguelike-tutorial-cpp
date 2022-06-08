@@ -65,26 +65,7 @@ namespace rlf
 		void MainGameRender()
 		{
 			auto& gfx = Graphics::Instance();
-			// Create the header the first time we're here
-			static bool firstTime = true;
-			if (firstTime)
-			{
-				firstTime = false;
-				std::vector<glm::uvec4> bufferHeader;
-				auto& gfx = Graphics::Instance();
-				auto screenSize = gfx.ScreenSize();
-				AddSeparatorLine(bufferHeader, 0, glm::vec4(1,1,1,1), screenSize.x, "The Tutorial Caverns");
-				// Initialize the header buffer if needed
-				auto& sparseBufferHeader = gfx.RequestBuffer("header");
-				if (!sparseBufferHeader.IsInitialized())
-					sparseBufferHeader.Init(sizeof(glm::uvec4), 200);
-				sparseBufferHeader.Set(bufferHeader.size(), bufferHeader.data());
-			}
-
-			// For the main game view, we need all three elements: header, character info and game area
 			gfx.RenderGame();
-			gfx.RenderGui();
-			gfx.RenderHeader();
 		}
 	}
 }

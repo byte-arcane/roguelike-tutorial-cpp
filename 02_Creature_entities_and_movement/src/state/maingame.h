@@ -1,7 +1,5 @@
 #pragma once
 
-#include "state.h"
-
 namespace rlf
 {
 	namespace state

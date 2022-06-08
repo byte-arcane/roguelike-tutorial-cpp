@@ -34,10 +34,6 @@ namespace rlf
 		void BeginRender();
 		// End rendering 
 		void EndRender();
-		// Render the typical GUI, which is some character info and a few lines of the log
-		void RenderGui();
-		// Render the header, here a simple row at the top of the screen
-		void RenderHeader();
 		// Render the game data in the game area (here, above the gui)
 		void RenderGame();
 		// Render some data in the game area (e.g. inventory).

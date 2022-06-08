@@ -315,41 +315,6 @@ namespace rlf
 		glViewport(guiOffsetPx.x, guiOffsetPx.y, guiSizePx.x, guiSizePx.y);
 	}
 
-	void Graphics::RenderGui()
-	{
-		// First update the gui buffer if needed
-		auto& guiSparseBuffer = RequestBuffer("gui");
-		auto rowStartAndNum = RowStartAndNum("char");
-		if (isGuiDirty)
-		{
-			isGuiDirty = false;
-			BuildPlayerGui(guiBuffer, rowStartAndNum.y);
-			if (!guiSparseBuffer.IsInitialized())
-				guiSparseBuffer.Init(sizeof(uvec4), 8192);
-			guiSparseBuffer.Set(guiBuffer.size(), guiBuffer.data());
-		}
-
-		SetupViewport({ 0,rowStartAndNum.x }, { screenSize.x, rowStartAndNum.y });
-
-		auto program = shaderDb["tilemap_sparse_gui"];
-		glUseProgram(program);
-		SetupTilemapAndGrid(program, tilemap, { screenSize.x, rowStartAndNum.y });
-		guiSparseBuffer.Draw();
-	}
-
-	void Graphics::RenderHeader()
-	{
-		auto& guiSparseBuffer = RequestBuffer("header");
-		auto rowStartAndNum = RowStartAndNum("status");
-		
-		SetupViewport({ 0,rowStartAndNum.x }, { screenSize.x, rowStartAndNum.y });
-
-		auto program = shaderDb["tilemap_sparse_gui"];
-		glUseProgram(program);
-		SetupTilemapAndGrid(program, tilemap, { screenSize.x, rowStartAndNum.y });
-		guiSparseBuffer.Draw();
-	}
-
 	void Graphics::RenderGame()
 	{
 		// set the viewport so that we don't render the margin area

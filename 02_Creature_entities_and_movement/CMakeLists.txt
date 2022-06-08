@@ -15,7 +15,6 @@ SET(SOURCE_FILES
 	src/db.cpp
 	src/signals.cpp
 	src/state/maingame.cpp
-	src/state/state.cpp
 )
 
 SET(HEADER_FILES
@@ -34,7 +33,6 @@ SET(HEADER_FILES
 	src/grid.h
 	src/signals.h
 	src/state/maingame.h
-	src/state/state.h
 )
 
 SET(ALL_SOURCE_FILES
