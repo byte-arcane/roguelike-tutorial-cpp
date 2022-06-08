@@ -18,15 +18,6 @@ namespace rlf
 		return weight;
 	}
 
-	int Inventory::EquippedItemAtSlot(ItemCategory itemCategory) const
-	{
-		auto it = std::find_if(items.begin(), items.end(), [&itemCategory](const EntityId& itemId) {
-			auto e = itemId.Entity();
-			return e->GetItemData()->equipped && e->DbCfg().Cfg()->itemCfg.category == itemCategory;
-		});
-		return it != items.end() ? int(std::distance(items.begin(), it)) : -1;
-	}
-
 	void Entity::Initialize(EntityId id, DbIndex dbIndex, const EntityDynamicConfig& dcfg)
 	{
 		this->dbIndex = dbIndex;

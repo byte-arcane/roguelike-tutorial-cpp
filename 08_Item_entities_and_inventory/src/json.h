@@ -29,18 +29,12 @@ namespace rlf
     void from_json(const nlohmann::json& j, TileData& td);
     void to_json(nlohmann::json& j, const TileData& td);
 
-    void from_json(const nlohmann::json& j, Effect& e) { e = magic_enum::enum_cast<Effect>(std::string(j)).value(); }
-    void to_json(nlohmann::json& j, const Effect& e) { j = magic_enum::enum_name(e); }
-
-    void from_json(const nlohmann::json& j, ItemCategory& e) { e = magic_enum::enum_cast<ItemCategory>(std::string(j)).value(); }
-    void to_json(nlohmann::json& j, const ItemCategory& e) { j = magic_enum::enum_name(e); }
-
     void from_json(const nlohmann::json& j, EntityType& e) { e = magic_enum::enum_cast<EntityType>(std::string(j)).value(); }
     void to_json(nlohmann::json& j, const EntityType& e) { j = magic_enum::enum_name(e); }
 
 	NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(DbIndex, name);
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(ItemConfig, defaultStackSize, weight, category, combatStatBonuses, effect);
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(CreatureConfig, lineOfSightRadius, hp, combatStats);
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(ObjectConfig, effect, blocksMovement, blocksVision, defaultState);
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(ItemConfig, defaultStackSize, weight);
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(CreatureConfig, lineOfSightRadius, hp);
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(ObjectConfig, blocksMovement, blocksVision, defaultState);
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(EntityConfig, type, tileData, itemCfg, creatureCfg, objectCfg, allowRandomSpawn);
 }

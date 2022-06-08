@@ -54,7 +54,7 @@ namespace rlf
 
 	void Db::LoadFromDisk()
 	{
-		auto filename = MediaSearch("json/db_no_attack_range.json");
+		auto filename = MediaSearch("json/db_no_effects_stats.json");
 		auto text = ReadTextFile(filename);
 		auto j = json::parse(text);
 		db = j;

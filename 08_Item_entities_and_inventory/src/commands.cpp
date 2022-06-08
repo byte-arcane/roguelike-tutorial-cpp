@@ -64,17 +64,6 @@ namespace rlf
 			return "unknown";
 	}
 
-	const Entity * EquippedItemAtSlot(const Entity& entity, ItemCategory itemCategory)
-	{
-		// find the first item that is currently equipped and matches the given item category
-		const auto& items = entity.GetInventory()->items;
-		auto itFound = std::find_if(items.begin(), items.end(), [&itemCategory](const EntityId& itemId) {
-			auto itemEntity = itemId.Entity();
-			return itemEntity->GetItemData()->equipped && itemEntity->DbCfg().Cfg()->itemCfg.category == itemCategory;
-		});
-		return itFound != items.end() ? itFound->Entity() : nullptr;
-	}
-
 	void MoveAdj(Entity& entity, const glm::ivec2& direction)
 	{
 		assert(entity.Type() != EntityType::Item);
@@ -144,53 +133,15 @@ namespace rlf
 			Game::Instance().WriteToMessageLog(text);
 		return died;
 	}
-	
-	ivec4 AccumulateCombatStats(const Entity& creature)
-	{
-		// Gather the stats from the creature configuration and the currently equipped items
-		auto stats = creature.DbCfg().Cfg()->creatureCfg.combatStats;
-		for (const auto& item : creature.GetInventory()->items)
-			if (item.Entity()->GetItemData()->equipped)
-				stats += item.Entity()->DbCfg().Cfg()->itemCfg.combatStatBonuses;
-		return stats;
-	}
 
 	void AttackEntity(Entity& attacker, Entity& defender)
 	{
 		// DestroyEntity(*entityAtPosition);
 		auto& g = Game::Instance();
-#if 0	// Super-simple combat - each bump is 1 damage
+		// Super-simple combat - each bump is 1 damage
 		auto text = fmt::format("{0} attacks {1}", attacker.Name(), defender.Name());
 		g.WriteToMessageLog(text);
 		auto defenderDied = ModifyHp(defender, -1);
-#else	// combat using stats
-		bool defenderDied = false;
-		auto attackerStats = AccumulateCombatStats(attacker);
-		auto defenderStats = AccumulateCombatStats(defender);
-		// check if attack lands!
-		std::string text = fmt::format("{0} attacks {1}. ", attacker.Name(), defender.Name());
-		auto attRoll = rand() % max(attackerStats[int(CombatStat::Attack)],1);
-		auto defRoll = rand() % max(defenderStats[int(CombatStat::Defense)],1);
-		text += fmt::format("{0}(d{1}) vs {2}(d{3}): ", attRoll + 1, attackerStats[int(CombatStat::Attack)], defRoll + 1, defenderStats[int(CombatStat::Defense)]);
-		if (defRoll < attRoll) // does the attack land?
-		{
-			auto damage = max(attackerStats[int(CombatStat::Damage)] - defenderStats[int(CombatStat::Resist)], 0);
-			text += fmt::format("HIT for {0} damage",damage);
-			g.WriteToMessageLog(text);
-			if (damage > 0)
-			{
-				auto defenderDied = ModifyHp(defender, -1);
-				if (defenderDied)
-					attacker.GetCreatureData()->xp++;
-			}
-		}
-		else
-		{
-			text += "MISS";
-			g.WriteToMessageLog(text);
-		}
-#endif
-		
 	}
 
 	void TransferItem(const EntityId& takerId, const EntityId itemId, Entity& giver)
@@ -294,11 +245,6 @@ namespace rlf
 			auto& g = Game::Instance();
 			ChangeLevel(g.GetCurrentLevelIndex() + 1);
 		}
-		else if (int(handled.DbCfg().Cfg()->objectCfg.effect) >= 0)
-		{
-			auto& g = Game::Instance();
-			ApplyEffect(handler, handled.DbCfg().Cfg()->objectCfg.effect);
-		}
 		if (objData.state != oldState)
 		{
 			sig::onObjectStateChanged.fire(handled);
@@ -340,26 +286,5 @@ namespace rlf
 
 		std::string msgtext = delveDirectionForward ? "You delve deeper into the dungeon" : "You take the stairs up";
 		Game::Instance().WriteToMessageLog(msgtext); // This triggers a gui Update
-	}
-
-	void ChangeEquippedItem(Entity& owner, int newEquippedIdx, int oldEquippedIdx)
-	{
-		auto& items = owner.GetInventory()->items;
-		if (newEquippedIdx >= 0)
-			items[newEquippedIdx].Entity()->GetItemData()->equipped = true;
-		if (oldEquippedIdx >= 0)
-			items[oldEquippedIdx].Entity()->GetItemData()->equipped = false;
-	}
-
-	void UseItem(Entity& owner, int itemIdx)
-	{
-		auto& items = owner.GetInventory()->items;
-		auto& item = *items[itemIdx].Entity();
-		ApplyEffect(owner, item.DbCfg().Cfg()->itemCfg.effect);
-		Game::Instance().WriteToMessageLog(fmt::format("{0} used {1}",owner.Name(),item.Name()));
-		auto& stackSize = item.GetItemData()->stackSize;
-		--stackSize;
-		if (stackSize == 0)
-			DestroyEntity(item);
 	}
 }

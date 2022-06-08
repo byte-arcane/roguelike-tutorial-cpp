@@ -13,7 +13,6 @@ SET(SOURCE_FILES
     src/json.cpp
 	src/astar.cpp
 	src/grid.cpp
-	src/effect.cpp
 	src/dungen.cpp
 	src/db.cpp
 	src/signals.cpp
@@ -38,7 +37,6 @@ SET(HEADER_FILES
     src/json.h
 	src/astar.h
 	src/grid.h
-	src/effect.h
 	src/dungen.h
 	src/signals.h
 	src/state/inventory.h

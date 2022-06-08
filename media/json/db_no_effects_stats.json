@@ -1,0 +1,150 @@
+{
+	"player": {
+        "type": "Creature",
+        "tileData": [{
+                "sprite": "@",
+                "color": [1, 1, 1, 1]
+            }
+        ],
+        "creatureCfg": {
+            "hp": 10,
+			"lineOfSightRadius" : 10
+        },
+		"allowRandomSpawn" : false
+    },
+    "door": {
+        "type": "Object",
+        "tileData": [{
+                "sprite": "+",
+                "color": [1, 0.545, 0, 1]
+            }, {
+                "sprite": "/",
+                "color": [1, 0.545, 0, 1]
+            }
+        ],
+		"allowRandomSpawn" : false
+    },
+    "stairs_up": {
+        "type": "Object",
+        "tileData": [{
+                "sprite": "<",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+		"allowRandomSpawn" : false
+    },
+    "stairs_down": {
+        "type": "Object",
+        "tileData": [{
+                "sprite": ">",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+		"allowRandomSpawn" : false
+    },
+    "item_pile": {
+        "type": "Object",
+        "tileData": [{
+                "sprite": ";",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+		"allowRandomSpawn" : false
+    },
+    "gold": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "$",
+                "color": [1, 1, 0.5, 1]
+            }
+        ]
+    },
+    "hat": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "[",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "weight": 1
+        }
+    },
+    "helmet": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "[",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "weight": 5
+        }
+    },
+    "scale mail": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "[",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "weight": 25
+        }
+    },
+    "dagger": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "(",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "weight": 2
+        }
+    },
+    "sword": {
+        "type": "Item",
+        "tileData": [{
+                "sprite": "(",
+                "color": [0.7, 0.7, 0.7, 1]
+            }
+        ],
+        "itemCfg": {
+            "weight": 5
+        }
+    },
+    "goblin": {
+        "type": "Creature",
+        "tileData": [{
+                "sprite": "g",
+                "color": [0.5, 0.5, 1, 1]
+            }
+        ],
+        "creatureCfg": {
+            "hp": 2
+        }
+    },
+    "orc": {
+        "type": "Creature",
+        "tileData": [{
+                "sprite": "o",
+                "color": [0.5, 1, 0.5, 1]
+            }
+        ],
+        "creatureCfg": {
+            "hp": 4
+        }
+    },
+    "rat": {
+        "type": "Creature",
+        "tileData": [{
+                "sprite": "r",
+                "color": [1, 0.5, 0, 1]
+            }
+        ],
+        "creatureCfg": {
+            "hp": 1
+        }
+    }
+}

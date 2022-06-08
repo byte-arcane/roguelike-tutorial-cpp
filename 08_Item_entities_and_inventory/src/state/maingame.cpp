@@ -87,12 +87,6 @@ namespace rlf
 				std::unique_ptr<State> newState(new Inventory(Inventory::Mode::Drop, {}));
 				Game::Instance().PushState(newState);
 			}
-			// Equip or use an item
-			if (Input::GetKeyDown(GLFW_KEY_E))
-			{
-				std::unique_ptr<State> newState(new Inventory(Inventory::Mode::EquipOrUse, {}));
-				Game::Instance().PushState(newState);
-			}
 
 			return Status::Running;
 		}

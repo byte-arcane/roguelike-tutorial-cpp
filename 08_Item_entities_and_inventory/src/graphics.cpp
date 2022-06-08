@@ -50,8 +50,7 @@ namespace rlf
 				gold = it_gold->Entity()->GetItemData()->stackSize;
 			const auto& cd = player->GetCreatureData();
 			auto hpMax = player->DbCfg().Cfg()->creatureCfg.hp;
-			auto cs = AccumulateCombatStats(*player);
-			AddTextSprites(buffer, fmt::format("{0} - {1},{2} Lvl:{3} ATT:{4} DEF:{5} DMG:{6} RES:{7} HP:{8}({9}) XP:{10} ${11}", player->Name(), p.x, p.y, loc.levelId + 1, cs.x, cs.y, cs.z, cs.w, cd->hp, hpMax, cd->xp, gold), maxShownLogLines, glm::vec4(1));
+			AddTextSprites(buffer, fmt::format("{0} - {1},{2} Lvl:{3} HP:{4}({5}) XP:{6} ${7}", player->Name(), p.x, p.y, loc.levelId + 1, cd->hp, hpMax, cd->xp, gold), maxShownLogLines, glm::vec4(1));
 		}
 
 		// after the player info, display a few log messages

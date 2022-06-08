@@ -39,10 +39,8 @@ namespace rlf
 			std::sort(items.begin(), items.end(), [](const EntityId& lhs, const EntityId& rhs) -> bool {
 				auto lhse = lhs.Entity();
 				auto rhse = rhs.Entity();
-				auto lhs_cat = lhse->DbCfg().Cfg()->itemCfg.category;
-				auto rhs_cat = rhse->DbCfg().Cfg()->itemCfg.category;
 				// strict weak ordering
-				return (lhs_cat < rhs_cat) || (lhs_cat == rhs_cat && lhse->Name() < rhse->Name());
+				return lhse->Name() < rhse->Name();
 				});
 		}
 
@@ -52,39 +50,12 @@ namespace rlf
 			bool actionTaken = true;
 			const auto& items = entity.GetInventory()->items;
 			auto item = items[itemIdx].Entity();
-			if (inventoryMode == Inventory::Mode::EquipOrUse)
-			{
-				auto itemCategory = item->DbCfg().Cfg()->itemCfg.category;
-				// is it equipped? Unequip
-				if (item->GetItemData()->equipped)
-					ChangeEquippedItem(entity, -1, itemIdx);
-				// is it equippable? equip
-				else if (int(itemCategory) < NUM_EQUIPMENT_SLOTS)
-				{
-					// find which was previously equipped in that slot
-					auto oldEquippedIdx = entity.GetInventory()->EquippedItemAtSlot(itemCategory);
-					ChangeEquippedItem(entity, itemIdx, oldEquippedIdx);
-				}
-				else if (itemCategory == ItemCategory::Consumable)
-					UseItem(entity, itemIdx);
-				else
-					actionTaken = false;
-			}
-			else // pick up or drop
-			{
-				auto player = Game::Instance().PlayerId();
-				auto isPlayer = Game::Instance().IsPlayer(entity);
-				if (isPlayer)
-				{
-					// can't drop equipped items!
-					if (!item->GetItemData()->equipped)
-						Drop(entity, items[itemIdx]);
-					else
-						actionTaken = false;
-				}
-				else
-					PickUp(*player.Entity(), entity, items[itemIdx]);
-			}
+			auto player = Game::Instance().PlayerId();
+			auto isPlayer = Game::Instance().IsPlayer(entity);
+			if (isPlayer)
+				Drop(entity, items[itemIdx]);
+			else
+				PickUp(*player.Entity(), entity, items[itemIdx]);
 			return actionTaken;
 		}
 
@@ -171,9 +142,6 @@ namespace rlf
 				std::string inventoryModeText;
 				switch (mode)
 				{
-				case rlf::state::Inventory::Mode::EquipOrUse:
-					inventoryModeText = "Equip/Use";
-					break;
 				case rlf::state::Inventory::Mode::PickUp:
 					inventoryModeText = "Pick up";
 					break;
@@ -202,19 +170,14 @@ namespace rlf
 				AddTextToLine(bufferMain, fmt::format("Total weight: {0} stones", entity.GetInventory()->Weight()), 0, rowStartAndNum.y-2, color::BROWN);
 				// 2 rows later, start listing the items
 				int rowItems0 = rowStartAndNum.y - 4;
-				ItemCategory category = ItemCategory(-1);
 				const int maxNameSize = 40; // use this for column alignment
 				for (int iItem = 0; iItem < itemsInPage; ++iItem)
 				{
 					const auto& item = items[iItem + firstIdxAtPage].Entity();
-					auto isEquipped = item->GetItemData()->equipped;
-					auto newCategory = item->DbCfg().Cfg()->itemCfg.category;
-					bool changedCategory = category != newCategory;
-					category = newCategory;
 
 					std::string text;
 					text.push_back('a' + iItem); // the actual letter
-					text += isEquipped ? ") [E] " : ")     "; // different tail text if it's equipped or not (same length though)
+					text += ")     ";
 					text += item->Name();
 					const auto stackSize = item->GetItemData()->stackSize;
 					// add an indicator if it's a stack w/ >1 items
@@ -224,9 +187,6 @@ namespace rlf
 					int pad = maxNameSize - item->Name().size();
 					for (int i = 0; i < pad; ++i)
 						text.push_back(' ');
-					// write the category if it differs from the last item
-					if (changedCategory)
-						text += fmt::format(" [{0}]", magic_enum::enum_name(category));
 					AddTextToLine(bufferMain, text, 0, rowItems0 - iItem, color::BROWN);
 				}
 				// Add the bottom line that tells the player which chars they can press

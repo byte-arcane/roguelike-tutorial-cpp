@@ -11,7 +11,6 @@
 #include "tilemap.h"
 #include "db.h"
 #include "entityid.h"
-#include "effect.h"
 
 namespace rlf
 {
@@ -24,30 +23,6 @@ namespace rlf
 		Creature,
 		Object,
 		Item
-	};
-
-	// The item category for item entities
-	enum class ItemCategory : int
-	{
-		Weapon = 0,
-		Shield,
-		Armor,
-		Accessory,
-		Consumable,
-		Other
-	};
-
-	// A few helper constants
-	constexpr int NUM_EQUIPMENT_SLOTS = int(ItemCategory::Other) - 1;
-	constexpr int NUM_ITEM_CATEGORIES = int(ItemCategory::Other) + 1;
-
-	// The 4 combat stats, for this project
-	enum class CombatStat
-	{
-		Attack=0,
-		Defense,
-		Damage,
-		Resist
 	};
 
 	///---------------------------------------------------------------------------
@@ -68,9 +43,6 @@ namespace rlf
 
 		// calculate the total weight
 		int Weight() const;
-		// Check, for an equippable item category, if we have an item that's equipped for that slot
-		// Return -1 if not found
-		int EquippedItemAtSlot(ItemCategory itemCategory) const;
 	};
 
 	// Creature-specific data
@@ -100,8 +72,6 @@ namespace rlf
 		int stackSize = 1;
 		// owner entity; object or creature
 		EntityId owner;
-		// is this item currently equipped?
-		bool equipped = false;
 	};
 
 	// Configuration data for item entities
@@ -111,12 +81,6 @@ namespace rlf
 		int defaultStackSize = 0;
 		// the weight of the item, in stones
 		int weight = 1; 
-		// The item category
-		ItemCategory category = ItemCategory::Other;
-		// add this to creature's stats. Order is as per enum: attack/defense/damage/resist
-		glm::ivec4 combatStatBonuses = {0,0,0,0};
-		// consumable-specific, effect type
-		Effect effect = Effect(-1);
 
 		// quick check if this item configuration represents a stackable item
 		bool IsStackable() const  { return defaultStackSize != 0; }
@@ -129,15 +93,11 @@ namespace rlf
 		int hp=10;
 		// max LoS radius
 		int lineOfSightRadius = 10;
-		// att/def/dmg/res default stats
-		glm::ivec4 combatStats = { 10,5,1,0 };
 	};
 
 	// Configuration data for object entities
 	struct ObjectConfig
 	{
-		// effect type, executed if we interact with the object
-		Effect effect = Effect(-1);
 		// Does it block movement at its initial state?
 		bool blocksMovement = false;
 		// Does it block vision at its initial state?

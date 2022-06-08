@@ -68,15 +68,15 @@ namespace rlf
 		Add("hat", MakeItem(
 			{ TileData{'[',vec4(.7,.7,.7,1)} },
 			true,
-			{0,1,ItemCategory::Armor}));
+			{0,1}));
 		Add("helmet", MakeItem(
 			{ TileData{'[',vec4(.7,.7,.7,1)} },
 			true,
-			{ 0,5,ItemCategory::Armor }));
+			{ 0,5}));
 		Add("sword", MakeItem(
 			{ TileData{'(',vec4(.7,.7,.7,1)} },
 			true,
-			{ 0,3,ItemCategory::Weapon }));
+			{ 0,3}));
 		Add("goblin", MakeCreature(
 			{ TileData{'g',vec4(.3,.3,1,1)} },
 			true,

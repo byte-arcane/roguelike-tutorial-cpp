@@ -18,8 +18,7 @@ namespace rlf
 			// The "mode" of this state
 			enum class Mode
 			{
-				EquipOrUse = 0,
-				PickUp,
+				PickUp=0,
 				Drop
 			};
 

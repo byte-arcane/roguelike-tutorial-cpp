@@ -21,8 +21,6 @@ namespace rlf
 	void Drop(Entity& handler, const EntityId& itemId);
 	// Handle an object
 	void Handle(Entity& handled, Entity& handler);
-	// Accumulate the combat info for a creature, from its natural stats and equipment
-	glm::ivec4 AccumulateCombatStats(const Entity& creature);
 	// Modify a creature's hitpoints by a specific amount
 	bool ModifyHp(Entity& entity, int hpMod);
 	// Attack a target entity using equipped weapons (or "natural" weapons if nothing is equipped)
@@ -31,10 +29,4 @@ namespace rlf
 	void DestroyEntity(Entity& e);
 	// Change to the given level index
 	void ChangeLevel(int levelIndex);
-	// Change the equipped item, given old item index and new item index. 
-	//	If newEquippedIdx==-1, we just unequip the old item
-	//	If oldEquippedIdx==-1, we didn't have anything equipped
-	void ChangeEquippedItem(Entity& owner, int newEquippedIdx, int oldEquippedIdx);
-	// Use an item at the given index (it should be a consumable)
-	void UseItem(Entity& owner, int itemIdx);
 }
