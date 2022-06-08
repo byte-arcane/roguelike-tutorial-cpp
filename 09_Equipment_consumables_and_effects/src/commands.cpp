@@ -107,10 +107,7 @@ namespace rlf
 					// if it's a creature, attack it
 					case EntityType::Creature:
 					{
-						// Attack if we're attacking with bare hands or a melee weapon
-						auto weapon = EquippedItemAtSlot(entity, ItemCategory::Weapon);
-						if (weapon == nullptr || weapon->DbCfg().Cfg()->itemCfg.attackRange == 1)
-							AttackEntity(entity, *entityAtPosition);
+						AttackEntity(entity, *entityAtPosition);
 						break;
 					}
 					// if it's an object, try to handle it

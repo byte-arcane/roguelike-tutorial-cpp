@@ -115,8 +115,6 @@ namespace rlf
 		ItemCategory category = ItemCategory::Other;
 		// add this to creature's stats. Order is as per enum: attack/defense/damage/resist
 		glm::ivec4 combatStatBonuses = {0,0,0,0};
-		// Set this to > 1 for ranged weapons, like a bow
-		int attackRange = 1;
 		// consumable-specific, effect type
 		Effect effect = Effect(-1);
 

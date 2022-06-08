@@ -10,7 +10,6 @@
 
 #include "framework.h"
 #include "inventory.h"
-#include "selecttarget.h"
 
 namespace rlf
 {
@@ -44,7 +43,6 @@ namespace rlf
 			if (direction != glm::ivec2(0, 0))
 			{
 				MoveAdj(*player, direction);
-				Game::Instance().EndTurn();
 			}
 
 			// Check if there's something to handle in the vicinity
@@ -65,89 +63,14 @@ namespace rlf
 						handleTargets.push_back(entityNb->Id());
 				}
 
-				// if we have one handle target, do it
-				if (handleTargets.size() == 1)
+				// if we have one or more handle targets, do the first
+				if (handleTargets.size() >= 1)
 				{
 					auto& handledObject = *handleTargets[0].Entity();
 					Handle(handledObject, *player);
-					Game::Instance().EndTurn();
-				}
-				//if we have > 1 handle targets, start targetting state
-				else if (handleTargets.size() > 1)
-				{
-					std::vector<glm::ivec2> handlePositions;
-					for (const auto& ht : handleTargets)
-						handlePositions.push_back(ht.Entity()->GetLocation().position);
-					std::unique_ptr<State> newState(new state::SelectTarget(handlePositions, [handleTargets](bool success, const State* state) {
-						// if success, handle that target and end turn
-						if (success)
-						{
-							auto player = Game::Instance().PlayerId().Entity();
-							auto targetIndex = static_cast<const state::SelectTarget*>(state)->targetIndex;
-							auto& handledObject = *handleTargets[targetIndex].Entity();
-							Handle(handledObject, *player);
-							Game::Instance().EndTurn();
-						}
-						}));
-					Game::Instance().PushState(newState);
 				}
 			}
 
-			// Check if we're trying to target an enemy with a ranged weapon
-			if (Input::GetKeyDown(GLFW_KEY_T))
-			{
-				// if we have a ranged weapon equipped...
-				auto equippedWeaponIdx = player->GetInventory()->EquippedItemAtSlot(ItemCategory::Weapon);
-				if (equippedWeaponIdx >= 0)
-				{
-					auto weapon = player->GetInventory()->items[equippedWeaponIdx].Entity();
-					int attackRange = weapon->DbCfg().Cfg()->itemCfg.attackRange;
-					if (attackRange > 1)
-					{
-						// ...and there are >0 valid targets. How to find them?
-						std::vector<glm::ivec2> validTargetPositions;
-						// Gather all points in the attack range
-						Circle(validTargetPositions, playerPos, attackRange, false);
-						// Erase-remove idiom, removing elements that fail to satisfy the condition for containing a valid target
-						validTargetPositions.erase(std::remove_if(validTargetPositions.begin(), validTargetPositions.end(), [&](const glm::ivec2& p) {
-							// If not currently visible, not valid
-							const auto& level = g.CurrentLevel();
-							if (!level.FogOfWar().InBounds(p) || level.FogOfWar()(p.x, p.y) != FogOfWarStatus::Visible)
-								return true;
-							// If not a creature, or is player, not valid
-							auto entity = level.GetEntity(p, true);
-							if (entity == nullptr || entity->Type() != EntityType::Creature || entity == player)
-								return true;
-							return false;
-						}), validTargetPositions.end());
-							
-						// start the targetting state
-						if (!validTargetPositions.empty())
-						{
-							auto& projPath = projectilePath;
-							auto& projFireTime = projectileFireTime;
-							std::unique_ptr<State> newState(new state::SelectTarget(validTargetPositions, [validTargetPositions,&projPath,&projFireTime](bool success, const State* state) {
-								// if success, handle that target and end turn
-								if (success)
-								{
-									auto& g = Game::Instance();
-									auto targetIndex = static_cast<const state::SelectTarget*>(state)->targetIndex;
-									auto targetPosition = validTargetPositions[targetIndex];
-									auto target = g.CurrentLevel().GetEntity(targetPosition, true);
-									assert(target != nullptr);
-									auto player = g.PlayerId().Entity();
-									AttackEntity(*player, *target);
-									// Also, store the projectile path and the firing time, so that we can render it moving towards the target
-									Line(projPath, player->GetLocation().position, targetPosition);
-									projFireTime = FrameworkApp::Time();
-									Game::Instance().EndTurn();
-								}
-								}));
-							Game::Instance().PushState(newState);
-						}
-					}
-				}
-			}
 			// Pick-up from an item pile
 			if (Input::GetKeyDown(GLFW_KEY_P))
 			{

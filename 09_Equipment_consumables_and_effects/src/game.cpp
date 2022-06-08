@@ -122,14 +122,6 @@ namespace rlf
 		sig::onGuiUpdated.fire();
 	}
 
-	void Game::EndTurn()
-	{
-		// tell the turn system that the player has played
-		turnSystem.SetWaitingForPlayerAction(false);
-		// process everybody else in the turn system
-		turnSystem.Process();
-	}
-
 	// Render the current game state
 	void Game::RenderCurrentState()
 	{

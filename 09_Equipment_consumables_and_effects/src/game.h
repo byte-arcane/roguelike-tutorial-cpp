@@ -2,7 +2,6 @@
 
 #include "level.h"
 #include "entity.h"
-#include "turn.h"
 #include "state/state.h"
 
 namespace rlf
@@ -55,9 +54,6 @@ namespace rlf
 		// Write an entry into the message log
 		void WriteToMessageLog(const std::string& msg);
 
-		// Finish the turn and play all monsters
-		void EndTurn();
-
 		// Start a new game
 		void New();
 
@@ -88,9 +84,6 @@ namespace rlf
 		std::vector<std::pair<std::string,int>> messageLog;
 
 		// NON SERIALIZABLE DATA
-		
-		// Turn logic
-		TurnSystem turnSystem;
 
 		// The game state stack
 		state::StateStack gameStates;

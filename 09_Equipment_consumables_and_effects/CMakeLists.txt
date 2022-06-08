@@ -13,7 +13,6 @@ SET(SOURCE_FILES
     src/json.cpp
 	src/astar.cpp
 	src/grid.cpp
-	src/turn.cpp
 	src/effect.cpp
 	src/dungen.cpp
 	src/db.cpp
@@ -21,7 +20,6 @@ SET(SOURCE_FILES
 	src/state/inventory.cpp
 	src/state/maingame.cpp
 	src/state/menu.cpp
-	src/state/selecttarget.cpp
 	src/state/state.cpp
 )
 
@@ -40,14 +38,12 @@ SET(HEADER_FILES
     src/json.h
 	src/astar.h
 	src/grid.h
-	src/turn.h
 	src/effect.h
 	src/dungen.h
 	src/signals.h
 	src/state/inventory.h
 	src/state/maingame.h
 	src/state/menu.h
-	src/state/selecttarget.h
 	src/state/state.h
 )
 

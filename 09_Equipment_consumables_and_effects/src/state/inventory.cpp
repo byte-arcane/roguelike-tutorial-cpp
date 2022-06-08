@@ -130,8 +130,6 @@ namespace rlf
 				{
 					//run the action(if any), and if we did run an action, end the turn.
 					auto doneSomething = inventoryAction(firstIdxAtPage + i, mode, entity);
-					if (doneSomething)
-						Game::Instance().EndTurn();
 					isGuiDirty = true;
 					// Also, if the inventory is now empty, no point in being here, so go back to main game state
 					if (entity.GetInventory()->items.empty())
