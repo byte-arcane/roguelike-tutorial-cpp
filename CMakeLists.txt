@@ -87,7 +87,7 @@ SET( APP_LINK_LIBRARIES GLEW::GLEW fmt::fmt imgui::imgui glfw glm::glm nlohmann_
 add_subdirectory(framework)
 #add_subdirectory(00_Setting_up)
 #add_subdirectory(01_Drawing_map_player_and_input)
-#add_subdirectory(02_Creature_entities_and_movement)
+add_subdirectory(02_Creature_entities_and_movement)
 add_subdirectory(03_User_interface)
 add_subdirectory(04_Field_of_vision)
 add_subdirectory(05_Object_entities)
