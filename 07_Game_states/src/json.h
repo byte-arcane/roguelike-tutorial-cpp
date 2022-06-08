@@ -33,8 +33,7 @@ namespace rlf
     void to_json(nlohmann::json& j, const EntityType& e) { j = magic_enum::enum_name(e); }
 
 	NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(DbIndex, name);
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(ItemConfig, defaultStackSize, weight);
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(CreatureConfig, lineOfSightRadius, hp);
     NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(ObjectConfig, blocksMovement, blocksVision, defaultState);
-    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(EntityConfig, type, tileData, itemCfg, creatureCfg, objectCfg, allowRandomSpawn);
+    NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_OPT(EntityConfig, type, tileData, creatureCfg, objectCfg, allowRandomSpawn);
 }

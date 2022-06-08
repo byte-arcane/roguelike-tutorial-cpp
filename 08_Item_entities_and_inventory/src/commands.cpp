@@ -142,6 +142,8 @@ namespace rlf
 		auto text = fmt::format("{0} attacks {1}", attacker.Name(), defender.Name());
 		g.WriteToMessageLog(text);
 		auto defenderDied = ModifyHp(defender, -1);
+		if(defenderDied)
+			attacker.GetCreatureData()->xp++;
 	}
 
 	void TransferItem(const EntityId& takerId, const EntityId itemId, Entity& giver)

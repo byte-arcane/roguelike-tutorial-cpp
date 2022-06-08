@@ -28,16 +28,6 @@ namespace rlf
 		return cfg;
 	}
 
-	EntityConfig MakeItem(const std::vector<TileData>& tileData, bool allowRandomSpawn, const ItemConfig& icfg)
-	{
-		EntityConfig cfg;
-		cfg.type = EntityType::Item;
-		cfg.tileData = tileData;
-		cfg.allowRandomSpawn = allowRandomSpawn;
-		cfg.itemCfg = icfg;
-		return cfg;
-	}
-
 	void Db::LoadFromCode()
 	{
 		Add("player", MakeCreature(
@@ -57,26 +47,6 @@ namespace rlf
 			{ TileData{'>',vec4(1,1,1,1)} },
 			false,
 			{}));
-		Add("item_pile", MakeObject(
-			{ TileData{';',vec4(.7,.7,.7,1)} },
-			false,
-			{}));
-		Add("gold", MakeItem(
-			{ TileData{'$',vec4(1,1,.5,1)} },
-			true,
-			{}));
-		Add("hat", MakeItem(
-			{ TileData{'[',vec4(.7,.7,.7,1)} },
-			true,
-			{0,1}));
-		Add("helmet", MakeItem(
-			{ TileData{'[',vec4(.7,.7,.7,1)} },
-			true,
-			{ 0,5}));
-		Add("sword", MakeItem(
-			{ TileData{'(',vec4(.7,.7,.7,1)} },
-			true,
-			{ 0,3}));
 		Add("goblin", MakeCreature(
 			{ TileData{'g',vec4(.3,.3,1,1)} },
 			true,

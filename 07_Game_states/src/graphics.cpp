@@ -44,13 +44,9 @@ namespace rlf
 		{
 			auto loc = player->GetLocation();
 			auto p = loc.position;
-			int gold = 0;
-			auto it_gold = std::find_if(player->GetInventory()->items.begin(), player->GetInventory()->items.end(), [](const EntityId& itemId) {return itemId.Entity()->Name() == "gold"; });
-			if (it_gold != player->GetInventory()->items.end())
-				gold = it_gold->Entity()->GetItemData()->stackSize;
 			const auto& cd = player->GetCreatureData();
 			auto hpMax = player->DbCfg().Cfg()->creatureCfg.hp;
-			AddTextSprites(buffer, fmt::format("{0} - {1},{2} Lvl:{3} HP:{4}({5}) XP:{6} ${7}", player->Name(), p.x, p.y, loc.levelId + 1, cd->hp, hpMax, cd->xp, gold), maxShownLogLines, glm::vec4(1));
+			AddTextSprites(buffer, fmt::format("{0} - {1},{2} Lvl:{3} HP:{4}({5}) XP:{6}", player->Name(), p.x, p.y, loc.levelId + 1, cd->hp, hpMax, cd->xp), maxShownLogLines, glm::vec4(1));
 		}
 
 		// after the player info, display a few log messages
@@ -272,23 +268,19 @@ namespace rlf
 
 	void Graphics::OnEntityAdded(Entity& e)
 	{
-		if(e.Type() != EntityType::Item)
-			UpdateRenderableEntity(e);
+		UpdateRenderableEntity(e);
 	}
 
 	void Graphics::OnEntityRemoved(Entity& e)
 	{
 		// when we remove an entity (objects and creatures, that can be visible in the map), we need to free the corresponding buffer element
-		if (e.Type() != EntityType::Item)
+		auto it = entityToBufferIndex.find(e.Id());
+		if (it != entityToBufferIndex.end())
 		{
-			auto it = entityToBufferIndex.find(e.Id());
-			if (it != entityToBufferIndex.end())
-			{
-				auto& buffer = e.Type() == EntityType::Creature ? bufferCreatures : bufferObjects;
-				constexpr uvec4 noData{ 0,0,0,0 };
-				buffer.Update(it->second, &noData);
-				entityToBufferIndex.erase(it);
-			}
+			auto& buffer = e.Type() == EntityType::Creature ? bufferCreatures : bufferObjects;
+			constexpr uvec4 noData{ 0,0,0,0 };
+			buffer.Update(it->second, &noData);
+			entityToBufferIndex.erase(it);
 		}
 	}
 

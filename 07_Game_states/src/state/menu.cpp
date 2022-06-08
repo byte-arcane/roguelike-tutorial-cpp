@@ -65,10 +65,6 @@ namespace rlf
 			EntityDynamicConfig dcfg;
 			dcfg.position = startPosition;
 			dcfg.nameOverride = charName;
-			// add one of each item, for debugging purposes!
-			for (const auto& kv : Db::Instance().All())
-				if (kv.second.allowRandomSpawn && kv.second.type == EntityType::Item)
-					dcfg.inventory.emplace_back(kv.first);
 			DbIndex cfgdb{ "player" };
 			auto player = Game::Instance().CreateEntity(cfgdb, dcfg, true).Entity();
 			Game::Instance().SetPlayer(*player);

@@ -44,23 +44,17 @@ namespace rlf
 
 	void Level::OnEntityAdded(Entity& entity)
 	{
-		if (entity.Type() != EntityType::Item)
-		{
-			entities.push_back(entity.Id());
-			// if it's the player who was added to the level, recalculate visibility
-			if (Game::Instance().IsPlayer(entity))
-				UpdateFogOfWar();
-		}
+		entities.push_back(entity.Id());
+		// if it's the player who was added to the level, recalculate visibility
+		if (Game::Instance().IsPlayer(entity))
+			UpdateFogOfWar();
 	}
 
 	void Level::OnEntityRemoved(Entity& entity)
 	{
-		if (entity.Type() != EntityType::Item)
-		{
-			auto id = entity.Id();
-			// erase-remove idiom, removing all entity IDs that match this entity's id
-			entities.erase(std::remove_if(entities.begin(), entities.end(), [id](const EntityId& eref) { return eref == id; }), entities.end());
-		}
+		auto id = entity.Id();
+		// erase-remove idiom, removing all entity IDs that match this entity's id
+		entities.erase(std::remove_if(entities.begin(), entities.end(), [id](const EntityId& eref) { return eref == id; }), entities.end());
 	}
 
 	bool Level::DoesTileBlockVision(const glm::ivec2& p) const
@@ -235,33 +229,12 @@ namespace rlf
 					entityCfgs.emplace_back("goblin", dcfg);
 					break;
 				case '$':
-					dcfg.inventory.emplace_back("gold");
-					entityCfgs.emplace_back(DbIndex::ItemPile(), dcfg);
+					// Nothing for now
 					break;
 				default:
 					break;
 				}
 			}
-		}
-
-		// Add some random treasure
-		std::vector<std::string> spawnableItems = {
-			"helmet",
-			"sword",
-			"hat",
-		};
-		for (int i = 0; i < 10; ++i)
-		{
-			auto x = rand()%width;
-			auto y = rand() % height;
-			ivec2 p = { x,y };
-			if (!bg(x, y).blocksMovement && std::find_if(entityCfgs.begin(), entityCfgs.end(), [&](const auto& dbi_dcfg) { return dbi_dcfg.second.position == p; }) == entityCfgs.end())
-			{
-				EntityDynamicConfig dcfg{ p };
-				dcfg.inventory.emplace_back(spawnableItems[rand()% spawnableItems.size()]);
-				entityCfgs.emplace_back(DbIndex::ItemPile(), dcfg);
-			}
-				
 		}
 
 		return { bg, entityCfgs };

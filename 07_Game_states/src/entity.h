@@ -21,8 +21,7 @@ namespace rlf
 	enum class EntityType : uint32_t
 	{
 		Creature,
-		Object,
-		Item
+		Object
 	};
 
 	///---------------------------------------------------------------------------
@@ -33,16 +32,6 @@ namespace rlf
 	{
 		int levelId = -1;
 		glm::ivec2 position;
-	};
-
-	// Inventory: items, stored by a creature or an object (e.g. item pile, chest, etc)
-	struct Inventory
-	{
-		// The list of items
-		std::vector<EntityId> items;
-
-		// calculate the total weight
-		int Weight() const;
 	};
 
 	// Creature-specific data
@@ -63,27 +52,6 @@ namespace rlf
 		bool blocksMovement = false;
 		// Does the object currently block vision?
 		bool blocksVision = false;
-	};
-
-	// Item-specific data
-	struct ItemData
-	{
-		// The size of the stack. It should never be 0. If not a stack, keep this at "1"
-		int stackSize = 1;
-		// owner entity; object or creature
-		EntityId owner;
-	};
-
-	// Configuration data for item entities
-	struct ItemConfig
-	{
-		// What's the default stack size when spawning an item? 0 if not stackable, otherwise 1 or more
-		int defaultStackSize = 0;
-		// the weight of the item, in stones
-		int weight = 1; 
-
-		// quick check if this item configuration represents a stackable item
-		bool IsStackable() const  { return defaultStackSize != 0; }
 	};
 
 	// Configuration data for creature entities
@@ -129,7 +97,6 @@ namespace rlf
 		// configuration for creatures/objects/items. Only define those if necessary, depending on type
 		CreatureConfig creatureCfg;
 		ObjectConfig objectCfg;
-		ItemConfig itemCfg;
 	};
 
 	// Entity-related data required for instantiation
@@ -141,8 +108,6 @@ namespace rlf
 		std::string nameOverride;
 		// if the entity is an item, who's the owner?
 		EntityId itemOwner;
-		// if the entity has an inventory, what items does it store? Store the configuration name for those items
-		std::vector<DbIndex> inventory;
 	};
 
 	// The main class to represent creature, object and item instances
@@ -157,10 +122,8 @@ namespace rlf
 		const std::string& Name()  { return name; }
 		void SetLocation(const Location& newLocation)  { location = newLocation; }
 		const Location& GetLocation() const  { return location; }
-		Inventory* GetInventory() const  { return inventory.get(); }
 		CreatureData* GetCreatureData() const  { return creatureData.get(); }
 		ObjectData* GetObjectData() const  { return objectData.get(); }
-		ItemData* GetItemData() const  { return itemData.get(); }
 
 		// Does this entity block movement?
 		bool BlocksMovement() const;
@@ -192,11 +155,8 @@ namespace rlf
 
 		// Location (level and position), useful for creatures and objects
 		Location location;
-		// Inventory is useful for creatures and sometimes objects
-		std::unique_ptr<Inventory> inventory;
 		// data specific to different entity types (a creature has creatureData, etc), null if N/A
 		std::unique_ptr<CreatureData> creatureData;
 		std::unique_ptr<ObjectData> objectData;
-		std::unique_ptr<ItemData> itemData;
 	};
 }

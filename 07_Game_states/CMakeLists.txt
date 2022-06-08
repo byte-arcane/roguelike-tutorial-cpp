@@ -16,7 +16,6 @@ SET(SOURCE_FILES
 	src/dungen.cpp
 	src/db.cpp
 	src/signals.cpp
-	src/state/inventory.cpp
 	src/state/maingame.cpp
 	src/state/menu.cpp
 	src/state/state.cpp
@@ -39,7 +38,6 @@ SET(HEADER_FILES
 	src/grid.h
 	src/dungen.h
 	src/signals.h
-	src/state/inventory.h
 	src/state/maingame.h
 	src/state/menu.h
 	src/state/state.h

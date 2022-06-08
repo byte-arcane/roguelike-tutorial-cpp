@@ -13,12 +13,8 @@ namespace rlf
 	void Teleport(Entity& entity, const glm::ivec2& position);
 	// Move entity towards an adjacent direction, if possible. Apply contextual actions (e.g. open a door if closed, or attack a creature)
 	void MoveAdj(Entity& entity, const glm::ivec2& direction);
-	// Pick up everything on the floor, or handle something that's on the floor (e.g. stairs)
-	void PickUpEverythingOrHandle(Entity& handler);
-	// Pick up a particular item from an item pile
-	void PickUp(Entity& handler, Entity& itemPile, const EntityId& itemId);
-	// Drop a particular item. 
-	void Drop(Entity& handler, const EntityId& itemId);
+	// Handle something that's on the floor (e.g. stairs)
+	void HandleOnFloor(Entity& handler);
 	// Handle an object
 	void Handle(Entity& handled, Entity& handler);
 	// Modify a creature's hitpoints by a specific amount

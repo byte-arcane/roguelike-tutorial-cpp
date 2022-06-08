@@ -49,7 +49,6 @@ namespace rlf
 		static const DbIndex Door() { return DbIndex("door"); }
 		static const DbIndex StairsUp() { return DbIndex("stairs_up"); }
 		static const DbIndex StairsDown() { return DbIndex("stairs_down"); }
-		static const DbIndex ItemPile() { return DbIndex("item_pile"); }
 
 		std::string name;
 	};

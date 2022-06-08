@@ -9,7 +9,6 @@
 #include "../grid.h"
 
 #include "framework.h"
-#include "inventory.h"
 
 namespace rlf
 {
@@ -52,7 +51,7 @@ namespace rlf
 				std::vector<EntityId> handleTargets;
 				// check our feet for anything to interact with that is NOT an item pile (need to use "pick up" command)
 				auto entityOnGround = g.CurrentLevel().GetEntity(playerPos, false);
-				if (entityOnGround != nullptr && entityOnGround->GetInventory() == nullptr)
+				if (entityOnGround != nullptr)
 					handleTargets.push_back(entityOnGround->Id());
 
 				for (const auto& nb4 : Nb4())
@@ -69,23 +68,6 @@ namespace rlf
 					auto& handledObject = *handleTargets[0].Entity();
 					Handle(handledObject, *player);
 				}
-			}
-
-			// Pick-up from an item pile
-			if (Input::GetKeyDown(GLFW_KEY_P))
-			{
-				auto itemPile = g.CurrentLevel().GetEntity(playerPos, false);
-				if (itemPile != nullptr && itemPile->DbCfg() == DbIndex::ItemPile())
-				{
-					std::unique_ptr<State> newState(new Inventory(Inventory::Mode::PickUp, {}));
-					Game::Instance().PushState(newState);
-				}
-			}
-			// Drop sth on ground
-			if (Input::GetKeyDown(GLFW_KEY_D))
-			{
-				std::unique_ptr<State> newState(new Inventory(Inventory::Mode::Drop, {}));
-				Game::Instance().PushState(newState);
 			}
 
 			return Status::Running;

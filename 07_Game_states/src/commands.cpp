@@ -19,19 +19,11 @@ namespace rlf
 	void DestroyEntity(Entity& e)
 	{
 		sig::onEntityRemoved.fire(e);
-		if (e.Type() == EntityType::Item) // it's an item -- remove it from its owner!
-		{
-			auto& items = e.GetItemData()->owner.Entity()->GetInventory()->items;
-			items.erase(std::remove_if(items.begin(), items.end(), [&e](const EntityId& eref) {
-				return eref == e.Id();
-			}), items.end());
-		}
 		Game::Instance().RemoveEntity(e);
 	}
 
 	void Teleport(Entity& entity, const glm::ivec2& position)
 	{
-		assert(entity.Type() != EntityType::Item);
 		const auto& level = Game::Instance().CurrentLevel();
 		
 		// Check if we can! If not, spawn a message
@@ -66,7 +58,6 @@ namespace rlf
 
 	void MoveAdj(Entity& entity, const glm::ivec2& direction)
 	{
-		assert(entity.Type() != EntityType::Item);
 		const auto& level = Game::Instance().CurrentLevel();
 
 		auto position = entity.GetLocation().position + direction;
@@ -142,86 +133,18 @@ namespace rlf
 		auto text = fmt::format("{0} attacks {1}", attacker.Name(), defender.Name());
 		g.WriteToMessageLog(text);
 		auto defenderDied = ModifyHp(defender, -1);
+		if (defenderDied)
+			attacker.GetCreatureData()->xp++;
 	}
 
-	void TransferItem(const EntityId& takerId, const EntityId itemId, Entity& giver)
-	{
-		// remove from giver
-		auto& items = takerId.Entity()->GetInventory()->items;
-		auto& giverItems = giver.GetInventory()->items;
-		giverItems.erase(std::remove_if(giverItems.begin(), giverItems.end(), [&itemId](const EntityId& eref) { 
-			return eref == itemId; 
-		}), giverItems.end());
-
-		// add to taker
-		const auto& itemDbCfg = itemId.Entity()->DbCfg();
-		auto itFound = std::find_if(items.begin(), items.end(), [&itemDbCfg](const EntityId& takerItemId) {return takerItemId.Entity()->DbCfg() == itemDbCfg; });
-		if (itFound != items.end() && itemDbCfg.Cfg()->itemCfg.IsStackable())
-			++itFound->Entity()->GetItemData()->stackSize;
-		else
-		{
-			itemId.Entity()->GetItemData()->owner = takerId;
-			items.push_back(itemId);
-		}
-
-		// if giver is an item pile
-		if (giver.DbCfg() == DbIndex::ItemPile())
-		{
-			// if it just became empty, destroy it
-			if (giverItems.empty())
-				DestroyEntity(giver);
-			// else update its state
-			else
-				sig::onObjectStateChanged.fire(giver);
-		}
-		// if taker is an item pile, update its state
-		const auto& taker = *takerId.Entity();
-		if (taker.DbCfg() == DbIndex::ItemPile())
-			sig::onObjectStateChanged.fire(taker);
-		
-	}
-
-	void PickUpEverythingOrHandle(Entity& handler)
+	void HandleOnFloor(Entity& handler)
 	{
 		auto& g = Game::Instance();
 		const auto& level = g.CurrentLevel();
 		auto position = handler.GetLocation().position;
 		auto entityOnGround = level.GetEntity(position, false);
 		if (entityOnGround != nullptr)
-		{
-			if (entityOnGround->GetInventory())
-			{
-				for (const auto& itemId : entityOnGround->GetInventory()->items)
-					TransferItem(handler.Id(), itemId, *entityOnGround);
-				Game::Instance().WriteToMessageLog(fmt::format("{0} picks up some items", handler.Name()));
-			}
-			else
-			{
-				Handle(*entityOnGround, handler);
-			}
-		}
-	}
-
-	void PickUp(Entity& handler, Entity& itemPile, const EntityId& itemId)
-	{
-		TransferItem(handler.Id(), itemId, itemPile);
-		Game::Instance().WriteToMessageLog(fmt::format("{0} picks up {1}", handler.Name(), itemId.Entity()->Name()));
-	}
-
-	void Drop(Entity& handler, const EntityId& itemId)
-	{
-		const auto& level = Game::Instance().CurrentLevel();
-		auto position = handler.GetLocation().position;
-		// When dropping an item, if an item pile does not exist under our feet, we need to create one
-		auto itemPile = level.GetEntity(position, false);
-		if (itemPile == nullptr)
-		{
-			EntityDynamicConfig dcfg;
-			dcfg.position = position;
-			itemPile = Game::Instance().CreateEntity(DbIndex::ItemPile(), dcfg, true).Entity();
-		}
-		TransferItem(itemPile->Id(), itemId, handler);
-		Game::Instance().WriteToMessageLog(fmt::format("{0} drops {1}", handler.Name(), itemId.Entity()->Name()));
+			Handle(*entityOnGround, handler);
 	}
 
 	void Handle(Entity& handled, Entity& handler)

@@ -65,8 +65,6 @@ namespace rlf
 				monsters.emplace_back(nameAndConfig.first);
 			else if (nameAndConfig.second.type == EntityType::Object && nameAndConfig.second.allowRandomSpawn)
 				features.emplace_back(nameAndConfig.first);
-			else if (nameAndConfig.second.type == EntityType::Item && nameAndConfig.second.allowRandomSpawn)
-				treasures.emplace_back(nameAndConfig.first);
 		});
 		
 		// Get all available positions, randomized
@@ -101,44 +99,38 @@ namespace rlf
 		// add monsters
 		for(int i=0;i<numMonsters;++i)
 			output.emplace_back(monsters[rand()%monsters.size()], EntityDynamicConfig{fnPopPosition()});
-		// add treasures
-		for (int i = 0; i < numTreasures; ++i)
-		{
-			auto dcfg = EntityDynamicConfig{ fnPopPosition() };
-			dcfg.inventory.push_back(treasures[rand() % treasures.size()]);
-			output.emplace_back(DbIndex::ItemPile(), dcfg);
-		}
 		// add features, but careful as they have the potential to be blocking narrow passageways!
-		for (int i = 0; i < numFeatures; ++i)
-		{
-			// get a feature
-			const auto& feature = features[rand() % features.size()];
-			// only attempt to place if we have enough positions available
-			while (!availablePositions.empty())
+		if(!features.empty())
+			for (int i = 0; i < numFeatures; ++i)
 			{
-				// pop a position
-				auto position = fnPopPosition();
-				// if the feature blocks movement, need further checks to ensure passability
-				if (feature.Cfg()->objectCfg.blocksMovement)
+				// get a feature
+				const auto& feature = features[rand() % features.size()];
+				// only attempt to place if we have enough positions available
+				while (!availablePositions.empty())
 				{
-					// calculate the number of walkable neighbours (4-connected). We need at least 3!
-					int numFloorNbs = 0;
-					for (const auto& nb4 : Nb4())
+					// pop a position
+					auto position = fnPopPosition();
+					// if the feature blocks movement, need further checks to ensure passability
+					if (feature.Cfg()->objectCfg.blocksMovement)
 					{
-						auto pnb = position + nb4;
-						if (layout.InBounds(pnb) && !layout(pnb.x, pnb.y).blocksMovement)
-							numFloorNbs++;							
+						// calculate the number of walkable neighbours (4-connected). We need at least 3!
+						int numFloorNbs = 0;
+						for (const auto& nb4 : Nb4())
+						{
+							auto pnb = position + nb4;
+							if (layout.InBounds(pnb) && !layout(pnb.x, pnb.y).blocksMovement)
+								numFloorNbs++;							
+						}
+						// if we don't have 3 walkable neighbours, then skip this one
+						if (numFloorNbs < 3)
+							continue;
 					}
-					// if we don't have 3 walkable neighbours, then skip this one
-					if (numFloorNbs < 3)
-						continue;
+					// if we arrived here, either the feature is not a blocker, or it has enough walkable neighbours
+					output.emplace_back(feature, EntityDynamicConfig{ position });
+					break;
 				}
-				// if we arrived here, either the feature is not a blocker, or it has enough walkable neighbours
-				output.emplace_back(feature, EntityDynamicConfig{ position });
-				break;
-			}
 			
-		}
+			}
 		return output;
 	}
 }
