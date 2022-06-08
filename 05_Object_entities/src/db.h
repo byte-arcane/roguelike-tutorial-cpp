@@ -47,8 +47,6 @@ namespace rlf
 
 		// Special ones, they are expected to be in the database
 		static const DbIndex Door() { return DbIndex("door"); }
-		static const DbIndex StairsUp() { return DbIndex("stairs_up"); }
-		static const DbIndex StairsDown() { return DbIndex("stairs_down"); }
 
 		std::string name;
 	};

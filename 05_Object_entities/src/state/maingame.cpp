@@ -20,18 +20,11 @@ namespace rlf
 			Game::Instance().New();
 
 			// set the level to first
-			ChangeLevel(0);
-
-			// find suitable position for the player (entry staircase)
-			const auto& entities = Game::Instance().CurrentLevel().Entities();
-			auto itFound = std::find_if(entities.begin(), entities.end(), [](const EntityId& entityId) {
-				return entityId.Entity()->DbCfg() == DbIndex::StairsUp();
-				});
-			auto startPosition = itFound->Entity()->GetLocation().position;
+			EnterLevel();
 
 			// Create the player entity
 			EntityDynamicConfig dcfg;
-			dcfg.position = startPosition;
+			dcfg.position = { 28,5 };
 			dcfg.nameOverride = "Sir Rodrick";
 			DbIndex cfgdb{ "player" };
 			auto player = Game::Instance().CreateEntity(cfgdb, dcfg, true).Entity();

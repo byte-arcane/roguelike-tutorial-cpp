@@ -157,57 +157,33 @@ namespace rlf
 			objData.blocksMovement = objData.state == STATE_DOOR_CLOSED;
 			objData.blocksVision = objData.state == STATE_DOOR_CLOSED;
 		}
-		else if (handled.DbCfg() == DbIndex::StairsUp())
-		{
-			auto& g = Game::Instance();
-			if (g.GetCurrentLevelIndex() > 0)
-				ChangeLevel(g.GetCurrentLevelIndex() - 1);
-		}
-		else if (handled.DbCfg() == DbIndex::StairsDown())
-		{
-			auto& g = Game::Instance();
-			ChangeLevel(g.GetCurrentLevelIndex() + 1);
-		}
 		if (objData.state != oldState)
 		{
 			sig::onObjectStateChanged.fire(handled);
 		}
 	}
 
-	void ChangeLevel(int levelIndex)
+	void EnterLevel()
 	{
 		auto& g = Game::Instance();
 
-		auto delveDirectionForward = g.GetCurrentLevelIndex() < levelIndex;
-
 		auto playerId = g.PlayerId();
 
-		// remove player from old level
-		if (playerId.Entity() != nullptr && g.GetCurrentLevelIndex() >= 0)
-			sig::onEntityRemoved.fire(*playerId.Entity());
-
 		// Change the level
-		g.ChangeLevel(levelIndex);
+		g.EnterLevel();
 
 		auto& level = g.CurrentLevel();
 		sig::onLevelChanged.fire(level);
 
 		// put player in new level
-		auto placeAtStairsEntityType = delveDirectionForward ? DbIndex::StairsUp() : DbIndex::StairsDown();
 		if (playerId.Entity() != nullptr)
 		{
-			for (const auto& entity : level.Entities())
-				if (entity.Entity()->DbCfg() == placeAtStairsEntityType)
-				{
-					auto position = entity.Entity()->GetLocation().position;
-					playerId.Entity()->SetLocation({ levelIndex, position });
-					break;
-				}
+			playerId.Entity()->SetLocation({ ivec2{ 14,15 } });
 			sig::onEntityAdded.fire(*playerId.Entity());
 			level.UpdateFogOfWar();
 		}
 
-		std::string msgtext = delveDirectionForward ? "You delve deeper into the dungeon" : "You take the stairs up";
+		std::string msgtext = "You enter the tutorial caverns";
 		Game::Instance().WriteToMessageLog(msgtext); // This triggers a gui Update
 	}
 }

@@ -13,7 +13,6 @@ SET(SOURCE_FILES
     src/json.cpp
 	src/astar.cpp
 	src/grid.cpp
-	src/dungen.cpp
 	src/db.cpp
 	src/signals.cpp
 	src/state/maingame.cpp
@@ -35,7 +34,6 @@ SET(HEADER_FILES
     src/json.h
 	src/astar.h
 	src/grid.h
-	src/dungen.h
 	src/signals.h
 	src/state/maingame.h
 	src/state/state.h

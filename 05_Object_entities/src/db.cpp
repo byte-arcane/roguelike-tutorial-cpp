@@ -39,14 +39,6 @@ namespace rlf
 			{ TileData{'+',vec4(1,.545,0,1)}, TileData{'/',vec4(1,.545,0,1)} },
 			false,
 			{}));
-		Add("stairs_up", MakeObject(
-			{ TileData{'<',vec4(1,1,1,1)}},
-			false,
-			{}));
-		Add("stairs_down", MakeObject(
-			{ TileData{'>',vec4(1,1,1,1)} },
-			false,
-			{}));
 		Add("goblin", MakeCreature(
 			{ TileData{'g',vec4(.3,.3,1,1)} },
 			true,

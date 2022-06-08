@@ -23,7 +23,7 @@ namespace rlf
 		{
 			auto entityId = Game::Instance().CreateEntity(ecfg.first, ecfg.second,false);
 			auto entity = entityId.Entity();
-			entity->SetLocation({ locationIndex, entity->GetLocation().position });
+			entity->SetLocation({ entity->GetLocation().position });
 			entities.push_back(entityId);
 		}
 	}
@@ -220,10 +220,8 @@ namespace rlf
 					entityCfgs.emplace_back(DbIndex::Door(), dcfg);
 					break;
 				case '>':
-					entityCfgs.emplace_back(DbIndex::StairsDown(), dcfg);
 					break;
 				case '<':
-					entityCfgs.emplace_back(DbIndex::StairsUp(), dcfg);
 					break;
 				case 'X':
 					entityCfgs.emplace_back("goblin", dcfg);

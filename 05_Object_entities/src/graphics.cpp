@@ -46,7 +46,7 @@ namespace rlf
 			auto p = loc.position;
 			const auto& cd = player->GetCreatureData();
 			auto hpMax = player->DbCfg().Cfg()->creatureCfg.hp;
-			AddTextSprites(buffer, fmt::format("{0} - {1},{2} Lvl:{3} HP:{4}({5}) XP:{6}", player->Name(), p.x, p.y, loc.levelId + 1, cd->hp, hpMax, cd->xp), maxShownLogLines, glm::vec4(1));
+			AddTextSprites(buffer, fmt::format("{0} - {1},{2} HP:{3}({4}) XP:{5}", player->Name(), p.x, p.y, cd->hp, hpMax, cd->xp), maxShownLogLines, glm::vec4(1));
 		}
 
 		// after the player info, display a few log messages

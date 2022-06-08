@@ -21,17 +21,11 @@ namespace rlf
 		// Get an entity pointer using an id
 		Entity * GetEntity(const EntityId& entityId);
 
-		// Get all levels
-		const std::vector<Level>& Levels() const { return levels; }
-
-		// Get the index of the current level
-		int GetCurrentLevelIndex() const { return currentLevelIndex; }
-
 		// Get the current level
-		Level& CurrentLevel() { return levels.at(currentLevelIndex); }
+		Level& CurrentLevel() { return level; }
 
 		// Change the current level to a new index. If that index does not correspond to a created level, one will be generated
-		void ChangeLevel(int iLevel);
+		void EnterLevel();
 		
 		// Set the player entity
 		void SetPlayer(const Entity& entity);
@@ -73,9 +67,7 @@ namespace rlf
 		EntityId playerId;
 
 		// the list of levels
-		std::vector<Level> levels;
-		// the current level index
-		int currentLevelIndex = -1;
+		Level level;
 
 		// message log: messages and how many times each is encountered
 		std::vector<std::pair<std::string,int>> messageLog;

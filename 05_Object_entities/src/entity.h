@@ -30,7 +30,6 @@ namespace rlf
 	// Location: where is the creature/object?
 	struct Location
 	{
-		int levelId = -1;
 		glm::ivec2 position;
 	};
 

@@ -24,5 +24,5 @@ namespace rlf
 	// Destroy an entity and remove it from the game
 	void DestroyEntity(Entity& e);
 	// Change to the given level index
-	void ChangeLevel(int levelIndex);
+	void EnterLevel();
 }

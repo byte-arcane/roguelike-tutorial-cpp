@@ -38,7 +38,7 @@ namespace rlf
 			objectData->state = cfg->objectCfg.defaultState;
 		}
 		
-		location = { Game::Instance().GetCurrentLevelIndex(), dcfg.position };
+		location = { dcfg.position };
 
 		if (dbIndex == DbIndex::Door())
 		{

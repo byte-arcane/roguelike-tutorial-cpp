@@ -62,9 +62,8 @@ namespace rlf
 
 	void Game::New()
 	{
-		currentLevelIndex = -1;
 		invalidPoolIndices.clear();
-		levels.clear();
+		level = {};
 		messageLog.clear();
 		playerId = {};
 		poolEntities.clear();
