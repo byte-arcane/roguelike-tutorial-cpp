@@ -20,7 +20,6 @@ namespace rlf
 		// clear everything else
 		location = {};
 		creatureData.reset();
-		objectData.reset();
 
 		// any other work, now that the basics are done
 
@@ -30,29 +29,13 @@ namespace rlf
 			creatureData = std::make_unique<CreatureData>();
 			creatureData->hp = cfg->creatureCfg.hp;
 		}
-		else if (type == EntityType::Object)
-		{
-			objectData = std::make_unique<ObjectData>();
-			objectData->blocksMovement = cfg->objectCfg.blocksMovement;
-			objectData->blocksVision = cfg->objectCfg.blocksVision;
-			objectData->state = cfg->objectCfg.defaultState;
-		}
 		
-		location = { dcfg.position };
-
-		if (dbIndex == DbIndex::Door())
-		{
-			objectData->blocksMovement = true;
-			objectData->blocksVision = true;
-			objectData->state = 0;
-		}	
+		location = { dcfg.position };	
 	}
 
 	const TileData& Entity::CurrentTileData() const
 	{
-		// get the tiledata according to the state
-		int state = Type() == EntityType::Object ? objectData->state : 0;
-		return DbCfg().Cfg()->tileData[state];
+		return DbCfg().Cfg()->tileData[0];
 	}
 
 	bool Entity::BlocksMovement() const
@@ -62,9 +45,6 @@ namespace rlf
 			// Creatures always block movement
 		case EntityType::Creature:
 			return true;
-			// Objects MAY block movement
-		case EntityType::Object:
-			return objectData->blocksMovement;
 		default:
 			assert(false); // don't be here
 			break;
@@ -79,9 +59,6 @@ namespace rlf
 			// creatures don't block vision
 		case EntityType::Creature:
 			return false;
-			// objects may block vision
-		case EntityType::Object:
-			return objectData->blocksVision;
 		default:
 			assert(false); // don't be here
 			break;

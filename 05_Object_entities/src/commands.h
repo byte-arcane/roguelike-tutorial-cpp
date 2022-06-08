@@ -13,10 +13,6 @@ namespace rlf
 	void Teleport(Entity& entity, const glm::ivec2& position);
 	// Move entity towards an adjacent direction, if possible. Apply contextual actions (e.g. open a door if closed, or attack a creature)
 	void MoveAdj(Entity& entity, const glm::ivec2& direction);
-	// Handle something that's on the floor (e.g. stairs)
-	void HandleOnFloor(Entity& handler);
-	// Handle an object
-	void Handle(Entity& handled, Entity& handler);
 	// Modify a creature's hitpoints by a specific amount
 	bool ModifyHp(Entity& entity, int hpMod);
 	// Attack a target entity using equipped weapons (or "natural" weapons if nothing is equipped)

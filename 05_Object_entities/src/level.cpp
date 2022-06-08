@@ -217,7 +217,6 @@ namespace rlf
 				switch (c)
 				{
 				case '+':
-					entityCfgs.emplace_back(DbIndex::Door(), dcfg);
 					break;
 				case '>':
 					break;
