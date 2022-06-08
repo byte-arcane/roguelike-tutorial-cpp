@@ -45,8 +45,6 @@ namespace rlf
 
 		// initialize the level with data
 		void Init(const Array2D<LevelBgElement>& data, const std::vector<std::pair<DbIndex, EntityDynamicConfig>>& entityCfgs, int locationIndex);
-		// update the fog of war map
-		void UpdateFogOfWar();
 		// check if an entity can move to a target position
 		bool EntityCanMoveTo(const Entity& e, const glm::ivec2& position) const;
 		// check if an entity can see a target position
@@ -64,7 +62,6 @@ namespace rlf
 		// signal-slots
 		void OnEntityAdded(Entity& entity);
 		void OnEntityRemoved(Entity& e);
-		void OnObjectStateChanged(const Entity& e);
 
 		// Does this tile block vision? Check the bg element and all entities standing on that tile
 		bool DoesTileBlockVision(const glm::ivec2& p) const;

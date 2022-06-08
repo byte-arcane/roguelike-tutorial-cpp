@@ -37,7 +37,6 @@ namespace rlf
 
 		if (Game::Instance().IsPlayer(entity))
 		{
-			Game::Instance().CurrentLevel().UpdateFogOfWar();
 			sig::onGuiUpdated.fire();// movement should cause GUI Update
 		}
 	}
@@ -73,7 +72,6 @@ namespace rlf
 			if (Game::Instance().IsPlayer(entity))
 			{
 				Game::Instance().WriteToMessageLog(fmt::format("{0} moves {1}", entity.Name(), DirectionString(direction)));
-				Game::Instance().CurrentLevel().UpdateFogOfWar();
 				sig::onGuiUpdated.fire();// movement should cause GUI Update
 			}
 		}
@@ -146,7 +144,6 @@ namespace rlf
 		{
 			playerId.Entity()->SetLocation({ ivec2{ 14,15 } });
 			sig::onEntityAdded.fire(*playerId.Entity());
-			level.UpdateFogOfWar();
 		}
 
 		std::string msgtext = "You enter the tutorial caverns";

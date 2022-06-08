@@ -4,7 +4,6 @@
 #include "utility.h"
 #include "game.h"
 #include "entity.h"
-#include "fov.h"
 #include "commands.h"
 #include "astar.h"
 #include "grid.h"
@@ -30,14 +29,12 @@ namespace rlf
 
 	void Level::StartListening()
 	{
-		sig::onObjectStateChanged.connect<Level, &Level::OnObjectStateChanged>(this);
 		sig::onEntityAdded.connect<Level, &Level::OnEntityAdded>(this);
 		sig::onEntityRemoved.connect<Level, &Level::OnEntityRemoved>(this);
 	}
 
 	void Level::StopListening()
 	{
-		sig::onObjectStateChanged.disconnect<Level, &Level::OnObjectStateChanged>(this);
 		sig::onEntityAdded.disconnect<Level, &Level::OnEntityAdded>(this);
 		sig::onEntityRemoved.disconnect<Level, &Level::OnEntityRemoved>(this);
 	}
@@ -45,9 +42,6 @@ namespace rlf
 	void Level::OnEntityAdded(Entity& entity)
 	{
 		entities.push_back(entity.Id());
-		// if it's the player who was added to the level, recalculate visibility
-		if (Game::Instance().IsPlayer(entity))
-			UpdateFogOfWar();
 	}
 
 	void Level::OnEntityRemoved(Entity& entity)
@@ -70,29 +64,6 @@ namespace rlf
 				return false;
 		}
 		return true;
-	}
-
-	void Level::UpdateFogOfWar()
-	{
-		// reset the fog of war by turning all previously visible tiles to definitely explored
-		auto map_size = bg.Size();
-		for (int y = 0; y < map_size.y; ++y)
-			for (int x = 0; x < map_size.x; ++x)
-			{
-				// Set everything previously visible to currently explored
-				auto& fowValue = fogOfWar(x, y);
-				if (fowValue == FogOfWarStatus::Visible)
-					fowValue = FogOfWarStatus::Explored;
-			}
-
-		// Now calculate the field of view, where if a tile is visible, it gets a "Visible" status
-		auto player = Game::Instance().PlayerId().Entity();
-		auto posPlayer = player->GetLocation().position;
-		auto cb_is_opaque = [&](const glm::ivec2& p) {return !DoesTileBlockVision(p); };
-		auto cb_on_visible = [&](const glm::ivec2& p) { fogOfWar(p.x, p.y) = FogOfWarStatus::Visible; };
-		CalculateFieldOfView(player->GetLocation().position, player->DbCfg().Cfg()->creatureCfg.lineOfSightRadius, map_size, cb_is_opaque, cb_on_visible);
-
-		sig::onFogOfWarChanged.fire();
 	}
 
 	bool Level::EntityCanMoveTo(const Entity& e, const glm::ivec2& position) const
@@ -156,12 +127,6 @@ namespace rlf
 			}
 		}
 		return nullptr;
-	}
-
-	void Level::OnObjectStateChanged(const Entity& e)
-	{
-		// The change in the object's state might affect visibility, so Update it for good measure
-		UpdateFogOfWar();
 	}
 
 	std::vector<glm::ivec2> Level::CalcPath(const Entity& e, const glm::ivec2& tgt) const

@@ -65,7 +65,6 @@ namespace rlf
 		void OnEntityAdded(Entity& e);
 		void OnEntityRemoved(Entity& e);
 		void OnLevelChanged(const Level& level);
-		void OnFogOfWarChanged();
 		void OnObjectStateChanged(const Entity& e);
 		void OnGuiUpdated() { isGuiDirty = true; }
 		void OnGameLoaded();
@@ -107,8 +106,6 @@ namespace rlf
 
 		// Current level data
 		Spritemap texBg;
-		// fog of war texture
-		uint32_t texFogOfWar=0;
 		// gpu buffer for level objects
 		SparseBuffer bufferObjects;
 		// gpu buffer for level creatures

@@ -88,8 +88,8 @@ namespace rlf
 
 		// specify the shader names (with an invalid associated program object), and then load them all
 		shaderDb = {
-			{"tilemap_dense",0},
-			{"tilemap_sparse",0},
+			{"tilemap_dense_nofow",0},
+			{"tilemap_sparse_nofow",0},
 			{"tilemap_sparse_gui",0},
 			{"tilemap_sparse_gui_highlight",0},
 		};
@@ -134,7 +134,6 @@ namespace rlf
 		sig::onEntityAdded.connect<Graphics, &Graphics::OnEntityAdded>(this);
 		sig::onEntityRemoved.connect<Graphics, &Graphics::OnEntityRemoved>(this);
 		sig::onLevelChanged.connect<Graphics, &Graphics::OnLevelChanged>(this);
-		sig::onFogOfWarChanged.connect<Graphics, &Graphics::OnFogOfWarChanged>(this);
 		sig::onObjectStateChanged.connect<Graphics, &Graphics::OnObjectStateChanged>(this);
 		sig::onGuiUpdated.connect<Graphics, &Graphics::OnGuiUpdated>(this);
 		sig::onGameLoaded.connect<Graphics, &Graphics::OnGameLoaded>(this);
@@ -205,11 +204,9 @@ namespace rlf
 		glUniform2i(glGetUniformLocation(program, "tilemap_tile_size"), tilemap.TileSize().x, tilemap.TileSize().y);
 	}
 
-	void SetupCameraAndFow(uint32_t program, const glm::ivec2& cameraOffset, uint32_t fow)
+	void SetupCamera(uint32_t program, const glm::ivec2& cameraOffset)
 	{
 		glUniform2i(glGetUniformLocation(program, "camera_offset"), cameraOffset.x, cameraOffset.y);
-		glBindTextureUnit(2, fow);
-		glUniform1i(glGetUniformLocation(program, "fow"), 2);
 	}
 
 	ivec2 Graphics::RowStartAndNum(const std::string& guiSegment) const
@@ -291,7 +288,6 @@ namespace rlf
 		bufferObjects.Clear();
 		entityToBufferIndex.clear();
 		texBg.Dispose();
-		DeleteTexture(texFogOfWar);
 
 		// Populate with new data
 		const auto& bg = level.Bg();
@@ -301,17 +297,9 @@ namespace rlf
 			return td.PackDense();
 		});
 		texBg.Init(bg.Size(), renderData.data());	
-		texFogOfWar = CreateTexture(bg.Size(),GL_RED, GL_R8);
 
 		for (const auto& entityId : level.Entities())
 			UpdateRenderableEntity(*entityId.Entity());
-	}
-
-	void Graphics::OnFogOfWarChanged()
-	{
-		const auto& fogOfWar = Game::Instance().CurrentLevel().FogOfWar();
-		auto size = fogOfWar.Size();
-		glTextureSubImage2D(texFogOfWar, 0, 0, 0, size.x, size.y, GL_RED, GL_UNSIGNED_BYTE, fogOfWar.Data().data());
 	}
 
 	void Graphics::OnObjectStateChanged(const Entity& object)
@@ -369,20 +357,18 @@ namespace rlf
 		SetupViewport({ 0,rowStartAndNum.x }, { screenSize.x, rowStartAndNum.y });
 
 		// Render bg layer(s) first
-		auto shaderTilemapDense = shaderDb.at("tilemap_dense");
+		auto shaderTilemapDense = shaderDb.at("tilemap_dense_nofow");
 		glUseProgram(shaderTilemapDense);
 		SetupTilemapAndGrid(shaderTilemapDense, tilemap, { screenSize.x, rowStartAndNum.y });
-		SetupCameraAndFow(shaderTilemapDense, cameraOffset, texFogOfWar);
+		SetupCamera(shaderTilemapDense, cameraOffset);
 		texBg.Draw(shaderTilemapDense);
 
 		// Render all sparse buffers using given order
-		auto shaderTilemapSparse = shaderDb.at("tilemap_sparse");
+		auto shaderTilemapSparse = shaderDb.at("tilemap_sparse_nofow");
 		glUseProgram(shaderTilemapSparse);
 		SetupTilemapAndGrid(shaderTilemapSparse, tilemap, { screenSize.x, rowStartAndNum.y });
-		SetupCameraAndFow(shaderTilemapSparse, cameraOffset, texFogOfWar);
-		glUniform1f(glGetUniformLocation(shaderTilemapSparse, "show_in_explored_areas"), 1.0f);
+		SetupCamera(shaderTilemapSparse, cameraOffset);
 		bufferObjects.Draw();
-		glUniform1f(glGetUniformLocation(shaderTilemapSparse, "show_in_explored_areas"), 0.0f);
 		bufferCreatures.Draw();
 	}
 
@@ -425,7 +411,6 @@ namespace rlf
 		// redo the level and gui
 		const auto& level = Game::Instance().CurrentLevel();
 		OnLevelChanged(level);
-		OnFogOfWarChanged();
 		isGuiDirty = true;
 	}
 }

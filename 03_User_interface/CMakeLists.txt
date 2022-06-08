@@ -8,7 +8,6 @@ SET(SOURCE_FILES
 	src/graphics.cpp
 	src/spritemap.cpp
 	src/commands.cpp
-	src/fov.cpp
 	src/entityid.cpp
     src/json.cpp
 	src/astar.cpp
@@ -29,7 +28,6 @@ SET(HEADER_FILES
 	src/spritemap.h
 	src/commands.h
 	src/db.h
-	src/fov.h
 	src/entityid.h
     src/json.h
 	src/astar.h

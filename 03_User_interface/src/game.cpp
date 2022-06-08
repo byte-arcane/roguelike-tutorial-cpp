@@ -94,7 +94,6 @@ namespace rlf
 	void Game::SetPlayer(const Entity& entity) 
 	{ 
 		playerId = entity.Id();
-		CurrentLevel().UpdateFogOfWar();
 		Graphics::Instance().CenterCameraAtPoint(entity.GetLocation().position);
 		sig::onGuiUpdated.fire();
 	}
