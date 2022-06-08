@@ -10,15 +10,14 @@
 #include "graphics.h"
 #include "dungen.h"
 #include "signals.h"
-#include "state/menu.h"
+
+#include "state/maingame.h"
 
 namespace rlf
 {
 	void Game::Init()
 	{
-		// The game initialization is nothing more than starting with the menu state
-		std::unique_ptr<state::State> menu = std::make_unique<state::Menu>();
-		PushState(menu);
+		state::MainGameStart();
 	}
 
 	Entity* Game::GetEntity(const EntityId& entityId)
@@ -125,12 +124,9 @@ namespace rlf
 	// Render the current game state
 	void Game::RenderCurrentState()
 	{
-		if (!gameStates.empty())
-		{
-			Graphics::Instance().BeginRender();
-			gameStates.back()->Render();
-			Graphics::Instance().EndRender();
-		}
+		Graphics::Instance().BeginRender();
+		state::MainGameRender();
+		Graphics::Instance().EndRender();
 	}
 
 	// Update the current game state
@@ -141,15 +137,6 @@ namespace rlf
 		if (Input::GetKeyDown(GLFW_KEY_L) && Input::GetKeyDown(GLFW_KEY_LEFT_CONTROL))
 			Graphics::Instance().ReloadShaders();
 
-		if (!gameStates.empty())
-			gameStates.back()->Update(gameStates);
-		else
-			exit(0); // Be nicer!
-	}
-
-	void Game::PushState(std::unique_ptr<state::State>& state)
-	{
-		gameStates.push_back(std::move(state));
-		gameStates.back()->StartListening();
+		state::MainGameUpdate();
 	}
 }

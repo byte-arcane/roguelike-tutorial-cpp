@@ -63,9 +63,6 @@ namespace rlf
 		// Update the current game state
 		void UpdateCurrentState();
 
-		// Push a new state onto the game state stack
-		void PushState(std::unique_ptr<state::State>& state);
-
 	private:
 
 		// entities. Stored as uptr, so that when the vector is resized and the memory is reallocated, our data is not invalidated
@@ -82,10 +79,5 @@ namespace rlf
 
 		// message log: messages and how many times each is encountered
 		std::vector<std::pair<std::string,int>> messageLog;
-
-		// NON SERIALIZABLE DATA
-
-		// The game state stack
-		state::StateStack gameStates;
 	};
 }

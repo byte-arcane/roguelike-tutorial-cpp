@@ -14,18 +14,42 @@ namespace rlf
 {
 	namespace state
 	{
-		Status MainGame::UpdateImpl()
+		void MainGameStart()
+		{
+			// Initialize the game state
+			Game::Instance().New();
+
+			// set the level to first
+			ChangeLevel(0);
+
+			// find suitable position for the player (entry staircase)
+			const auto& entities = Game::Instance().CurrentLevel().Entities();
+			auto itFound = std::find_if(entities.begin(), entities.end(), [](const EntityId& entityId) {
+				return entityId.Entity()->DbCfg() == DbIndex::StairsUp();
+				});
+			auto startPosition = itFound->Entity()->GetLocation().position;
+
+			// Create the player entity
+			EntityDynamicConfig dcfg;
+			dcfg.position = startPosition;
+			dcfg.nameOverride = "Sir Rodrick";
+			DbIndex cfgdb{ "player" };
+			auto player = Game::Instance().CreateEntity(cfgdb, dcfg, true).Entity();
+			Game::Instance().SetPlayer(*player);
+		}
+
+		void MainGameUpdate()
 		{
 			// Quick save/load
 			auto& g = Game::Instance();
 
 			auto player = Game::Instance().PlayerId().Entity();
 			if (player == nullptr)
-				return Status::Abort;
+				return;
 
 			// End the game state if player is dead, so that we can move to the death screen
 			if (player->GetCreatureData()->hp <= 0)
-				return Status::Success;
+				return;
 
 			// Check for direction keys (movement and related contextual actions)
 			auto playerPos = player->GetLocation().position;
@@ -69,17 +93,16 @@ namespace rlf
 					Handle(handledObject, *player);
 				}
 			}
-
-			return Status::Running;
 		}
 
-		void MainGame::Render()
+		void MainGameRender()
 		{
 			auto& gfx = Graphics::Instance();
-			// Create the header if needed
-			if (isHeaderDirty)
+			// Create the header the first time we're here
+			static bool firstTime = true;
+			if (firstTime)
 			{
-				isHeaderDirty = false;
+				firstTime = false;
 				std::vector<glm::uvec4> bufferHeader;
 				auto& gfx = Graphics::Instance();
 				auto screenSize = gfx.ScreenSize();
@@ -95,25 +118,6 @@ namespace rlf
 			gfx.RenderGame();
 			gfx.RenderGui();
 			gfx.RenderHeader();
-
-			// Render a projectile. since this is the only effect, this is VERY inefficient, and the Render pass would be better utilised if more things were rendered
-			if (!projectilePath.empty())
-			{
-				auto time = FrameworkApp::Time() - projectileFireTime;
-				const float PROJECTILE_SPEED = 50.0f; // 50 tiles per second
-				auto ptIdx = int(PROJECTILE_SPEED * time);
-				if (ptIdx < projectilePath.size())
-				{
-					auto& sparseBufferFx = gfx.RequestBuffer("fx");
-					if (!sparseBufferFx.IsInitialized())
-						sparseBufferFx.Init(sizeof(glm::uvec4), 200);
-					auto bufferData = TileData('*',glm::vec4(1,1,1,1)).PackSparse(gfx.WorldToScreen(projectilePath[ptIdx]));
-					sparseBufferFx.Set(1, &bufferData);
-					Graphics::Instance().RenderGameOverlay(sparseBufferFx);
-				}
-				else
-					projectilePath.clear();
-			}
 		}
 	}
 }
