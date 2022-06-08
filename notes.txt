@@ -46,3 +46,10 @@ Structure:
 	turn taking code (EndTurn & TurnSystem)
 * Saving/loading
 * Finishing touches: more screens/states (death, create char)
+
+
+State of the project:
+	Architecture is occasionally iffy, which makes backwards simplification hard at times
+	Needs another pass from last to first, using cppcheck or other for FAST dead code removal, as I need to remove dead code, re-run it, check again, etc.
+		e.g. astar code, targetting variables in main game state, etc
+	
